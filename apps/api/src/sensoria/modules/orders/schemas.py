@@ -259,6 +259,7 @@ class CheckoutResponse(BaseModel):
     amount_due_grosz: int
     payment_integration: str
     payment_url: str | None
+    access_token: str
     message: str
 
 

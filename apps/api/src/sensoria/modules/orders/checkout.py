@@ -14,9 +14,12 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from sensoria.config import get_settings
 from sensoria.modules.accounts.models import ConsentTextVersion, CustomerConsent
 from sensoria.modules.catalog.models import Product, ProductBook, ProductVoucher
 from sensoria.modules.catalog.types import ProductKind, ProductStatus
+from sensoria.modules.payments.stripe_client import stripe_configured
+from sensoria.modules.payments.tokens import order_access_token
 from sensoria.modules.vouchers.gifts import load_gift_settings, scheduled_delivery_at
 from sensoria.shared.app_settings import AppSetting
 from sensoria.shared.errors import DomainError
@@ -109,6 +112,10 @@ def _invoice(payload: CheckoutInput) -> dict[str, Any]:
     }
 
 
+def _payment_integration() -> str:
+    return "stripe" if stripe_configured(get_settings()) else "not_configured"
+
+
 async def create_guest_order(
     session: AsyncSession,
     token: str | None,
@@ -166,11 +173,11 @@ async def create_guest_order(
                 order_id=prior.id,
                 status=prior.status,
                 amount_due_grosz=prior.amount_due_grosz,
-                payment_integration="not_configured",
+                payment_integration=_payment_integration(),
                 payment_url=None,
+                access_token=order_access_token(prior.id),
                 message=(
-                    "Zamówienie oczekuje na uruchomienie płatności; "
-                    "integracja operatora nie jest jeszcze skonfigurowana."
+                    "Zamówienie oczekuje na płatność. Rozpocznij ją przez endpoint sesji płatności."
                 ),
             )
 
@@ -640,11 +647,11 @@ async def create_guest_order(
             order_id=order.id,
             status=order.status,
             amount_due_grosz=order.amount_due_grosz,
-            payment_integration="not_configured",
+            payment_integration=_payment_integration(),
             payment_url=None,
+            access_token=order_access_token(order.id),
             message=(
                 "Zamówienie zapisano jako oczekujące na płatność. "
-                "Płatność nie została uruchomiona, ponieważ integracja Stripe "
-                "nie jest skonfigurowana."
+                "Rozpocznij płatność przez endpoint sesji płatności."
             ),
         )

@@ -67,6 +67,11 @@ class Settings(BaseSettings):
     LOGIN_LINK_COOLDOWN_SECONDS: int = Field(default=900, ge=60, le=86400)
     LOGIN_LINK_INVALID_LIMIT: int = Field(default=20, ge=3, le=200)
     INPOST_POINTS_TIMEOUT_SECONDS: int = Field(default=5, ge=1, le=20)
+    STRIPE_SECRET_KEY: SecretStr | None = None
+    STRIPE_WEBHOOK_SECRET: SecretStr | None = None
+    STRIPE_API_BASE: str = "https://api.stripe.com"
+    STRIPE_TIMEOUT_SECONDS: int = Field(default=10, ge=1, le=30)
+    PAYMENT_WEBHOOK_TOLERANCE_SECONDS: int = Field(default=300, ge=30, le=3600)
 
     @field_validator("TRUSTED_PROXY_CIDRS")
     @classmethod

@@ -36,6 +36,7 @@ GUEST_PURCHASE_LINKING_REVISION = "f56000000001"
 ORDER_PUBLIC_NUMBER_REVISION = "f57000000001"
 CART_REORDER_REVISION = "f58000000001"
 ACCOUNT_PROFILE_REVISION = "f59000000001"
+ACCOUNT_PRIVACY_REVISION = "f60000000001"
 
 
 def _alembic_config() -> Config:
@@ -161,6 +162,11 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         "login_links",
         "customer_addresses",
         "customer_billing_profiles",
+        "account_privacy_jobs",
+        "consent_guest_imports",
+        "consent_text_versions",
+        "customer_consents",
+        "deleted_email_suppressions",
     }
     assert set(initial_state[2]).issubset(expected_tables), (
         "TEST_DATABASE_URL musi wskazywać dedykowaną bazę testową bez obcych tabel."
@@ -193,6 +199,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         ORDER_PUBLIC_NUMBER_REVISION,
         CART_REORDER_REVISION,
         ACCOUNT_PROFILE_REVISION,
+        ACCOUNT_PRIVACY_REVISION,
     )
 
     if initial_state[1] in (FOUNDATION_REVISION, PRODUCT_REVISION, TAXONOMY_REVISION):
@@ -250,6 +257,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         ORDER_PUBLIC_NUMBER_REVISION,
         CART_REORDER_REVISION,
         ACCOUNT_PROFILE_REVISION,
+        ACCOUNT_PRIVACY_REVISION,
     ):
         assert not asyncio.run(_transactional_tables_have_rows(test_database_url)), (
             "Test downgrade wymaga pustych tabel zamówień/voucherów; nie może usuwać danych."
@@ -261,7 +269,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         command.upgrade(config, "head")
         assert asyncio.run(_migration_state(test_database_url))[:2] == (
             True,
-            ACCOUNT_PROFILE_REVISION,
+            ACCOUNT_PRIVACY_REVISION,
         )
         assert {
             "ix_products_status_price",
@@ -423,7 +431,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         reupgraded = asyncio.run(_migration_state(test_database_url))
         assert reupgraded[:2] == (
             True,
-            ACCOUNT_PROFILE_REVISION,
+            ACCOUNT_PRIVACY_REVISION,
         )
         assert {
             "carts",
