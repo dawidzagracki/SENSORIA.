@@ -162,6 +162,15 @@ async def process_outbox(
                     row.html_body = row.text_body = "[usunięto po wysyłce]"
             if status == "failed" and row.template_key in SECRET_TEMPLATES:
                 row.html_body = row.text_body = "[usunięto po błędzie]"
+            if status == "failed" and row.template_key != "ops_alert":
+                from sensoria.modules.ops.alerts import describe, notify_owner
+
+                await notify_owner(
+                    session,
+                    key=f"mail-failed:{row.id}",
+                    title="Nie udało się wysłać wiadomości",
+                    lines=describe(szablon=row.template_key, blad=error_code),
+                )
             elif status == "retry":
                 row.next_attempt_at = moment + BACKOFF[min(row.attempts, len(BACKOFF)) - 1]
             counts[status] += 1

@@ -21,6 +21,7 @@ from sensoria.modules.catalog.router import (
     router as catalog_router,
 )
 from sensoria.modules.catalog.samples import router as product_samples_router
+from sensoria.modules.content.help import router as help_router
 from sensoria.modules.content.router import router as pages_router
 from sensoria.modules.documents.router import router as documents_router
 from sensoria.modules.library.router import router as library_router
@@ -32,11 +33,13 @@ from sensoria.modules.orders.router import router as orders_router
 from sensoria.modules.payments.router import router as payments_router
 from sensoria.modules.reviews.router import router as reviews_router
 from sensoria.modules.reviews.service import review_request_scheduler
+from sensoria.modules.support.router import router as support_router
 from sensoria.modules.vouchers.pdf_worker import voucher_pdf_scheduler
 from sensoria.modules.vouchers.reminders import voucher_reminder_scheduler
 from sensoria.modules.vouchers.router import router as vouchers_router
 from sensoria.shared.exception_handlers import register_exception_handlers
 from sensoria.shared.health import router as health_router
+from sensoria.shared.security_headers import SecurityHeadersMiddleware
 from sensoria.version import APP_VERSION
 
 
@@ -90,6 +93,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = selected_settings
+    app.add_middleware(SecurityHeadersMiddleware)
     register_exception_handlers(app, development=is_development)
     app.include_router(health_router)
     for router in (
@@ -104,7 +108,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         library_router,
         documents_router,
         pages_router,
+        help_router,
         reviews_router,
+        support_router,
         vouchers_router,
         accounts_router,
         auth_router,

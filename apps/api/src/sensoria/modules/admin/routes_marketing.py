@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, m
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
-from sensoria.modules.content.models import ContentPage
+from sensoria.modules.content.models import ContentPage, CookieConsent, FaqEntry
 from sensoria.modules.orders.models import DiscountCode
 from sensoria.shared.audit_log import ActorType, AuditLog
 from sensoria.shared.errors import DomainError
@@ -265,3 +265,162 @@ async def unpublish_page(slug: str, session: SessionDependency, admin: Owner) ->
             )
         )
     return {"slug": slug, "status": "draft"}
+
+
+class FaqInput(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    category: str = Field(min_length=1, max_length=60)
+    question: str = Field(min_length=3, max_length=300)
+    answer: str = Field(min_length=3, max_length=6000)
+    position: int = Field(default=0, ge=0, le=10_000)
+    published: bool = False
+
+
+def _faq_view(e: FaqEntry) -> dict[str, Any]:
+    return {
+        "id": str(e.id),
+        "category": e.category,
+        "question": e.question,
+        "answer": e.answer,
+        "position": e.position,
+        "published": e.published,
+    }
+
+
+@router.get("/faq")
+async def list_faq(session: SessionDependency, _admin: Staff) -> dict[str, Any]:
+    rows = (
+        await session.scalars(select(FaqEntry).order_by(FaqEntry.category, FaqEntry.position))
+    ).all()
+    return {"items": [_faq_view(e) for e in rows]}
+
+
+@router.post("/faq", status_code=201)
+async def create_faq(payload: FaqInput, session: SessionDependency, admin: Owner) -> dict[str, Any]:
+    async with session.begin():
+        entry = FaqEntry(**payload.model_dump())
+        session.add(entry)
+        await session.flush()
+        session.add(
+            AuditLog(
+                actor_type=ActorType.ADMINISTRATOR,
+                actor_id=admin.id,
+                entity_type="faq_entry",
+                entity_id=entry.id,
+                action="faq.created",
+                payload={},
+            )
+        )
+        return _faq_view(entry)
+
+
+@router.put("/faq/{entry_id}")
+async def update_faq(
+    entry_id: UUID, payload: FaqInput, session: SessionDependency, admin: Owner
+) -> dict[str, Any]:
+    async with session.begin():
+        entry = await session.scalar(
+            select(FaqEntry).where(FaqEntry.id == entry_id).with_for_update()
+        )
+        if entry is None:
+            raise DomainError("FAQ_NOT_FOUND", "Nie znaleziono pytania.", 404)
+        for name, value in payload.model_dump().items():
+            setattr(entry, name, value)
+        session.add(
+            AuditLog(
+                actor_type=ActorType.ADMINISTRATOR,
+                actor_id=admin.id,
+                entity_type="faq_entry",
+                entity_id=entry.id,
+                action="faq.updated",
+                payload={},
+            )
+        )
+        await session.flush()
+        return _faq_view(entry)
+
+
+@router.delete("/faq/{entry_id}", status_code=204)
+async def delete_faq(entry_id: UUID, session: SessionDependency, admin: Owner) -> None:
+    async with session.begin():
+        entry = await session.get(FaqEntry, entry_id)
+        if entry is None:
+            raise DomainError("FAQ_NOT_FOUND", "Nie znaleziono pytania.", 404)
+        await session.delete(entry)
+        session.add(
+            AuditLog(
+                actor_type=ActorType.ADMINISTRATOR,
+                actor_id=admin.id,
+                entity_type="faq_entry",
+                entity_id=entry_id,
+                action="faq.deleted",
+                payload={},
+            )
+        )
+
+
+@router.get("/cookie-consents")
+async def cookie_register(
+    session: SessionDependency, _admin: Owner, page: Page = 1, page_size: PageSize = 50
+) -> dict[str, Any]:
+    total = int(await session.scalar(select(func.count()).select_from(CookieConsent)) or 0)
+    rows = (
+        await session.scalars(
+            select(CookieConsent)
+            .order_by(CookieConsent.created_at.desc(), CookieConsent.id)
+            .limit(page_size)
+            .offset((page - 1) * page_size)
+        )
+    ).all()
+    return {
+        "total": total,
+        "items": [
+            {
+                "subject_id": str(r.subject_id),
+                "policy_version": r.policy_version,
+                "analytics": r.analytics,
+                "marketing": r.marketing,
+                "created_at": r.created_at.isoformat(),
+            }
+            for r in rows
+        ],
+    }
+
+
+@router.get("/audit")
+async def audit_log_view(
+    session: SessionDependency,
+    _admin: Owner,
+    entity_type: Annotated[str | None, Query(max_length=100)] = None,
+    action: Annotated[str | None, Query(max_length=100)] = None,
+    page: Page = 1,
+    page_size: PageSize = 50,
+) -> dict[str, Any]:
+    statement = select(AuditLog)
+    if entity_type:
+        statement = statement.where(AuditLog.entity_type == entity_type)
+    if action:
+        statement = statement.where(AuditLog.action.like(f"{action}%"))
+    total = int(await session.scalar(select(func.count()).select_from(statement.subquery())) or 0)
+    rows = (
+        await session.scalars(
+            statement.order_by(AuditLog.created_at.desc(), AuditLog.id)
+            .limit(page_size)
+            .offset((page - 1) * page_size)
+        )
+    ).all()
+    return {
+        "total": total,
+        "items": [
+            {
+                "at": r.created_at.isoformat(),
+                "actor_type": r.actor_type.value,
+                "actor_id": str(r.actor_id) if r.actor_id else None,
+                "entity_type": r.entity_type,
+                "entity_id": str(r.entity_id),
+                "action": r.action,
+                "payload": r.payload,
+            }
+            for r in rows
+        ],
+    }

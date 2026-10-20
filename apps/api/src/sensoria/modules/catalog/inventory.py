@@ -326,6 +326,14 @@ async def record_paid_order_inventory(
                 )
                 session.add(conflict)
                 await session.flush()
+                from sensoria.modules.ops.alerts import describe, notify_owner
+
+                await notify_owner(
+                    session,
+                    key=f"stock-conflict:{conflict.id}",
+                    title="Konflikt stanu magazynowego po płatności",
+                    lines=describe(zamowienie=str(order_id), pozycja=str(item.id)),
+                )
                 session.add(
                     AuditLog(
                         actor_type=ActorType.SYSTEM,

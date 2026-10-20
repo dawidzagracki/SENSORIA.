@@ -178,6 +178,35 @@ def voucher_expiry_reminder(v: dict[str, Any]) -> Rendered:
     return subject, layout(subject, body), text
 
 
+def ops_alert(v: dict[str, Any]) -> Rendered:
+    _require(v, "title", "lines")
+    subject = f"[SENSORIA] {v['title']}"
+    items = "".join(f"<li>{_e(line)}</li>" for line in v["lines"])
+    body = f"<ul>{items}</ul>" + (_button(v["link"], "Otwórz panel") if v.get("link") else "")
+    text = f"{v['title']}\n" + "\n".join(f"- {line}" for line in v["lines"])
+    if v.get("link"):
+        text += f"\n{v['link']}"
+    return subject, layout(v["title"], body), text
+
+
+def support_confirmation(v: dict[str, Any]) -> Rendered:
+    _require(v, "case_number", "kind_label", "summary")
+    subject = f"Przyjęliśmy zgłoszenie {v['case_number']}"
+    body = (
+        f"<p>Twoje zgłoszenie ({_e(v['kind_label'])}) zostało zapisane pod numerem "
+        f"<strong>{_e(v['case_number'])}</strong>.</p>"
+        f'<blockquote style="border-left:3px solid {ACCENT};margin:16px 0;padding-left:14px;'
+        f'color:{MUTED}">{_e(v["summary"])}</blockquote>'
+        "<p>Odpowiemy tak szybko, jak to możliwe — w sprawie reklamacji najpóźniej w ciągu "
+        "14 dni.</p>"
+    )
+    text = (
+        f"Zgłoszenie {v['case_number']} ({v['kind_label']}) zostało zapisane.\n{v['summary']}\n"
+        "W sprawie reklamacji odpowiemy najpóźniej w ciągu 14 dni."
+    )
+    return subject, layout(subject, body), text
+
+
 def review_request(v: dict[str, Any]) -> Rendered:
     _require(v, "product_name", "review_url", "unsubscribe_url")
     subject = "Jak oceniasz swój zakup?"
@@ -216,6 +245,8 @@ TEMPLATES: dict[str, Callable[[dict[str, Any]], Rendered]] = {
     "pickup_ready": pickup_ready,
     "voucher_expiry_reminder": voucher_expiry_reminder,
     "review_request": review_request,
+    "ops_alert": ops_alert,
+    "support_confirmation": support_confirmation,
     "login_link": _link_mail(
         "Zaloguj się do SENSORIA",
         "Kliknij, aby zalogować się. Link jest jednorazowy i ważny 15 minut.",

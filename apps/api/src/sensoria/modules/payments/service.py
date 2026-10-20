@@ -17,6 +17,7 @@ from sensoria.modules.documents.service import issue_after_payment
 from sensoria.modules.library.models import Entitlement
 from sensoria.modules.library.service import grant_entitlements_for_paid_order
 from sensoria.modules.mail.outbox import enqueue_mail
+from sensoria.modules.ops.alerts import describe, notify_owner
 from sensoria.modules.orders.models import Order, OrderItem
 from sensoria.modules.orders.service import record_paid_discount_use
 from sensoria.modules.orders.shipments import mark_fulfillment_ready_after_payment
@@ -261,6 +262,16 @@ async def process_event(session: AsyncSession, event: dict[str, Any]) -> str:
                         payload={"order_id": str(order.id)},
                     )
                 )
+                await notify_owner(
+                    session,
+                    key=f"amount-mismatch:{payment.id}",
+                    title="Niezgodna kwota płatności",
+                    lines=describe(
+                        zamowienie=order.public_number,
+                        oczekiwano_gr=order.amount_due_grosz,
+                        otrzymano_gr=obj.get("amount_total"),
+                    ),
+                )
                 ledger.outcome = "amount_mismatch"
                 return ledger.outcome
             await _confirm_paid(session, order, payment)
@@ -278,6 +289,14 @@ async def process_event(session: AsyncSession, event: dict[str, Any]) -> str:
                     action=f"payment.{payment.status}",
                     payload={"order_id": str(order.id), "attempt": payment.attempt},
                 )
+            )
+            await notify_owner(
+                session,
+                key=f"payment-{payment.status}:{payment.id}",
+                title="Nieudana płatność"
+                if payment.status == "failed"
+                else "Wygasła sesja płatności",
+                lines=describe(zamowienie=order.public_number, proba=payment.attempt),
             )
             if order.status == "pending_payment":
                 await enqueue_mail(

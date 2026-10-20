@@ -43,8 +43,11 @@ async def test_review_lifecycle_with_moderation(
     slug = None
     async with factory() as session:
         from sensoria.modules.catalog.models import Product
+        from sensoria.modules.orders.models import OrderItem
 
-        slug = await session.scalar(select(Product.slug))
+        slug = await session.scalar(
+            select(Product.slug).join(OrderItem, OrderItem.product_id == Product.id)
+        )
     assert slug
 
     assert (await client.get(f"/reviews/eligible?order_id={order_id}&order_token={token}")).json()[
