@@ -58,6 +58,7 @@ export function CookieConsent() {
   const [analytics, setAnalytics] = useState(false);
   const [marketing, setMarketing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = readChoice(document.cookie);
@@ -76,6 +77,8 @@ export function CookieConsent() {
     async (next: { analytics: boolean; marketing: boolean }) => {
       setSaving(true);
       let subject = choice?.subject ?? null;
+      let recordedOk = true;
+      setNotice(null);
       try {
         // The register is evidence of consent; a failed write must not block the visitor.
         const recorded = await apiJson<{ subject_id: string }>(
@@ -91,14 +94,18 @@ export function CookieConsent() {
         );
         subject = recorded.subject_id;
       } catch {
-        /* keep the local choice */
+        recordedOk = false;
+        // Keep the local choice, but tell the visitor the register was not reached.
+        setNotice(
+          "Wybór zapisaliśmy w przeglądarce, ale nie udało się go zapisać w rejestrze zgód. Spróbuj ponownie później.",
+        );
       }
       const saved: CookieChoice = { v: POLICY_VERSION, subject, ...next };
       writeChoice(saved);
       setChoice(saved);
       setAnalytics(next.analytics);
       setMarketing(next.marketing);
-      setSettingsOpen(false);
+      if (recordedOk) setSettingsOpen(false);
       setSaving(false);
     },
     [choice],
@@ -121,8 +128,9 @@ export function CookieConsent() {
                 Pliki cookies
               </h2>
               <p className="mt-1 text-body-small text-ink-muted">
-                Używamy niezbędnych plików cookies (koszyk, logowanie). Za Twoją
-                zgodą możemy włączyć dodatkowe — analityczne i marketingowe.{" "}
+                Używamy niezbędnych plików cookies (koszyk, logowanie). Narzędzi
+                analitycznych ani marketingowych obecnie nie uruchamiamy; jeśli
+                to się zmieni, zrobimy to tylko za Twoją zgodą.{" "}
                 <a className="underline" href="/polityka-cookies">
                   Polityka cookies
                 </a>
@@ -160,13 +168,13 @@ export function CookieConsent() {
             koszyk ani logowanie.
           </p>
           <Checkbox
-            label="Analityczne — pomagają nam zrozumieć, jak korzystasz ze sklepu."
+            label="Analityczne — obecnie nieużywane; zapiszemy Twój wybór na przyszłość."
             name="cookies-analytics"
             checked={analytics}
             onChange={(event) => setAnalytics(event.target.checked)}
           />
           <Checkbox
-            label="Marketingowe — pozwalają dopasować reklamy."
+            label="Marketingowe — obecnie nieużywane; zapiszemy Twój wybór na przyszłość."
             name="cookies-marketing"
             checked={marketing}
             onChange={(event) => setMarketing(event.target.checked)}
@@ -174,12 +182,24 @@ export function CookieConsent() {
           <p className="text-caption text-ink-muted">
             Wybór możesz zmienić w każdej chwili w stopce strony.
           </p>
+          {notice ? (
+            <p className="text-body-small text-danger" role="alert">
+              {notice}
+            </p>
+          ) : null}
           <div className="flex flex-wrap gap-3">
             <Button
               loading={saving}
               onClick={() => save({ analytics, marketing })}
             >
               Zapisz wybór
+            </Button>
+            <Button
+              variant="secondary"
+              loading={saving}
+              onClick={() => save({ analytics: false, marketing: false })}
+            >
+              Odrzuć dodatkowe
             </Button>
           </div>
         </div>

@@ -1,8 +1,7 @@
 "use client";
 
 import { Button } from "../ui/button";
-
-const OPEN_EVENT = "sensoria:open-cookie-settings";
+import { OPEN_EVENT } from "../cookies/cookie-consent";
 
 /** Footer entry point that reopens the cookie settings dialog. */
 export function CookiePreferencesAction({

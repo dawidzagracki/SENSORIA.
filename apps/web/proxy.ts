@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Per-request CSP with a nonce. Next.js reads the nonce from the request's CSP header and stamps
  * it on its own inline bootstrap scripts, so no `unsafe-inline` is needed for scripts.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const nonce = btoa(crypto.randomUUID());
   const development = process.env.NODE_ENV === "development";
   let apiOrigin = "";
