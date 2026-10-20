@@ -3,7 +3,8 @@
 	https_port 8443
 }
 
-http://localhost {
+# Any Host is accepted in development (localhost, 127.0.0.1, container names, LAN IPs).
+:8080 {
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.config import get_settings
 from sensoria.database import get_session
+from sensoria.shared.rate_limit import enforce_rate_limit
 
 from .schemas import OrderStatusResponse, PaymentSessionResponse
 from .service import order_status_view, process_event, start_payment
@@ -22,9 +23,11 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 @router.post("/orders/{order_id}/session", response_model=PaymentSessionResponse)
 async def create_payment_session(
     order_id: UUID,
+    request: Request,
     session: SessionDependency,
     token: str = Query(min_length=16, max_length=128),
 ) -> PaymentSessionResponse:
+    await enforce_rate_limit(session, request, scope="payment_session", limit=30, window_seconds=60)
     settings = get_settings()
     site_url = settings.SITE_URL or "http://localhost"
     payment = await start_payment(

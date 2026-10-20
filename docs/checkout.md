@@ -17,8 +17,8 @@ Frontend `/zamowienie` pobiera koszyk i wyłącznie publiczne, wersjonowane teks
 - Dla firmy backend weryfikuje sumę kontrolną polskiego NIP. Dla zakupów cyfrowych nie jest wymagany adres wysyłki.
 - `DIGITAL` i `AUDIOBOOK` wymagają zgody na natychmiastowe wydanie. Vouchery nie są przez to klasyfikowane jako treść cyfrowa. Tryb wydania po 14 dniach jest jawnie odrzucony, ponieważ kolejka wydania odroczonego nie istnieje.
 - Zgody regulaminowej/digitalnej nie ustawia się domyślnie. API obecnie nie posiada niezależnego pola „akceptacja polityki prywatności”; tekst wersjonowanej zgody wymaganej obejmuje oba dokumenty.
-- Zamówienie zapisuje wybraną metodę BLIK/karta/portfel, ale Stripe nie jest podłączony. Endpoint nie tworzy URL płatności ani nie zgłasza płatności jako udanej. Odpowiedź jawnie zwraca `payment_integration=not_configured` oraz `payment_url=null`. Włączenie produkcyjnego zakupu wymaga etapu [32].
-- Nie ma jeszcze logowania klienta, potwierdzenia e-mail, wyboru punktu [30], faktury/dokumentu [36] ani odroczonego wydania. Rezerwacja stanu nie zmniejsza fizycznego stocku; jej wygaśnięcie i zwolnienie obsługuje scheduler API.
+- Zamówienie zapisuje wybraną metodę BLIK/karta/portfel. Odpowiedź zawiera `payment_integration` (`stripe` albo `not_configured`, gdy brak kluczy `STRIPE_*`) oraz `access_token` — przy ponowieniu z tym samym kluczem token jest wyliczany ponownie z `SECRET_KEY`, nie jest zapisywany. Płatność startuje osobnym `POST /payments/orders/{id}/session?token=…`; zamówienie staje się opłacone wyłącznie po podpisanym webhooku Stripe.
+- Odbiór w gabinecie (`pickup_in_person`) jest bezpłatny i nie wymaga adresu ani punktu. Odroczone wydanie treści cyfrowej po 14 dniach nie istnieje — taki tryb jest odrzucany. Rezerwacja stanu nie zmniejsza fizycznego stocku; jej wygaśnięcie i zwolnienie obsługuje scheduler API, a stan jest rozliczany przy potwierdzonej płatności.
 
 ## Weryfikacja
 

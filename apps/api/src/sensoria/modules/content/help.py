@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.database import get_session
 from sensoria.shared.app_settings import AppSetting
+from sensoria.shared.rate_limit import enforce_rate_limit
 
 from .models import CookieConsent, FaqEntry
 
@@ -79,6 +80,7 @@ async def record_cookie_consent(
 ) -> dict[str, Any]:
     from sensoria.modules.accounts.privacy import hashed_client_ip
 
+    await enforce_rate_limit(session, request, scope="cookie_consent", limit=30, window_seconds=60)
     subject = payload.subject_id or uuid4()
     row = CookieConsent(
         subject_id=subject,

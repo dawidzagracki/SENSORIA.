@@ -289,7 +289,8 @@ test("menu zwalnia fokus i przywraca go po Escape; redukcja ruchu wyłącza anim
   await expect(menuButton).toBeFocused();
 
   await menuButton.click();
-  await page.setViewportSize({ width: 768, height: 900 });
+  // The menu closes at the desktop breakpoint (lg = 1024 px), not at tablet width.
+  await page.setViewportSize({ width: 1280, height: 900 });
   await expect(dialog).toBeHidden();
 
   await page.setViewportSize({ width: 360, height: 800 });

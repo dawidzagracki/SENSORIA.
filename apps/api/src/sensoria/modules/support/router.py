@@ -15,6 +15,7 @@ from sensoria.modules.accounts.auth import require_customer_id
 from sensoria.modules.orders.models import Order
 from sensoria.modules.payments.tokens import verify_order_access_token
 from sensoria.shared.errors import DomainError
+from sensoria.shared.rate_limit import enforce_rate_limit
 
 from . import service
 from .models import SupportCase
@@ -85,6 +86,7 @@ async def order_support(
 async def create_case(
     payload: CaseInput, request: Request, session: SessionDependency, order_token: OrderToken = None
 ) -> dict[str, Any]:
+    await enforce_rate_limit(session, request, scope="support_case", limit=10, window_seconds=3600)
     order = await _order(session, request, payload.order_id, order_token)
     case = await service.create_case(
         session,

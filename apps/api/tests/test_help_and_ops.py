@@ -123,3 +123,20 @@ async def test_security_headers_deep_health_and_audit_view(
     assert audit["total"] >= 2 and all(
         i["action"].startswith("admin.login") for i in audit["items"]
     )
+
+
+@pytest.mark.asyncio
+async def test_unauthenticated_write_endpoints_are_rate_limited(
+    cart_environment: CartEnvironment,
+) -> None:
+    client, _factory = cart_environment
+    statuses = [
+        (
+            await client.post("/consents/cookies", json={"analytics": False, "marketing": False})
+        ).status_code
+        for _ in range(32)
+    ]
+    assert statuses[:30] == [201] * 30
+    assert statuses[30:] == [429, 429]
+    blocked = await client.post("/consents/cookies", json={"analytics": False, "marketing": False})
+    assert blocked.headers["retry-after"].isdigit()

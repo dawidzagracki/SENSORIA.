@@ -18,6 +18,7 @@ from sensoria.modules.catalog.types import ProductStatus
 from sensoria.modules.orders.models import Order
 from sensoria.modules.payments.tokens import verify_order_access_token
 from sensoria.shared.errors import DomainError
+from sensoria.shared.rate_limit import enforce_rate_limit
 
 from . import service
 from .models import Review
@@ -119,6 +120,7 @@ async def create_review(
     session: SessionDependency,
     order_token: OrderToken = None,
 ) -> dict[str, Any]:
+    await enforce_rate_limit(session, request, scope="review_submit", limit=10, window_seconds=3600)
     order, customer = await _authorize(session, request, payload.order_id, order_token)
     review = await service.submit_review(
         session,

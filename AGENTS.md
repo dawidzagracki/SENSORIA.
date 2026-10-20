@@ -15,8 +15,11 @@ Nie zmieniaj głównych wersji stosu bez polecenia.
 
 - `apps/api/src/sensoria/` — pakiet API w układzie src: konfiguracja, aplikacja, baza, obsługa błędów i moduły.
 - `apps/api/src/sensoria/modules/catalog/` — produkty, kategorie, odbiorcy, SEO, publiczne filtrowanie oraz PostgreSQL FTS.
-- `apps/api/src/sensoria/modules/orders/` — trwały koszyk gościa oraz punkt integracji scalania koszyka po logowaniu; zamówienia pozostają poza zakresem.
-- `apps/api/src/sensoria/modules/{payments,vouchers,accounts,admin}/` — szkielety bez implementacji płatności, voucherów, klientów, logowania ani administracji.
+- `apps/api/src/sensoria/modules/orders/` — trwały koszyk gościa, scalanie koszyka po logowaniu, kalkulator VAT, dostawa (paczkomat, kurier, odbiór w gabinecie), checkout oraz wysyłki.
+- `apps/api/src/sensoria/modules/payments/` — Stripe Checkout, webhook (jedyne miejsce oznaczające zamówienie jako opłacone), token dostępu do zamówienia gościa.
+- `apps/api/src/sensoria/modules/library/` — uprawnienia do treści cyfrowych, linki pobrania, znakowanie PDF, czytnik i odtwarzacz; `documents/` — paragony i faktury; `mail/` — outbox, szablony, SMTP, worker; `reviews/`, `support/`, `content/`, `ops/` — opinie, zgłoszenia, strony/FAQ/cookies, alerty.
+- `apps/api/src/sensoria/modules/{vouchers,accounts,admin}/` — vouchery (wystawianie, PDF z QR, rejestr), konta klientek, konta i trasy panelu administracyjnego (`admin/routes_*.py`).
+- `scripts/` — kopie zapasowe, odtwarzanie, wdrożenie i monitoring (opis w `docs/operacje.md` i `docs/wdrozenie-vps.md`).
 - `apps/api/src/sensoria/shared/` — elementy wspólne, m.in. błędy domenowe i schematy odpowiedzi.
 - `apps/api/alembic/` — środowisko migracji i rewizje; nie zmieniaj wydanych rewizji.
 - `apps/api/tests/` — testy backendu. Testy integracyjne używają oddzielnego PostgreSQL wskazanego przez `TEST_DATABASE_URL`.
@@ -26,7 +29,7 @@ Nie zmieniaj głównych wersji stosu bez polecenia.
 - `apps/web/app/(shop)/produkt/[slug]/` i `kategoria/[slug]/` — minimalne serwerowe widoki danych opublikowanego produktu i kategorii; `app/sitemap.ts` oraz `app/robots.ts` generują dynamiczne dokumenty SEO.
 - `apps/web/components/layout/` — wspólna rama sklepu, mapa linków, pasek informacyjny oraz adaptery licznika koszyka i zgód.
 - `apps/web/app/(shop)/` — publiczne trasy opakowane ramą sklepu; route group nie zmienia URL-i.
-- `apps/web/app/(isolated)/` — strony bez nagłówka i stopki sklepu, w tym `/dev/tokeny`; przeznaczone też dla przyszłych obszarów admina, czytnika i odtwarzacza.
+- `apps/web/app/(isolated)/` — strony bez nagłówka i stopki sklepu: `/dev/tokeny`, panel `/admin/*`, czytnik `/konto/czytnik/{id}` i odtwarzacz `/konto/odtwarzacz/{id}`.
 - `docs/` — specyfikacja i dostarczone makiety; nie zmieniaj ich zawartości.
 - `docker/` — Dockerfile API, web i Caddy oraz konfiguracje Caddy dla produkcji i lokalnego HTTP.
 - `docker-compose.yml` — cztery usługi, wspólna sieć, healthchecki i nazwane wolumeny.
@@ -268,4 +271,6 @@ Zmienne środowiskowe rozróżniaj według źródła: aplikacyjne i Compose są 
 - Nie nadpisuj zmian użytkownika.
 - Nie wykonuj zmian niezwiązanych z zadaniem ani szerokiego refaktoringu.
 - Nie zmieniaj stosu technologicznego ani architektury bez polecenia.
-- Nie implementuj funkcji sklepu, integracji płatności ani autoryzacji. Zmiany infrastruktury Docker ogranicz do wymagań zleconego etapu; nie dodawaj CI bez polecenia.
+- Zakres funkcji sklepu wyznaczają etapy [01]–[90] z Jiry (projekt SEN); nie dodawaj funkcji spoza zleconego etapu. Zmiany infrastruktury Docker ogranicz do wymagań zleconego etapu; nie dodawaj CI bez polecenia.
+- Płatność potwierdza wyłącznie podpisany webhook (`payments/service.py`); nigdy nie oznaczaj zamówienia jako opłaconego na podstawie żądania klienta.
+- Pliki płatnych materiałów nie mogą trafić do katalogu publicznego ani być zwracane bez uprawnienia i krótkotrwałego linku; treści redakcyjne są danymi (bloki), nie HTML.

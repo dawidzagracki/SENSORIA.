@@ -209,6 +209,7 @@ test("checkout cyfrowy: responsywność, axe, zgody i payload bez dostawy", asyn
         amount_due_grosz: 1000,
         payment_integration: "not_configured",
         payment_url: null,
+        access_token: "fixture-token-0123456789abcdef",
         message: "Fixture — operator płatności niepodłączony.",
       },
     });
@@ -247,9 +248,10 @@ test("checkout cyfrowy: responsywność, axe, zgody i payload bez dostawy", asyn
   await page.getByRole("checkbox", { name: /Akceptuję regulamin/ }).check();
   await page.getByRole("checkbox", { name: /Żądam natychmiastowego/ }).check();
   await page.getByRole("button", { name: "Zamawiam i płacę" }).click();
-  await expect(
-    page.getByText("Numer zamówienia: order-fixture."),
-  ).toBeVisible();
+  // After checkout the buyer lands on the confirmation page (payment starts there).
+  await page.waitForURL(
+    /\/zamowienie\/potwierdzenie\?order=order-fixture&token=fixture-token/,
+  );
   expect(checkoutPayload).not.toBeNull();
   expect(checkoutPayload).not.toHaveProperty("delivery_method");
   expect(checkoutPayload).not.toHaveProperty("shipping_address");

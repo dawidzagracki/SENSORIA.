@@ -48,6 +48,7 @@ REVIEWS_REVISION = "f68000000001"
 SUPPORT_CASES_REVISION = "f69000000001"
 HELP_COOKIES_REVISION = "f70000000001"
 OFFICE_PICKUP_REVISION = "f71000000001"
+RATE_LIMIT_REVISION = "f72000000001"
 
 
 def _alembic_config() -> Config:
@@ -199,6 +200,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         "support_cases",
         "faq_entries",
         "cookie_consents",
+        "rate_limit_windows",
     }
     assert set(initial_state[2]).issubset(expected_tables), (
         "TEST_DATABASE_URL musi wskazywać dedykowaną bazę testową bez obcych tabel."
@@ -243,6 +245,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         SUPPORT_CASES_REVISION,
         HELP_COOKIES_REVISION,
         OFFICE_PICKUP_REVISION,
+        RATE_LIMIT_REVISION,
     )
 
     if initial_state[1] in (FOUNDATION_REVISION, PRODUCT_REVISION, TAXONOMY_REVISION):
@@ -312,6 +315,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         SUPPORT_CASES_REVISION,
         HELP_COOKIES_REVISION,
         OFFICE_PICKUP_REVISION,
+        RATE_LIMIT_REVISION,
     ):
         assert not asyncio.run(_transactional_tables_have_rows(test_database_url)), (
             "Test downgrade wymaga pustych tabel zamówień/voucherów; nie może usuwać danych."
@@ -327,7 +331,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         command.upgrade(config, "head")
         assert asyncio.run(_migration_state(test_database_url))[:2] == (
             True,
-            OFFICE_PICKUP_REVISION,
+            RATE_LIMIT_REVISION,
         )
         assert {
             "ix_products_status_price",
@@ -489,7 +493,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         reupgraded = asyncio.run(_migration_state(test_database_url))
         assert reupgraded[:2] == (
             True,
-            OFFICE_PICKUP_REVISION,
+            RATE_LIMIT_REVISION,
         )
         assert {
             "carts",

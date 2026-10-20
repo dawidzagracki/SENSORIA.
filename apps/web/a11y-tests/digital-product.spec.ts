@@ -12,7 +12,7 @@ test("e-book SSR uses real fixture fields, sale history, and safe product JSON-L
     page.locator("main").getByText("PDF · 148 stron").first(),
   ).toBeVisible();
   await expect(
-    page.getByText("Najniższa cena z 30 dni przed obniżką: 89,00 zł"),
+    page.getByText("Najniższa cena z 30 dni przed obniżką: 89,00 zł").first(),
   ).toBeVisible();
   await expect(page.getByText("−20%", { exact: true })).toBeVisible();
   await expect(

@@ -7,7 +7,6 @@ import {
   productTypeLabel,
 } from "@/components/products/product-detail-shared";
 import { ProductPurchaseActions } from "@/components/products/product-purchase-actions";
-import { formatMoney } from "@/lib/format-money";
 import { PdfSamplePreview } from "@/components/products/pdf-sample-preview";
 import type { CatalogProductDetail } from "@/types/catalog";
 
@@ -147,15 +146,6 @@ export function DigitalProductView({ product }: Props) {
               primaryLabel="Kup i pobierz teraz"
               vatRate={product.vat_rate}
             />
-            {isDiscounted ? (
-              <p className="text-body-small text-ink-muted">
-                Najniższa cena z 30 dni przed obniżką:{" "}
-                {digital?.lowest_price_before_discount !== null &&
-                digital?.lowest_price_before_discount !== undefined
-                  ? formatMoney(digital.lowest_price_before_discount)
-                  : "nie może być ustalona na podstawie dostępnej historii"}
-              </p>
-            ) : null}
           </section>
           <ul className="space-y-3 border-t border-border pt-4 text-body-small text-ink-muted">
             <li>
