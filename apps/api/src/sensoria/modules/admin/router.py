@@ -11,6 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sensoria.database import get_session
 from sensoria.modules.admin.auth import AdminPrincipal, require_admin_principal
 from sensoria.modules.admin.routes_auth import router as auth_router
+from sensoria.modules.admin.routes_customers import router as customers_router
+from sensoria.modules.admin.routes_dashboard import router as dashboard_router
+from sensoria.modules.admin.routes_orders import router as orders_router
+from sensoria.modules.admin.routes_vouchers import router as vouchers_router
 from sensoria.modules.orders.shipments import (
     build_tracking_url,
     correct_shipment,
@@ -25,6 +29,9 @@ from sensoria.modules.orders.shipments import (
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 router.include_router(auth_router)
+router.include_router(dashboard_router)
+router.include_router(customers_router)
+router.include_router(vouchers_router)
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 AdminDependency = Annotated[AdminPrincipal, Depends(require_admin_principal)]
 
@@ -146,3 +153,7 @@ async def picked_up(
 ) -> FulfillmentResponse:
     order = await mark_picked_up(session, order_id=order_id, actor_id=admin.id)
     return FulfillmentResponse(order_id=order_id, fulfillment_status=order.fulfillment_status)
+
+
+# Included last so static paths such as /orders/shipping-dashboard win over /orders/{order_id}.
+router.include_router(orders_router)

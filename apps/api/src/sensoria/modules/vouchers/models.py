@@ -242,3 +242,31 @@ class VoucherReminderRun(UUIDMixin, Base):
     error_count: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     limit_reached: Mapped[bool] = mapped_column(nullable=False, server_default="false")
     has_more: Mapped[bool] = mapped_column(nullable=False, server_default="false")
+
+
+class VoucherEvent(UUIDMixin, Base):
+    """Append-only voucher ledger: redemption, reversal, cancellation, extension."""
+
+    __tablename__ = "voucher_events"
+    __table_args__ = (
+        CheckConstraint(
+            "action IN ('redeemed', 'redemption_reverted', 'cancelled', 'extended')",
+            name="valid_action",
+        ),
+        Index("ix_voucher_events_voucher_created", "voucher_id", "created_at"),
+        Index("ix_voucher_events_created", "created_at"),
+    )
+
+    voucher_id: Mapped[UUID] = mapped_column(
+        ForeignKey("vouchers.id", ondelete="RESTRICT"), nullable=False
+    )
+    action: Mapped[str] = mapped_column(String(24), nullable=False)
+    admin_id: Mapped[UUID | None] = mapped_column(ForeignKey("admin_users.id", ondelete="SET NULL"))
+    performed_by: Mapped[str | None] = mapped_column(String(200))
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    previous_valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    new_valid_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    note: Mapped[str | None] = mapped_column(String(1000))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )

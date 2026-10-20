@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, func
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from sensoria.database import Base, UUIDMixin
@@ -54,3 +54,22 @@ class AdminSession(UUIDMixin, Base):
     absolute_expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     ip_hash: Mapped[str | None] = mapped_column(String(64))
+
+
+class OrderNote(UUIDMixin, Base):
+    """Internal note on an order; never shown to the buyer."""
+
+    __tablename__ = "order_notes"
+    __table_args__ = (
+        CheckConstraint("length(btrim(body)) > 0", name="nonempty_body"),
+        Index("ix_order_notes_order_created", "order_id", "created_at"),
+    )
+
+    order_id: Mapped[UUID] = mapped_column(
+        ForeignKey("orders.id", ondelete="CASCADE"), nullable=False
+    )
+    admin_id: Mapped[UUID | None] = mapped_column(ForeignKey("admin_users.id", ondelete="SET NULL"))
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
