@@ -49,7 +49,7 @@ class StorageService:
         return directory
 
     def _category_directory(self, category: str, year: int) -> Path:
-        if category not in {"products", "watermarked"}:
+        if category not in {"products", "watermarked", "documents"}:
             raise ValueError("Nieobsługiwana kategoria magazynu.")
         if not 2000 <= year <= 9999:
             raise ValueError("Nieprawidłowy rok magazynu.")
@@ -115,7 +115,7 @@ class StorageService:
     def resolve_file(self, stored_file: StoredFile) -> Path:
         """Map validated metadata to a private path; reject symlinks and traversal."""
         if (
-            stored_file.category not in {"products", "watermarked"}
+            stored_file.category not in {"products", "watermarked", "documents"}
             or len(stored_file.stored_name) != 64
             or any(c not in "0123456789abcdef" for c in stored_file.stored_name)
         ):

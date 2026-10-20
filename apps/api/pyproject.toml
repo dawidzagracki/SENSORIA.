@@ -38,7 +38,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-sensoria = ["py.typed"]
+sensoria = ["py.typed", "assets/fonts/*"]
 
 [tool.mypy]
 mypy_path = ["src"]
