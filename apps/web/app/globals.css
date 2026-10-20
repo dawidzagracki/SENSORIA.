@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-ink: theme("colors.ink");
+}
+
+body {
+  @apply m-0 bg-surface font-body text-body text-ink;
+  overflow-wrap: anywhere;
+}
+
+.page-shell {
+  @apply mx-auto max-w-page-shell px-4 py-8;
+}
+
+.uppercase-label {
+  @apply font-interface text-label font-bold uppercase tracking-caps;
+}
+
+.skip-link {
+  @apply fixed left-4 top-4 z-50 min-h-touch items-center rounded-pill bg-accent-action px-4 py-3 font-interface text-label font-bold text-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-surface;
+  display: inline-flex;
+  transform: translateY(calc(-100% - theme("spacing.4")));
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

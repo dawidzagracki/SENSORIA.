@@ -1,0 +1,108 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: docker/postgres.Dockerfile
+    user: postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?Set POSTGRES_DB in the root .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+    networks:
+      - sensoria
+
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+      target: runtime
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?Set POSTGRES_USER in the root .env file}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the root .env file}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in the root .env file}
+      ENVIRONMENT: production
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in the root .env file}
+      TEST_DATABASE_URL: ""
+      TRUSTED_PROXY_CIDRS: ${TRUSTED_PROXY_CIDRS:-172.16.0.0/12}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    networks:
+      - sensoria
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+      target: runtime
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL in the root .env file}
+    environment:
+      API_URL: http://api:8000
+      ENVIRONMENT: production
+      SITE_URL: ${SITE_URL:?Set SITE_URL in the root .env file}
+      SITE_OG_IMAGE: ${SITE_OG_IMAGE:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - sensoria
+
+  caddy:
+    build:
+      context: .
+      dockerfile: docker/caddy.Dockerfile
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in the root .env file}
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+    ports:
+      - "${HTTP_PORT:-80}:8080"
+      - "${HTTPS_PORT:-443}:8443"
+      - "${HTTPS_PORT:-443}:8443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - sensoria
+
+volumes:
+  postgres_data:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_postgres_data
+  uploads_data:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_uploads_data
+  caddy_data:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_caddy_data
+  caddy_config:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_caddy_config
+  web_node_modules:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_web_node_modules
+  web_next_cache:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_web_next_cache
+
+networks:
+  sensoria:
+    name: ${COMPOSE_PROJECT_NAME:-sensoria}_network

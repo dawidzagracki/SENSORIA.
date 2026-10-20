@@ -1,0 +1,57 @@
+services:
+  db:
+    ports:
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
+
+  api:
+    build:
+      target: development
+    command:
+      - sensoria.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --log-level
+      - debug
+      - --no-access-log
+    environment:
+      ENVIRONMENT: development
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      - ./apps/api/src:/app/src
+      - ./apps/api/alembic:/app/alembic
+      - ./apps/api/alembic.ini:/app/alembic.ini:ro
+
+  web:
+    build:
+      target: development
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL in the root .env file}
+    command: ["npm", "run", "dev", "--", "--hostname", "0.0.0.0"]
+    environment:
+      API_URL: http://api:8000
+      ENVIRONMENT: development
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?Set NEXT_PUBLIC_API_URL in the root .env file}
+      SITE_URL: ${SITE_URL:?Set SITE_URL in the root .env file}
+      SITE_OG_IMAGE: ${SITE_OG_IMAGE:-}
+      WATCHPACK_POLLING: "true"
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    volumes:
+      - ./apps/web/app:/app/app
+      - ./apps/web/components:/app/components
+      - ./apps/web/lib:/app/lib
+      - ./apps/web/types:/app/types
+      - ./apps/web/public:/app/public
+      - web_node_modules:/app/node_modules
+      - web_next_cache:/app/.next
+
+  caddy:
+    ports: !override
+      - "127.0.0.1:${CADDY_HTTP_PORT:-80}:8080"
+    volumes:
+      - ./docker/Caddyfile.dev:/etc/caddy/Caddyfile:ro

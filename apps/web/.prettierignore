@@ -1,0 +1,6 @@
+node_modules/
+.next/
+.next-audit/
+package-lock.json
+test-results/
+playwright-report/

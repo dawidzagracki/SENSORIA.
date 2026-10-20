@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      - id: backend-ruff
+        name: Ruff — backend
+        # Alembic revisions are immutable after release; lint maintained API and test code.
+        entry: ruff check apps/api/src/sensoria apps/api/tests
+        language: python
+        additional_dependencies: ["ruff>=0.9,<1"]
+        pass_filenames: false
+        files: \.py$
+      - id: frontend-eslint
+        name: ESLint — frontend
+        entry: npm --prefix apps/web run lint
+        language: system
+        pass_filenames: false
+        files: \.(c|m)?[jt]sx?$

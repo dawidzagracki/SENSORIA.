@@ -1,0 +1,26 @@
+{
+	http_port 8080
+	https_port 8443
+}
+
+http://localhost {
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	handle_path /api/* {
+		reverse_proxy api:8000
+	}
+
+	@private_uploads path /uploads/*
+	handle @private_uploads {
+		respond 404
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}

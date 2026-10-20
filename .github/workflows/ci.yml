@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-bookworm
+        env:
+          POSTGRES_USER: sensoria
+          POSTGRES_PASSWORD: test-only-password
+          POSTGRES_DB: sensoria
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sensoria -d sensoria"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+          --health-start-period 10s
+    env:
+      DATABASE_URL: postgresql+asyncpg://sensoria:test-only-password@127.0.0.1:5432/sensoria
+      TEST_DATABASE_URL: postgresql+asyncpg://sensoria:test-only-password@127.0.0.1:5432/sensoria_test
+      ENVIRONMENT: development
+      SECRET_KEY: test-only-placeholder-not-a-secret
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv and restore dependency cache
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          version: 0.12.23
+          enable-cache: true
+          cache-dependency-glob: apps/api/uv.lock
+
+      - name: Install repeatable Polish PostgreSQL dictionary
+        run: |
+          docker cp docker/prepare-polish-dictionary.py "${{ job.services.postgres.id }}:/tmp/prepare-polish-dictionary.py"
+          docker exec "${{ job.services.postgres.id }}" bash -lc 'apt-get update -qq && apt-get install --no-install-recommends -y hunspell-pl=1:7.5.0-1 python3 && mkdir -p /out'
+          docker exec "${{ job.services.postgres.id }}" python3 /tmp/prepare-polish-dictionary.py
+          docker exec "${{ job.services.postgres.id }}" bash -lc 'cp /out/sensoria_pl.* /out/sensoria_pl_folded.* "$(pg_config --sharedir)/tsearch_data/"'
+
+      - name: Create isolated PostgreSQL test database
+        run: docker exec "${{ job.services.postgres.id }}" psql -U sensoria -d sensoria -c "CREATE DATABASE sensoria_test OWNER sensoria;"
+
+      - name: Install locked backend and development dependencies
+        working-directory: apps/api
+        run: uv sync --frozen --all-groups
+
+      - name: Ruff lint
+        working-directory: apps/api
+        run: uv run --frozen --all-groups ruff check src/sensoria tests
+
+      - name: Ruff format check
+        working-directory: apps/api
+        run: uv run --frozen --all-groups ruff format --check src/sensoria tests
+
+      - name: Mypy strict
+        working-directory: apps/api
+        run: uv run --frozen --all-groups mypy --strict src/sensoria tests
+
+      - name: Pytest with PostgreSQL 16
+        working-directory: apps/api
+        run: uv run --frozen --all-groups pytest
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      API_URL: http://127.0.0.1:8000
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:8000
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 22 and restore npm cache
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install locked frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: ESLint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Prettier check
+        working-directory: apps/web
+        run: npm run format:check
+
+      - name: TypeScript check
+        working-directory: apps/web
+        run: npx tsc --noEmit
+
+      - name: Next.js production build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Install Chromium for accessibility checks
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Axe accessibility and responsive checks
+        working-directory: apps/web
+        env:
+          ENVIRONMENT: development
+          API_URL: http://127.0.0.1:9
+        run: npm run a11y
+
+  docker:
+    name: docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Build PostgreSQL image with Polish dictionary
+        run: docker build --file docker/postgres.Dockerfile --tag sensoria-postgres:ci .
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build production API image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/api.Dockerfile
+          target: runtime
+          push: false
+          tags: sensoria-api:ci
+          cache-from: type=gha,scope=sensoria-api
+          cache-to: type=gha,mode=max,scope=sensoria-api
+
+      - name: Build production web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/web.Dockerfile
+          target: runtime
+          push: false
+          tags: sensoria-web:ci
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://example.invalid/api
+          cache-from: type=gha,scope=sensoria-web
+          cache-to: type=gha,mode=max,scope=sensoria-web

@@ -1,0 +1,1 @@
+"""Sensoria shop applications namespace."""
