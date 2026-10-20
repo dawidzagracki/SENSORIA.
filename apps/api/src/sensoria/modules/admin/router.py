@@ -1,8 +1,4 @@
-"""Protected administrative operation contracts.
-
-All routes currently fail closed because [64] has not supplied an administrator
-principal. The seam can be replaced by the real session/role dependency later.
-"""
+"""Protected administrative operations; every route needs an authenticated administrator."""
 
 from datetime import datetime
 from typing import Annotated
@@ -14,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.database import get_session
 from sensoria.modules.admin.auth import AdminPrincipal, require_admin_principal
+from sensoria.modules.admin.routes_auth import router as auth_router
 from sensoria.modules.orders.shipments import (
     build_tracking_url,
     correct_shipment,
@@ -27,6 +24,7 @@ from sensoria.modules.orders.shipments import (
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+router.include_router(auth_router)
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 AdminDependency = Annotated[AdminPrincipal, Depends(require_admin_principal)]
 

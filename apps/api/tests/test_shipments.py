@@ -100,15 +100,15 @@ def test_tracking_policy_rejects_unsafe_scheme() -> None:
 
 
 @pytest.mark.asyncio
-async def test_admin_shipment_routes_fail_closed_without_admin_identity(
+async def test_admin_shipment_routes_require_authenticated_admin(
     api_client: AsyncClient,
 ) -> None:
     response = await api_client.post(
         "/admin/orders/00000000-0000-0000-0000-000000000001/ship",
         json={"carrier": "inpost", "tracking_number": "001234567890123456789012"},
     )
-    assert response.status_code == 503
-    assert response.json()["error"]["code"] == "ADMIN_AUTH_UNAVAILABLE"
+    assert response.status_code == 401
+    assert response.json()["error"]["code"] == "ADMIN_AUTHENTICATION_REQUIRED"
 
 
 def test_parallel_shipment_attempts_create_one_record_and_notice(test_database_url: str) -> None:
