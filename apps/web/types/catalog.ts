@@ -92,6 +92,8 @@ export type CatalogRelatedProduct = {
   short_description: string | null;
   price: number;
   compare_at_price: number | null;
+  lowest_price_before_discount?: number | null;
+  discount_started_at?: string | null;
   image: PublicImage | null;
   digital: Pick<
     CatalogDigitalDetails,
@@ -110,6 +112,8 @@ export type CatalogProductDetail = {
   description: string | null;
   price: number;
   compare_at_price: number | null;
+  lowest_price_before_discount?: number | null;
+  discount_started_at?: string | null;
   image: PublicImage | null;
   images: PublicImage[];
   categories: PublicCategoryRef[];

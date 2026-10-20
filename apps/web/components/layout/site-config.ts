@@ -11,7 +11,7 @@ export const productCategoryLinks = [
 export const primaryNavigationLinks = [
   ...productCategoryLinks.slice(0, 3),
   productCategoryLinks[3],
-  { label: "O autorce", href: "/pomoc?temat=o-autorce" },
+  { label: "O autorce", href: "/o-autorce" },
 ] as const;
 
 export const footerColumns = [
@@ -38,27 +38,19 @@ export const footerColumns = [
     title: "Pomoc",
     kind: "links",
     items: [
-      {
-        label: "Dostawa i płatności",
-        href: "/pomoc?temat=dostawa-i-platnosci",
-      },
-      {
-        label: "Zwroty i reklamacje",
-        href: "/pomoc?temat=zwroty-i-reklamacje",
-      },
-      { label: "Jak działa voucher", href: "/pomoc?temat=jak-dziala-voucher" },
-      { label: "Kontakt", href: "/pomoc?temat=kontakt" },
+      { label: "Dostawa i płatności", href: "/dostawa-i-platnosci" },
+      { label: "Zwroty i reklamacje", href: "/pomoc/zwroty-i-reklamacje" },
+      { label: "Odstąpienie od umowy", href: "/pomoc/odstapienie" },
+      { label: "Centrum pomocy", href: "/pomoc" },
     ],
   },
   {
     title: "Formalności",
     kind: "legal",
     items: [
-      { label: "Regulamin", href: "/pomoc?temat=regulamin" },
-      {
-        label: "Polityka prywatności",
-        href: "/pomoc?temat=polityka-prywatnosci",
-      },
+      { label: "Regulamin", href: "/regulamin" },
+      { label: "Polityka prywatności", href: "/polityka-prywatnosci" },
+      { label: "Polityka cookies", href: "/polityka-cookies" },
       { label: "Ustawienia cookies", href: null },
     ],
   },

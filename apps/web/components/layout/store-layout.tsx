@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CookieConsent } from "../cookies/cookie-consent";
 import { AnnouncementBar } from "./announcement-bar";
 import { CartCountProvider } from "./cart-count-provider";
 import { readInitialCartSnapshot } from "./cart-adapter";
@@ -15,6 +16,7 @@ export async function StoreLayout({ children }: { children: ReactNode }) {
       <ShopHeader />
       {children}
       <ShopFooter demoEnabled={demoEnabled} />
+      <CookieConsent />
     </CartCountProvider>
   );
 }

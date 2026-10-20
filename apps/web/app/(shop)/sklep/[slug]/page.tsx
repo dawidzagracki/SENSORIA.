@@ -13,6 +13,8 @@ import type { CatalogProductDetail, VoucherVariantKind } from "@/types/catalog";
 import { DigitalProductView } from "@/components/digital/digital-product-view";
 import { BookProductView } from "@/components/products/book-product-view";
 import { AudiobookProductView } from "@/components/products/audiobook-product-view";
+import { ProductReviews } from "@/components/reviews/product-reviews";
+import { aggregateRatingJsonLd, getProductReviews } from "@/lib/reviews-api";
 
 export const dynamic = "force-dynamic";
 
@@ -165,10 +167,12 @@ export default async function VoucherPage({ params, searchParams }: PageProps) {
       product.kind === "BOOK"
         ? (product.book?.available_quantity ?? 0) > 0 && product.is_available
         : product.is_available;
-    const structuredData = buildProductJsonLd(
-      product,
-      available ? "InStock" : "OutOfStock",
-    );
+    const reviews = await getProductReviews(product.slug);
+    const rating = aggregateRatingJsonLd(reviews);
+    const structuredData = {
+      ...buildProductJsonLd(product, available ? "InStock" : "OutOfStock"),
+      ...(rating ? { aggregateRating: rating } : {}),
+    };
     const view =
       product.kind === "DIGITAL" ? (
         <DigitalProductView product={product} />
@@ -180,6 +184,7 @@ export default async function VoucherPage({ params, searchParams }: PageProps) {
     return (
       <>
         {view}
+        <ProductReviews reviews={reviews} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
@@ -203,7 +208,12 @@ export default async function VoucherPage({ params, searchParams }: PageProps) {
     : variants[0]
       ? variantKeys[variants[0].kind]
       : "";
-  const structuredData = buildVoucherJsonLd(product);
+  const voucherReviews = await getProductReviews(product.slug);
+  const voucherRating = aggregateRatingJsonLd(voucherReviews);
+  const structuredData = {
+    ...buildVoucherJsonLd(product),
+    ...(voucherRating ? { aggregateRating: voucherRating } : {}),
+  };
   const safeImages = product.images
     .map((image) => ({ ...image, url: safePublicImageUrl(image.url) }))
     .filter((image): image is typeof image & { url: string } =>
@@ -217,6 +227,7 @@ export default async function VoucherPage({ params, searchParams }: PageProps) {
         product={safeProduct}
         initialVariantKey={initialVariantKey}
       />
+      <ProductReviews reviews={voucherReviews} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}

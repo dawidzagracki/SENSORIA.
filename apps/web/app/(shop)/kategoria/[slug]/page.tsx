@@ -143,6 +143,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
                             ? (product.compare_at_price ?? undefined)
                             : undefined
                         }
+                        lowestPriceInGrosze={null}
                         vatRate={product.vat_rate ?? undefined}
                       />
                     ))}

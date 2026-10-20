@@ -19,7 +19,7 @@ export default function VerifyEmailPage() {
           <p className="text-label font-bold tracking-wide text-accent-action">
             TWOJE KONTO
           </p>
-          <h1 className="mt-3 font-display text-heading text-ink">
+          <h1 className="mt-3 font-display text-subtitle text-ink">
             Potwierdzenie adresu
           </h1>
         </div>

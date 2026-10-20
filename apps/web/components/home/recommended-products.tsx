@@ -55,6 +55,11 @@ export function RecommendedProducts({
             metric={productMetric(product)}
             onAddToCart={() => setNotice(true)}
             previousPriceInGrosze={product.compare_at_price ?? undefined}
+            lowestPriceInGrosze={
+              product.compare_at_price
+                ? (product.lowest_price_before_discount ?? null)
+                : undefined
+            }
             priceInGrosze={product.price}
             title={product.name}
             type={productTypeLabel(product)}

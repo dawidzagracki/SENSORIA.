@@ -136,6 +136,11 @@ export function DigitalProductView({ product }: Props) {
             <ProductPurchaseActions
               available={product.is_available}
               compareAtPrice={isDiscounted ? product.compare_at_price : null}
+              lowestPriceBeforeDiscount={
+                product.lowest_price_before_discount ??
+                product.digital?.lowest_price_before_discount ??
+                null
+              }
               mobileLabel="Kup i pobierz"
               price={product.price}
               productId={product.id}

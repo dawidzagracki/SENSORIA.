@@ -111,6 +111,9 @@ class CatalogListItem(BaseModel):
     short_description: str | None
     price: int
     compare_at_price: int | None
+    # Omnibus: lowest price in the 30 days before the current reduction, when one is advertised.
+    lowest_price_before_discount: int | None = None
+    discount_started_at: datetime | None = None
     image: PublicImage | None
     book: "CatalogBookDetails | None" = None
     audiobook: "CatalogAudiobookDetails | None" = None

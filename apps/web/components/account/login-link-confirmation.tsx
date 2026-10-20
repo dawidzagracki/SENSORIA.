@@ -106,7 +106,7 @@ export function LoginLinkConfirmation({
 
   return (
     <section className="w-full max-w-xl rounded-card border border-border bg-surface p-5 shadow-subtle sm:p-8">
-      <h2 className="font-display text-heading text-ink">
+      <h2 className="font-display text-subtitle text-ink">
         Logowanie odnośnikiem
       </h2>
       {checking ? (

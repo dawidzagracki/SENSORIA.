@@ -18,6 +18,7 @@ export type ProductCardProps = {
   metric: string;
   onAddToCart?: () => void;
   previousPriceInGrosze?: number;
+  lowestPriceInGrosze?: number | null;
   priceInGrosze: number;
   title: string;
   type: ProductType;
@@ -34,6 +35,7 @@ export function ProductCard({
   metric,
   onAddToCart,
   previousPriceInGrosze,
+  lowestPriceInGrosze,
   priceInGrosze,
   title,
   type,
@@ -74,6 +76,7 @@ export function ProductCard({
             <Price
               amountInGrosze={priceInGrosze}
               previousAmountInGrosze={previousPriceInGrosze}
+              lowestPriceInGrosze={lowestPriceInGrosze}
             />
             <p className="mt-2 text-caption text-ink-muted">{metric}</p>
           </div>

@@ -420,7 +420,19 @@ async def _apply_live_inventory(
         session, {item.id for item in items if item.kind is ProductKind.BOOK}
     )
 
+    omnibus: dict[Any, tuple[int | None, datetime | None]] = {}
+    for item in items:
+        if item.compare_at_price is not None and item.compare_at_price > item.price:
+            omnibus[item.id] = await lowest_price_before_current_discount(
+                session, item.id, price=item.price, compare_at_price=item.compare_at_price
+            )
+
     def update_item(item: CatalogListItem) -> CatalogListItem:
+        if item.id in omnibus:
+            lowest, started = omnibus[item.id]
+            item = item.model_copy(
+                update={"lowest_price_before_discount": lowest, "discount_started_at": started}
+            )
         if item.kind is not ProductKind.BOOK or item.book is None:
             return item
         physical, available = states.get(item.id, (item.book.stock_quantity, 0))
@@ -572,6 +584,16 @@ async def get_product_detail(session: AsyncSession, slug: str) -> CatalogProduct
         )
     item_data = item.model_dump()
     item_data["digital"] = digital
+    if (
+        product.price is not None
+        and product.compare_at_price is not None
+        and product.compare_at_price > product.price
+    ):
+        lowest, started = await lowest_price_before_current_discount(
+            session, product.id, price=product.price, compare_at_price=product.compare_at_price
+        )
+        item_data["lowest_price_before_discount"] = lowest
+        item_data["discount_started_at"] = started
     sample_storage = LocalSampleStorage(get_settings().SAMPLE_STORAGE_ROOT)
     if product.digital is not None and digital is not None:
         sample_available = product.digital.sample_enabled and sample_storage.exists(

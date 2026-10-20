@@ -10,6 +10,7 @@ import type { VatRate } from "@/types/catalog";
 type Props = {
   available: boolean;
   compareAtPrice: number | null;
+  lowestPriceBeforeDiscount?: number | null;
   disabledReason?: string;
   mobileLabel: string;
   price: number;
@@ -22,6 +23,7 @@ type Props = {
 export function ProductPurchaseActions({
   available,
   compareAtPrice,
+  lowestPriceBeforeDiscount,
   disabledReason,
   mobileLabel,
   price,
@@ -68,6 +70,9 @@ export function ProductPurchaseActions({
         <Price
           amountInGrosze={price}
           previousAmountInGrosze={compareAtPrice ?? undefined}
+          lowestPriceInGrosze={
+            compareAtPrice ? (lowestPriceBeforeDiscount ?? null) : undefined
+          }
           vatRate={vatRate ?? undefined}
         />
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -115,6 +120,9 @@ export function ProductPurchaseActions({
             <Price
               amountInGrosze={price}
               previousAmountInGrosze={compareAtPrice ?? undefined}
+              lowestPriceInGrosze={
+                compareAtPrice ? (lowestPriceBeforeDiscount ?? null) : undefined
+              }
               vatRate={vatRate ?? undefined}
             />
           </div>

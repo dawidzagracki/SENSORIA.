@@ -171,6 +171,7 @@ describe("CheckoutPage", () => {
             amount_due_grosz: 1000,
             payment_integration: "not_configured",
             payment_url: null,
+            access_token: "token-0123456789abcdef",
             message: "Oczekuje na płatność",
             received: JSON.parse(String(init?.body)),
           });
@@ -263,6 +264,7 @@ describe("CheckoutPage", () => {
             amount_due_grosz: 1000,
             payment_integration: "not_configured",
             payment_url: null,
+            access_token: "token-0123456789abcdef",
             message: "Oczekuje na płatność",
             received: JSON.parse(String(init?.body)),
           });
@@ -271,6 +273,8 @@ describe("CheckoutPage", () => {
       },
     );
     vi.stubGlobal("fetch", fetchMock);
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, assign });
     vi.stubGlobal("crypto", { randomUUID: () => "gift-order-idempotency" });
     render(
       <CartCountProvider
@@ -304,8 +308,11 @@ describe("CheckoutPage", () => {
     await user.click(screen.getByRole("button", { name: "Zamawiam i płacę" }));
 
     await screen.findByRole("heading", {
-      name: "Zamówienie oczekuje na płatność",
+      name: "Przekierowujemy do płatności…",
     });
+    expect(assign).toHaveBeenCalledWith(
+      "/zamowienie/potwierdzenie?order=order-same&token=token-0123456789abcdef",
+    );
     const request = fetchMock.mock.calls.find(([url]) =>
       String(url).endsWith("/checkout"),
     );

@@ -218,6 +218,11 @@ export function NoResults({
                 key={product.id}
                 metric={metric(product)}
                 previousPriceInGrosze={product.compare_at_price ?? undefined}
+                lowestPriceInGrosze={
+                  product.compare_at_price
+                    ? (product.lowest_price_before_discount ?? null)
+                    : undefined
+                }
                 priceInGrosze={product.price}
                 title={product.name}
                 type={productType(product)}

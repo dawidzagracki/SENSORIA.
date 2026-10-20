@@ -154,6 +154,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
               <Price
                 amountInGrosze={product.price}
                 previousAmountInGrosze={product.compare_at_price ?? undefined}
+                lowestPriceInGrosze={null}
                 vatRate={product.vat_rate ?? undefined}
               />
             ) : null}

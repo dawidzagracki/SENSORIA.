@@ -1,45 +1,28 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "../ui/button";
-import { Modal } from "../ui/modal";
 
+const OPEN_EVENT = "sensoria:open-cookie-settings";
+
+/** Footer entry point that reopens the cookie settings dialog. */
 export function CookiePreferencesAction({
-  demoEnabled,
   onOpenPreferences,
 }: {
-  demoEnabled: boolean;
+  /** Kept for tests and non-browser hosts; defaults to the shared window event. */
   onOpenPreferences?: () => void;
+  demoEnabled?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-
   return (
-    <>
-      <Button
-        disabled={!demoEnabled && !onOpenPreferences}
-        className="!min-h-touch !justify-start !px-0"
-        onClick={() => {
-          if (onOpenPreferences) onOpenPreferences();
-          else setOpen(true);
-        }}
-        size="sm"
-        variant="text"
-      >
-        Ustawienia cookies
-      </Button>
-      {demoEnabled ? (
-        <Modal
-          onOpenChange={setOpen}
-          open={open}
-          title="Ustawienia cookies — demonstracja"
-        >
-          <p className="text-body-small">
-            To wyłącznie demonstracja punktu integracji. Nie zapisuje zgód ani
-            nie zmienia ustawień cookies. Pełny panel zgód powstanie w etapie
-            [79].
-          </p>
-        </Modal>
-      ) : null}
-    </>
+    <Button
+      className="!min-h-touch !justify-start !px-0"
+      onClick={() => {
+        if (onOpenPreferences) onOpenPreferences();
+        else window.dispatchEvent(new Event(OPEN_EVENT));
+      }}
+      size="sm"
+      variant="text"
+    >
+      Ustawienia cookies
+    </Button>
   );
 }

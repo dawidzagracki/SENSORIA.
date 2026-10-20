@@ -105,6 +105,9 @@ export function BookProductView({
           <ProductPurchaseActions
             available={canBuy}
             compareAtPrice={product.compare_at_price}
+            lowestPriceBeforeDiscount={
+              product.lowest_price_before_discount ?? null
+            }
             disabledReason={
               book.available_quantity === 0
                 ? "Nie można teraz kupić tej książki, ponieważ nie ma jej na stanie."

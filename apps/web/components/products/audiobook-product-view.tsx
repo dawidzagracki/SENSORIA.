@@ -112,6 +112,9 @@ export function AudiobookProductView({
           <ProductPurchaseActions
             available={product.is_available}
             compareAtPrice={product.compare_at_price}
+            lowestPriceBeforeDiscount={
+              product.lowest_price_before_discount ?? null
+            }
             mobileLabel="Kup i pobierz"
             price={product.price}
             productId={product.id}

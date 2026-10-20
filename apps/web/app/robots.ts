@@ -8,7 +8,16 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/konto", "/koszyk", "/zamowienie", "/dev", "/dev/"],
+      disallow: [
+        "/konto",
+        "/koszyk",
+        "/zamowienie",
+        "/opinie",
+        "/voucher",
+        "/admin",
+        "/dev",
+        "/dev/",
+      ],
     },
     sitemap: publicUrl("/sitemap.xml"),
   };

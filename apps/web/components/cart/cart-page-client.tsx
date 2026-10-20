@@ -392,6 +392,11 @@ function ProductRecommendations({
               }
               priceInGrosze={product.price}
               previousPriceInGrosze={product.compare_at_price ?? undefined}
+              lowestPriceInGrosze={
+                product.compare_at_price
+                  ? (product.lowest_price_before_discount ?? null)
+                  : undefined
+              }
               title={product.name}
               type={productTypeLabel(product)}
             />
@@ -681,7 +686,7 @@ export function CartPageClient() {
         className="mx-auto min-h-96 max-w-screen-xl px-4 py-10 focus:outline-none"
         aria-busy="true"
       >
-        <h1 className="font-display text-heading-1 text-ink">Twój koszyk</h1>
+        <h1 className="font-display text-title text-ink">Twój koszyk</h1>
         <p role="status" className="text-body text-ink">
           Wczytujemy koszyk…
         </p>
@@ -695,9 +700,7 @@ export function CartPageClient() {
         tabIndex={-1}
         className="mx-auto max-w-screen-xl px-4 py-10 focus:outline-none"
       >
-        <h1 className="text-heading-1 text-ink">
-          Nie udało się wczytać koszyka
-        </h1>
+        <h1 className="text-title text-ink">Nie udało się wczytać koszyka</h1>
         <p role="alert" className="mt-4 text-body text-on-danger">
           {error}
         </p>
@@ -746,7 +749,7 @@ export function CartPageClient() {
               <circle cx="18" cy="20" r="1" />
             </svg>
           </div>
-          <h1 className="font-display text-heading-1 text-ink">
+          <h1 className="font-display text-title text-ink">
             Twój koszyk jest jeszcze pusty
           </h1>
           <p className="mx-auto mt-4 max-w-prose text-body text-ink-muted">
@@ -820,7 +823,7 @@ export function CartPageClient() {
           <h1
             ref={listHeading}
             tabIndex={-1}
-            className="mt-2 font-display text-heading-1 text-ink"
+            className="mt-2 font-display text-title text-ink"
           >
             Twój koszyk
           </h1>

@@ -15,6 +15,8 @@ export type CatalogListItem = {
   short_description: string | null;
   price: number;
   compare_at_price: number | null;
+  lowest_price_before_discount?: number | null;
+  discount_started_at?: string | null;
   image: PublicImage | null;
   book: {
     weight_grams: number | null;

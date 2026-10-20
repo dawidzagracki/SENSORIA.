@@ -176,8 +176,10 @@ function HeroProductCard({
         <h2 className="line-clamp-2 font-interface text-label font-bold text-ink">
           {product.name}
         </h2>
+        {/* No reduced-price claim without the Omnibus 30-day price, which this feed lacks. */}
         <Price
           amountInGrosze={product.price}
+          lowestPriceInGrosze={null}
           previousAmountInGrosze={product.compare_at_price ?? undefined}
         />
         <p className="break-words text-caption text-ink-muted">

@@ -262,7 +262,7 @@ export function AccountAuthPanel({
         <p className="text-label font-bold tracking-wide text-accent-action">
           TWOJE KONTO
         </p>
-        <h2 className="mt-3 font-display text-heading text-ink">
+        <h2 className="mt-3 font-display text-subtitle text-ink">
           Witaj, {String(customer.first_name ?? "")}
         </h2>
         <p className="mt-2 break-words text-body-small text-ink-muted">
@@ -622,7 +622,7 @@ export function AccountRecoveryForm({
       <form className="space-y-5" onSubmit={submit}>
         {mode === "request" ? (
           <>
-            <h2 className="font-display text-heading text-ink">
+            <h2 className="font-display text-subtitle text-ink">
               Nie pamiętasz hasła?
             </h2>
             <p className="text-body-small text-ink-muted">
@@ -644,7 +644,7 @@ export function AccountRecoveryForm({
         ) : null}
         {mode === "reset" ? (
           <>
-            <h2 className="font-display text-heading text-ink">
+            <h2 className="font-display text-subtitle text-ink">
               Ustaw nowe hasło
             </h2>
             {token ? (
@@ -689,7 +689,7 @@ export function AccountRecoveryForm({
         ) : null}
         {mode === "verify" ? (
           <>
-            <h2 className="font-display text-heading text-ink">
+            <h2 className="font-display text-subtitle text-ink">
               Potwierdź adres e-mail
             </h2>
             {token ? (

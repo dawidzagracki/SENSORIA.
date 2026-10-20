@@ -31,6 +31,8 @@ type CheckoutResult = {
   message: string;
   amount_due_grosz: number;
   order_id: string;
+  access_token: string;
+  payment_integration: string;
 };
 type DeliveryMethod = "parcel_locker" | "courier";
 type GiftDraft = {
@@ -156,6 +158,7 @@ export function CheckoutPage() {
   const [terms, setTerms] = useState(false);
   const [digitalConsent, setDigitalConsent] = useState(false);
   const [marketing, setMarketing] = useState(false);
+  const [reviewRequests, setReviewRequests] = useState(false);
   const [giftDrafts, setGiftDrafts] = useState<Record<string, GiftDraft>>({});
   const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [savedAddressMessage, setSavedAddressMessage] = useState("");
@@ -450,6 +453,7 @@ export function CheckoutPage() {
       terms_accepted: terms,
       digital_consent: containsDigital ? digitalConsent : false,
       marketing_consent: marketing,
+      review_requests_consent: reviewRequests,
       consent_version: config.consent_version,
       issuance_mode: "immediate",
       gifts: cart.items
@@ -478,7 +482,22 @@ export function CheckoutPage() {
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error(await errorMessage(response));
-      setResult((await response.json()) as CheckoutResult);
+      const created = (await response.json()) as CheckoutResult;
+      setResult(created);
+      const confirmation = `/zamowienie/potwierdzenie?order=${encodeURIComponent(created.order_id)}&token=${encodeURIComponent(created.access_token)}`;
+      if (created.payment_integration === "stripe") {
+        // Hosted payment page: card data never touches this site.
+        const payment = await fetch(
+          `/api/payments/orders/${encodeURIComponent(created.order_id)}/session?token=${encodeURIComponent(created.access_token)}`,
+          { method: "POST", credentials: "include" },
+        );
+        if (payment.ok) {
+          const body = (await payment.json()) as { payment_url: string };
+          window.location.assign(body.payment_url);
+          return;
+        }
+      }
+      window.location.assign(confirmation);
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -498,7 +517,7 @@ export function CheckoutPage() {
         className="mx-auto w-full max-w-screen-xl px-4 py-16"
         aria-busy="true"
       >
-        <h1 className="font-display text-heading-1 text-ink">Zamówienie</h1>
+        <h1 className="font-display text-title text-ink">Zamówienie</h1>
         <p role="status">Wczytujemy koszyk…</p>
       </main>
     );
@@ -509,7 +528,7 @@ export function CheckoutPage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-screen-xl px-4 py-16"
       >
-        <h1 className="font-display text-heading-1 text-ink">
+        <h1 className="font-display text-title text-ink">
           Nie udało się wczytać zamówienia
         </h1>
         <p className="mt-4 text-body text-ink-muted">
@@ -530,7 +549,7 @@ export function CheckoutPage() {
         tabIndex={-1}
         className="mx-auto w-full max-w-screen-xl px-4 py-16"
       >
-        <h1 className="font-display text-heading-1 text-ink">
+        <h1 className="font-display text-title text-ink">
           Twój koszyk jest pusty
         </h1>
         <Link
@@ -559,7 +578,7 @@ export function CheckoutPage() {
       <p className="text-caption font-bold tracking-wide text-accent-action">
         KROK 2 Z 2
       </p>
-      <h1 className="mt-2 font-display text-heading-1 text-ink">Zamówienie</h1>
+      <h1 className="mt-2 font-display text-title text-ink">Zamówienie</h1>
       <ol
         aria-label="Etapy zamówienia"
         className="mt-4 flex flex-wrap gap-2 text-caption text-ink-muted"
@@ -577,7 +596,7 @@ export function CheckoutPage() {
           className="mt-8 rounded-card border border-warning bg-surface-muted p-5"
         >
           <h2 className="font-display text-title text-ink">
-            Zamówienie oczekuje na płatność
+            Przekierowujemy do płatności…
           </h2>
           <p className="mt-2 text-body text-ink">{result.message}</p>
           <p className="mt-2 text-caption text-ink-muted">
@@ -617,6 +636,13 @@ export function CheckoutPage() {
                 name="marketing"
                 checked={marketing}
                 onChange={(event) => setMarketing(event.target.checked)}
+                className="mt-4"
+              />
+              <Checkbox
+                label="Prośby o opinię. Zapytamy o zdanie po zakupie. Możesz to wyłączyć w ustawieniach konta."
+                name="review_requests"
+                checked={reviewRequests}
+                onChange={(event) => setReviewRequests(event.target.checked)}
                 className="mt-4"
               />
             </section>
