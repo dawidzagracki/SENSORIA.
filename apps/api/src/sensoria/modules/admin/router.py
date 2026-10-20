@@ -17,6 +17,7 @@ from sensoria.modules.admin.routes_marketing import router as marketing_router
 from sensoria.modules.admin.routes_orders import router as orders_router
 from sensoria.modules.admin.routes_products import router as products_router
 from sensoria.modules.admin.routes_reports import router as reports_router
+from sensoria.modules.admin.routes_reviews import router as reviews_router
 from sensoria.modules.admin.routes_vouchers import router as vouchers_router
 from sensoria.modules.orders.shipments import (
     build_tracking_url,
@@ -38,6 +39,7 @@ router.include_router(vouchers_router)
 router.include_router(products_router)
 router.include_router(marketing_router)
 router.include_router(reports_router)
+router.include_router(reviews_router)
 SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 AdminDependency = Annotated[AdminPrincipal, Depends(require_admin_principal)]
 

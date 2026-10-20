@@ -16,6 +16,7 @@ from sqlalchemy.orm import selectinload
 
 from sensoria.config import get_settings
 from sensoria.modules.accounts.models import ConsentTextVersion, CustomerConsent
+from sensoria.modules.accounts.privacy import CONSENT_COPY
 from sensoria.modules.catalog.models import Product, ProductBook, ProductVoucher
 from sensoria.modules.catalog.types import ProductKind, ProductStatus
 from sensoria.modules.payments.stripe_client import stripe_configured
@@ -146,6 +147,7 @@ async def create_guest_order(
             "terms": public_policy["terms_text"],
             "digital": public_policy["digital_text"],
             "marketing": public_policy["marketing_text"],
+            "review_requests": CONSENT_COPY["review_requests"][1],
         }
         cart = await session.scalar(
             select(Cart)
@@ -583,18 +585,26 @@ async def create_guest_order(
                 )
             )
         scopes = [str(product.id) for _item, product in rows]
-        for kind, granted in (
+        consent_rows = [
             ("terms", payload.terms_accepted),
             ("digital", payload.digital_consent),
             ("marketing", payload.marketing_consent),
-        ):
+        ]
+        if payload.review_requests_consent:
+            consent_rows.append(("review_requests", True))
+        for kind, granted in consent_rows:
             if kind == "digital" and not digital_products:
                 continue
+            kind_version = (
+                CONSENT_COPY["review_requests"][0]
+                if kind == "review_requests"
+                else policy["version"]
+            )
             order_consent = OrderConsent(
                 order_id=order.id,
                 kind=kind,
                 granted=granted,
-                version=policy["version"],
+                version=kind_version,
                 displayed_text=policy[kind],
                 scope=scopes,
                 issuance_mode="immediate" if kind == "digital" else None,
@@ -605,17 +615,18 @@ async def create_guest_order(
                 "terms": "checkout_terms",
                 "digital": "checkout_digital",
                 "marketing": "checkout_marketing",
+                "review_requests": "review_requests",
             }[kind]
             text_version = await session.scalar(
                 select(ConsentTextVersion).where(
                     ConsentTextVersion.consent_type == consent_type,
-                    ConsentTextVersion.version == policy["version"],
+                    ConsentTextVersion.version == kind_version,
                 )
             )
             if text_version is None:
                 text_version = ConsentTextVersion(
                     consent_type=consent_type,
-                    version=policy["version"],
+                    version=kind_version,
                     text=policy[kind],
                 )
                 session.add(text_version)

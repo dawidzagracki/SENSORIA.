@@ -67,7 +67,12 @@ def stripe_settings(monkeypatch: pytest.MonkeyPatch) -> Iterator[Settings]:
 
 
 async def _checkout(
-    client: AsyncClient, kind: ProductKind, factory: Any, product: Any = None, **extra: Any
+    client: AsyncClient,
+    kind: ProductKind,
+    factory: Any,
+    product: Any = None,
+    payload_extra: dict[str, Any] | None = None,
+    **extra: Any,
 ) -> dict[str, Any]:
     product = await _publish(
         factory,
@@ -87,6 +92,7 @@ async def _checkout(
         "terms_accepted": True,
         "digital_consent": kind in {ProductKind.DIGITAL, ProductKind.AUDIOBOOK},
         "consent_version": config["consent_version"],
+        **(payload_extra or {}),
     }
     response = await client.post(
         "/cart/checkout",

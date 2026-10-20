@@ -224,6 +224,7 @@ class CheckoutInput(BaseModel):
     terms_accepted: StrictBool
     digital_consent: StrictBool = False
     marketing_consent: StrictBool = False
+    review_requests_consent: StrictBool = False
     consent_version: str = Field(min_length=1, max_length=40)
     issuance_mode: str = "immediate"
     gifts: list[GiftOrderItemInput] = Field(default_factory=list, max_length=100)

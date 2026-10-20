@@ -30,6 +30,8 @@ from sensoria.modules.orders.reorder import cart_reorder_router
 from sensoria.modules.orders.reorder import router as reorder_router
 from sensoria.modules.orders.router import router as orders_router
 from sensoria.modules.payments.router import router as payments_router
+from sensoria.modules.reviews.router import router as reviews_router
+from sensoria.modules.reviews.service import review_request_scheduler
 from sensoria.modules.vouchers.pdf_worker import voucher_pdf_scheduler
 from sensoria.modules.vouchers.reminders import voucher_reminder_scheduler
 from sensoria.modules.vouchers.router import router as vouchers_router
@@ -47,6 +49,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     privacy_task = asyncio.create_task(privacy_job_scheduler())
     voucher_pdf_task = asyncio.create_task(voucher_pdf_scheduler())
     mail_task = asyncio.create_task(mail_scheduler())
+    review_task = asyncio.create_task(review_request_scheduler())
     try:
         yield
     finally:
@@ -55,6 +58,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         privacy_task.cancel()
         voucher_pdf_task.cancel()
         mail_task.cancel()
+        review_task.cancel()
         with suppress(asyncio.CancelledError):
             await cleanup_task
         with suppress(asyncio.CancelledError):
@@ -65,6 +69,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             await voucher_pdf_task
         with suppress(asyncio.CancelledError):
             await mail_task
+        with suppress(asyncio.CancelledError):
+            await review_task
         await engine.dispose()
 
 
@@ -98,6 +104,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         library_router,
         documents_router,
         pages_router,
+        reviews_router,
         vouchers_router,
         accounts_router,
         auth_router,

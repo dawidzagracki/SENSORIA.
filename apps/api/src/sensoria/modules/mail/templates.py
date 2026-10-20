@@ -178,6 +178,23 @@ def voucher_expiry_reminder(v: dict[str, Any]) -> Rendered:
     return subject, layout(subject, body), text
 
 
+def review_request(v: dict[str, Any]) -> Rendered:
+    _require(v, "product_name", "review_url", "unsubscribe_url")
+    subject = "Jak oceniasz swój zakup?"
+    body = (
+        f"<p>Dziękujemy za zakup: <strong>{_e(v['product_name'])}</strong>. "
+        "Twoja opinia pomaga innym osobom wybrać.</p>"
+        + _button(v["review_url"], "Napisz opinię")
+        + f'<p style="font-size:12px;color:{MUTED}">Dostajesz tę wiadomość, bo wyraziłaś zgodę na '
+        f'prośby o opinię. <a href="{_e(v["unsubscribe_url"])}">Zmień ustawienia zgód</a>.</p>'
+    )
+    text = (
+        f"Dziękujemy za zakup: {v['product_name']}. Napisz opinię: {v['review_url']}\n"
+        f"Zgody możesz zmienić tutaj: {v['unsubscribe_url']}"
+    )
+    return subject, layout(subject, body), text
+
+
 def _link_mail(
     subject: str, intro: str, label: str, key: str
 ) -> Callable[[dict[str, Any]], Rendered]:
@@ -198,6 +215,7 @@ TEMPLATES: dict[str, Callable[[dict[str, Any]], Rendered]] = {
     "shipment_sent": shipment_sent,
     "pickup_ready": pickup_ready,
     "voucher_expiry_reminder": voucher_expiry_reminder,
+    "review_request": review_request,
     "login_link": _link_mail(
         "Zaloguj się do SENSORIA",
         "Kliknij, aby zalogować się. Link jest jednorazowy i ważny 15 minut.",
