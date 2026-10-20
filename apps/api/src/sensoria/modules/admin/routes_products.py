@@ -520,6 +520,31 @@ async def upload_image(_admin: Staff, file: Annotated[UploadFile, File()]) -> di
     return {"url": f"/api/media/{name}"}
 
 
+async def _require_readable_pdf(content: bytes) -> None:
+    """Reject corrupt or password-protected PDFs now, not when the first buyer downloads."""
+    import asyncio
+    import io
+
+    from pypdf import PdfReader
+
+    def check() -> None:
+        reader = PdfReader(io.BytesIO(content))
+        if reader.is_encrypted:
+            raise ValueError("encrypted")
+        if len(reader.pages) < 1:
+            raise ValueError("empty")
+        reader.pages[0].extract_text()
+
+    try:
+        await asyncio.to_thread(check)
+    except Exception:
+        raise DomainError(
+            "FILE_PDF_UNREADABLE",
+            "Nie można odczytać tego PDF-a. Plik jest uszkodzony lub zabezpieczony hasłem.",
+            422,
+        ) from None
+
+
 def _looks_like_mp3(head: bytes) -> bool:
     return head.startswith(b"ID3") or (len(head) > 2 and head[0] == 0xFF and head[1] & 0xE0 == 0xE0)
 
@@ -545,6 +570,8 @@ async def upload_file(
     body = head + await file.read(limit + 1)
     if len(body) > limit:
         raise DomainError("FILE_TOO_LARGE", "Plik przekracza dozwolony rozmiar.", 413)
+    if kind == "pdf":
+        await _require_readable_pdf(body)
     async with session.begin():
         product = await _load(session, product_id)
         expected = {ProductKind.DIGITAL: "pdf", ProductKind.AUDIOBOOK: "audio"}.get(product.kind)

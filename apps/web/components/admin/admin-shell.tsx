@@ -22,6 +22,7 @@ const NAV: Array<{ href: string; label: string; owner?: boolean }> = [
   { href: "/admin/rabaty", label: "Kody rabatowe", owner: true },
   { href: "/admin/strony", label: "Strony i FAQ", owner: true },
   { href: "/admin/raporty", label: "Raporty" },
+  { href: "/admin/ustawienia", label: "Ustawienia", owner: true },
   { href: "/admin/dziennik", label: "Dziennik", owner: true },
 ];
 

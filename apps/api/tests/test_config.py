@@ -93,3 +93,24 @@ def test_production_accepts_long_random_key() -> None:
     settings = make_settings(ENVIRONMENT="production", SECRET_KEY=token_urlsafe(48))
 
     assert settings.ENVIRONMENT == "production"
+
+
+def test_blank_optional_integrations_are_treated_as_unset(monkeypatch: pytest.MonkeyPatch) -> None:
+    from sensoria.config import Settings
+    from sensoria.modules.mail.transport import mail_configured
+    from sensoria.modules.payments.stripe_client import stripe_configured
+
+    values = {
+        "DATABASE_URL": "postgresql+asyncpg://u:p@localhost:5432/d",
+        "ENVIRONMENT": "development",
+        "SECRET_KEY": "test-only-placeholder-not-a-secret",
+        "STRIPE_SECRET_KEY": "",
+        "STRIPE_WEBHOOK_SECRET": "   ",
+        "SMTP_HOST": "",
+        "MAIL_FROM": "",
+    }
+    for key, value in values.items():
+        monkeypatch.setenv(key, value)
+    settings = Settings(_env_file=None)  # type: ignore[call-arg]
+    assert settings.STRIPE_SECRET_KEY is None and settings.STRIPE_WEBHOOK_SECRET is None
+    assert not stripe_configured(settings) and not mail_configured(settings)

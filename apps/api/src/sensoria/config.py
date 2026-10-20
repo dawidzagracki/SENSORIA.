@@ -81,6 +81,24 @@ class Settings(BaseSettings):
     MAIL_REPLY_TO: str | None = None
     MAIL_WORKER_INTERVAL_SECONDS: int = Field(default=10, ge=1, le=600)
 
+    @field_validator(
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "SMTP_HOST",
+        "SMTP_USERNAME",
+        "SMTP_PASSWORD",
+        "MAIL_FROM",
+        "MAIL_REPLY_TO",
+        mode="before",
+    )
+    @classmethod
+    def blank_means_unset(cls, value: Any) -> Any:
+        """The example env file ships these empty; empty must mean "not configured"."""
+
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @field_validator("TRUSTED_PROXY_CIDRS")
     @classmethod
     def validate_trusted_proxy_cidrs(cls, value: str) -> str:

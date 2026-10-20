@@ -143,6 +143,14 @@ async def test_ebook_files_chapters_and_validation(
         headers=h,
     )
     assert fake.status_code == 422
+    broken = await client.post(
+        f"/admin/products/{pid}/files",
+        files={"file": ("book.pdf", b"%PDF-1.4 truncated", "application/pdf")},
+        data={"label": "E-book"},
+        headers=h,
+    )
+    assert broken.status_code == 422
+    assert broken.json()["error"]["code"] == "FILE_PDF_UNREADABLE"
     audio_on_ebook = await client.post(
         f"/admin/products/{pid}/files",
         files={"file": ("a.mp3", b"ID3" + b"\x00" * 100, "audio/mpeg")},
