@@ -21,6 +21,7 @@ from sensoria.modules.catalog.router import (
     router as catalog_router,
 )
 from sensoria.modules.catalog.samples import router as product_samples_router
+from sensoria.modules.content.router import router as pages_router
 from sensoria.modules.documents.router import router as documents_router
 from sensoria.modules.library.router import router as library_router
 from sensoria.modules.mail.worker import mail_scheduler
@@ -96,6 +97,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         payments_router,
         library_router,
         documents_router,
+        pages_router,
         vouchers_router,
         accounts_router,
         auth_router,
