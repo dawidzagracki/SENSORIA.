@@ -48,7 +48,9 @@ def qr_png(target: str) -> bytes:
     return buffer.getvalue()
 
 
-def render_voucher_pdf(voucher: Voucher, *, origin: str) -> bytes:
+def render_voucher_pdf(
+    voucher: Voucher, *, origin: str, valid_until: datetime | None = None
+) -> bytes:
     """Build a one-page voucher; only trusted snapshot fields are printed."""
     _fonts()
     snapshot: dict[str, Any] = voucher.issue_snapshot
@@ -70,8 +72,8 @@ def render_voucher_pdf(voucher: Voucher, *, origin: str) -> bytes:
     variant = VARIANT_LABELS.get(str(snapshot.get("variant_kind", "")), "")
     if variant:
         pdf.drawString(48, height - 202, variant)
-    valid_until = voucher.valid_until.astimezone(WARSAW).strftime("%d.%m.%Y")
-    pdf.drawString(48, height - 226, f"Ważny do: {valid_until} (włącznie)")
+    valid_until_text = (valid_until or voucher.valid_until).astimezone(WARSAW).strftime("%d.%m.%Y")
+    pdf.drawString(48, height - 226, f"Ważny do: {valid_until_text} (włącznie)")
     gift = snapshot.get("gift")
     y = height - 252
     if isinstance(gift, dict):

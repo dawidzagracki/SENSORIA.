@@ -72,6 +72,14 @@ class Settings(BaseSettings):
     STRIPE_API_BASE: str = "https://api.stripe.com"
     STRIPE_TIMEOUT_SECONDS: int = Field(default=10, ge=1, le=30)
     PAYMENT_WEBHOOK_TOLERANCE_SECONDS: int = Field(default=300, ge=30, le=3600)
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int = Field(default=587, ge=1, le=65535)
+    SMTP_USERNAME: str | None = None
+    SMTP_PASSWORD: SecretStr | None = None
+    SMTP_STARTTLS: bool = True
+    MAIL_FROM: str | None = None
+    MAIL_REPLY_TO: str | None = None
+    MAIL_WORKER_INTERVAL_SECONDS: int = Field(default=10, ge=1, le=600)
 
     @field_validator("TRUSTED_PROXY_CIDRS")
     @classmethod

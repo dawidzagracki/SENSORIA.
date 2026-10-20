@@ -11,10 +11,12 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sensoria.config import Settings
+from sensoria.config import Settings, get_settings
 from sensoria.modules.catalog.inventory import record_paid_order_inventory
 from sensoria.modules.documents.service import issue_after_payment
+from sensoria.modules.library.models import Entitlement
 from sensoria.modules.library.service import grant_entitlements_for_paid_order
+from sensoria.modules.mail.outbox import enqueue_mail
 from sensoria.modules.orders.models import Order, OrderItem
 from sensoria.modules.orders.service import record_paid_discount_use
 from sensoria.modules.orders.shipments import mark_fulfillment_ready_after_payment
@@ -24,7 +26,7 @@ from sensoria.shared.errors import DomainError
 
 from .models import Payment, PaymentEvent
 from .stripe_client import create_checkout_session, stripe_configured
-from .tokens import verify_order_access_token
+from .tokens import order_access_token, verify_order_access_token
 
 logger = logging.getLogger("sensoria.payments")
 
@@ -122,6 +124,7 @@ async def _confirm_paid(session: AsyncSession, order: Order, payment: Payment) -
     await issue_vouchers_for_paid_order(session, order.id, now=paid_at)
     await grant_entitlements_for_paid_order(session, order.id, now=paid_at)
     await issue_after_payment(session, order.id)
+    await _queue_paid_mails(session, order)
     await mark_fulfillment_ready_after_payment(session, order_id=order.id, paid_at=paid_at)
     session.add(
         AuditLog(
@@ -134,6 +137,52 @@ async def _confirm_paid(session: AsyncSession, order: Order, payment: Payment) -
         )
     )
     await session.flush()
+
+
+def _order_url(order: Order) -> str:
+    origin = get_settings().SITE_URL or ""
+    token = order_access_token(order.id)
+    return f"{origin}/zamowienie/potwierdzenie?order={order.id}&token={token}"
+
+
+async def _queue_paid_mails(session: AsyncSession, order: Order) -> None:
+    """Order confirmation and digital access mails are queued with the payment commit."""
+    number = order.public_number or str(order.id)
+    await enqueue_mail(
+        session,
+        template_key="order_confirmation",
+        recipient=order.email,
+        variables={
+            "order_number": number,
+            "amount_grosz": order.amount_due_grosz,
+            "order_url": _order_url(order),
+        },
+        idempotency_key=f"order-confirmation:{order.id}",
+        order_id=order.id,
+    )
+    titles = list(
+        (
+            await session.scalars(
+                select(OrderItem.product_name_snapshot)
+                .join(Entitlement, Entitlement.order_item_id == OrderItem.id)
+                .where(Entitlement.order_id == order.id)
+                .order_by(OrderItem.id)
+            )
+        ).all()
+    )
+    if titles:
+        await enqueue_mail(
+            session,
+            template_key="digital_access",
+            recipient=order.email,
+            variables={
+                "order_number": number,
+                "titles": [title or "Materiał" for title in titles],
+                "library_url": _order_url(order),
+            },
+            idempotency_key=f"digital-access:{order.id}",
+            order_id=order.id,
+        )
 
 
 def _session_object(event: dict[str, Any]) -> dict[str, Any]:
@@ -230,6 +279,18 @@ async def process_event(session: AsyncSession, event: dict[str, Any]) -> str:
                     payload={"order_id": str(order.id), "attempt": payment.attempt},
                 )
             )
+            if order.status == "pending_payment":
+                await enqueue_mail(
+                    session,
+                    template_key="payment_failed",
+                    recipient=order.email,
+                    variables={
+                        "order_number": order.public_number or str(order.id),
+                        "retry_url": _order_url(order),
+                    },
+                    idempotency_key=f"payment-failed:{payment.id}",
+                    order_id=order.id,
+                )
         ledger.outcome = payment.status
         return ledger.outcome
 

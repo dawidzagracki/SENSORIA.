@@ -11,5 +11,7 @@ def configured_reminder_consent_reader() -> VoucherReminderConsentReader | None:
 
 
 def configured_queue() -> VoucherReminderQueue | None:
-    """Return the transactional [62]/[63] queue adapter when implemented."""
-    return None
+    """Return the transactional outbox adapter."""
+    from sensoria.modules.mail.bridge import ReminderOutboxQueue
+
+    return ReminderOutboxQueue()

@@ -22,6 +22,7 @@ from sensoria.modules.catalog.router import (
 from sensoria.modules.catalog.samples import router as product_samples_router
 from sensoria.modules.documents.router import router as documents_router
 from sensoria.modules.library.router import router as library_router
+from sensoria.modules.mail.worker import mail_scheduler
 from sensoria.modules.orders.cleanup import cleanup_scheduler
 from sensoria.modules.orders.reorder import cart_reorder_router
 from sensoria.modules.orders.reorder import router as reorder_router
@@ -43,6 +44,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     reminder_task = asyncio.create_task(voucher_reminder_scheduler())
     privacy_task = asyncio.create_task(privacy_job_scheduler())
     voucher_pdf_task = asyncio.create_task(voucher_pdf_scheduler())
+    mail_task = asyncio.create_task(mail_scheduler())
     try:
         yield
     finally:
@@ -50,6 +52,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         reminder_task.cancel()
         privacy_task.cancel()
         voucher_pdf_task.cancel()
+        mail_task.cancel()
         with suppress(asyncio.CancelledError):
             await cleanup_task
         with suppress(asyncio.CancelledError):
@@ -58,6 +61,8 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
             await privacy_task
         with suppress(asyncio.CancelledError):
             await voucher_pdf_task
+        with suppress(asyncio.CancelledError):
+            await mail_task
         await engine.dispose()
 
 

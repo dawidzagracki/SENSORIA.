@@ -101,9 +101,9 @@ def test_scheduler_uses_fixed_local_time_across_dst() -> None:
     assert autumn_next.astimezone(settings.timezone).hour == 9
 
 
-def test_consent_reader_is_connected_while_mail_queue_fails_closed() -> None:
+def test_consent_reader_and_outbox_queue_are_connected() -> None:
     assert configured_reminder_consent_reader() is not None
-    assert configured_queue() is None
+    assert configured_queue() is not None
 
 
 def test_message_variables_use_voucher_snapshot_and_configured_origin() -> None:
