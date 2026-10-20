@@ -48,6 +48,85 @@ class StorageService:
             os.chmod(directory, 0o700)
         return directory
 
+    def _category_directory(self, category: str, year: int) -> Path:
+        if category not in {"products", "watermarked"}:
+            raise ValueError("Nieobsługiwana kategoria magazynu.")
+        if not 2000 <= year <= 9999:
+            raise ValueError("Nieprawidłowy rok magazynu.")
+        root = self.root
+        root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        directory = root / category / str(year)
+        directory.mkdir(parents=True, exist_ok=True, mode=0o700)
+        for part in (root / category, directory):
+            if part.is_symlink() or not part.resolve().is_relative_to(root):
+                raise DomainError(
+                    "FILE_STORAGE_UNAVAILABLE", "Magazyn plików jest niedostępny.", 503
+                )
+            with suppress(OSError):
+                os.chmod(part, 0o700)
+        return directory
+
+    async def store_file(
+        self,
+        session: AsyncSession,
+        *,
+        category: str,
+        scope_id: UUID,
+        year: int,
+        content: bytes,
+        original_name: str,
+        mime_type: str,
+    ) -> StoredFile:
+        """Atomically publish a private file under a random name; never overwrites."""
+        if not content:
+            raise DomainError("FILE_EMPTY", "Plik jest pusty.", 422)
+        directory = self._category_directory(category, year)
+        stored_name = secrets.token_hex(32)
+        target = directory / stored_name
+        descriptor, temporary_name = tempfile.mkstemp(prefix=".pending-", dir=directory)
+        temporary = Path(temporary_name)
+        try:
+            with suppress(OSError):
+                os.chmod(temporary, 0o600)
+            with os.fdopen(descriptor, "wb") as stream:
+                stream.write(content)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.link(temporary, target)
+            temporary.unlink()
+            record = StoredFile(
+                category=category,
+                original_name=original_name[:255],
+                stored_name=stored_name,
+                mime_type=mime_type,
+                size_bytes=len(content),
+                checksum=hashlib.sha256(content).hexdigest(),
+                scope_id=scope_id,
+                storage_year=year,
+            )
+            session.add(record)
+            await session.flush()
+            return record
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            target.unlink(missing_ok=True)
+            raise
+
+    def resolve_file(self, stored_file: StoredFile) -> Path:
+        """Map validated metadata to a private path; reject symlinks and traversal."""
+        if (
+            stored_file.category not in {"products", "watermarked"}
+            or len(stored_file.stored_name) != 64
+            or any(c not in "0123456789abcdef" for c in stored_file.stored_name)
+        ):
+            raise DomainError("FILE_NOT_FOUND", "Plik jest niedostępny.", 404)
+        path = self._category_directory(stored_file.category, stored_file.storage_year) / (
+            stored_file.stored_name
+        )
+        if path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(self.root):
+            raise DomainError("FILE_NOT_FOUND", "Plik jest niedostępny.", 404)
+        return path
+
     async def store_voucher_pdf(
         self,
         session: AsyncSession,

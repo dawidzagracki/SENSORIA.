@@ -67,11 +67,11 @@ def stripe_settings(monkeypatch: pytest.MonkeyPatch) -> Iterator[Settings]:
 
 
 async def _checkout(
-    client: AsyncClient, kind: ProductKind, factory: Any, **extra: Any
+    client: AsyncClient, kind: ProductKind, factory: Any, product: Any = None, **extra: Any
 ) -> dict[str, Any]:
     product = await _publish(
         factory,
-        _product(kind, price=7900, vat_rate=VatRate.RATE_5, **extra),
+        product or _product(kind, price=7900, vat_rate=VatRate.RATE_5, **extra),
     )
     item: dict[str, Any] = {"product_id": str(product.id), "quantity": 1}
     if kind is ProductKind.VOUCHER:
@@ -85,7 +85,7 @@ async def _checkout(
         "invoice_kind": "private",
         "payment_method": "blik",
         "terms_accepted": True,
-        "digital_consent": kind is ProductKind.DIGITAL,
+        "digital_consent": kind in {ProductKind.DIGITAL, ProductKind.AUDIOBOOK},
         "consent_version": config["consent_version"],
     }
     response = await client.post(

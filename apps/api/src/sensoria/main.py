@@ -20,6 +20,7 @@ from sensoria.modules.catalog.router import (
     router as catalog_router,
 )
 from sensoria.modules.catalog.samples import router as product_samples_router
+from sensoria.modules.library.router import router as library_router
 from sensoria.modules.orders.cleanup import cleanup_scheduler
 from sensoria.modules.orders.reorder import cart_reorder_router
 from sensoria.modules.orders.reorder import router as reorder_router
@@ -80,6 +81,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         reorder_router,
         cart_reorder_router,
         payments_router,
+        library_router,
         vouchers_router,
         accounts_router,
         auth_router,

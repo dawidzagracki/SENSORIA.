@@ -14,7 +14,9 @@ dependencies = [
     "cryptography>=44,<47",
     "fastapi>=0.115,<1",
     "pydantic-settings>=2.7,<3",
+    "pypdf>=6.21.1",
     "qrcode>=8,<9",
+    "reportlab>=5.0.1",
     "sqlalchemy[asyncio]>=2.0.36,<2.1",
     "tzdata>=2025.2,<2027",
     "uvicorn[standard]>=0.34,<1",
@@ -29,6 +31,7 @@ dev = [
     "pytest-asyncio>=0.24,<1",
     "ruff>=0.9,<1",
     "types-qrcode>=7.4,<9",
+    "types-reportlab>=5.0.0.20261008",
 ]
 
 [tool.setuptools.packages.find]

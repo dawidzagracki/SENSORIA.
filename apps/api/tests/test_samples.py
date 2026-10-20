@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 from collections.abc import AsyncIterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -128,7 +128,7 @@ async def _create_product(
         compare_at_price=None,
         vat_rate=VatRate.RATE_23,
         status=ProductStatus.PUBLISHED,
-        published_at=datetime.now(UTC),
+        published_at=datetime.now(UTC) - timedelta(minutes=5),
         digital=details,
         audiobook=audiobook,
         images=[],
@@ -280,7 +280,7 @@ async def test_parallel_sample_opens_increment_counter_without_lost_updates(
             price=1000,
             vat_rate=VatRate.RATE_23,
             status=ProductStatus.PUBLISHED,
-            published_at=datetime.now(UTC),
+            published_at=datetime.now(UTC) - timedelta(minutes=5),
             digital=ProductDigital(
                 file_format="PDF",
                 sample_file_path=sample_key,

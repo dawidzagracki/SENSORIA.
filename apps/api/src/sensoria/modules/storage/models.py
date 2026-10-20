@@ -16,7 +16,9 @@ class StoredFile(UUIDMixin, Base):
 
     __tablename__ = "stored_files"
     __table_args__ = (
-        CheckConstraint("category IN ('vouchers')", name="valid_category"),
+        CheckConstraint(
+            "category IN ('vouchers', 'products', 'watermarked')", name="valid_category"
+        ),
         CheckConstraint("size_bytes > 0", name="positive_size"),
         CheckConstraint("length(stored_name) = 64", name="valid_stored_name"),
         Index("ix_stored_files_category_scope", "category", "scope_id"),

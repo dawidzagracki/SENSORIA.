@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.config import Settings
 from sensoria.modules.catalog.inventory import record_paid_order_inventory
+from sensoria.modules.library.service import grant_entitlements_for_paid_order
 from sensoria.modules.orders.models import Order, OrderItem
 from sensoria.modules.orders.service import record_paid_discount_use
 from sensoria.modules.orders.shipments import mark_fulfillment_ready_after_payment
@@ -118,6 +119,7 @@ async def _confirm_paid(session: AsyncSession, order: Order, payment: Payment) -
         )
     await record_paid_order_inventory(session, order.id, confirmed_at=paid_at)
     await issue_vouchers_for_paid_order(session, order.id, now=paid_at)
+    await grant_entitlements_for_paid_order(session, order.id, now=paid_at)
     await mark_fulfillment_ready_after_payment(session, order_id=order.id, paid_at=paid_at)
     session.add(
         AuditLog(
