@@ -99,3 +99,10 @@ rezerwacji wizyt, opóźnienie próśb o opinię. Zmiany działają od razu.
 | Konflikt magazynowy | Opłacono książkę, której zabrakło po wygaśnięciu rezerwacji: skontaktuj się z klientką (czekanie na dostawę lub zwrot). |
 | Zapomniałaś hasła do panelu | Administrator techniczny uruchamia polecenie z `docs/wdrozenie-vps.md` pkt 5. |
 | Podejrzenie włamania | Zmień hasła (panel, Stripe, poczta), sprawdź Dziennik → logowania, zgłoś administratorowi technicznemu. |
+
+## Teksty prawne (regulamin, polityki)
+
+Szkice stron `regulamin`, `polityka-prywatnosci`, `polityka-cookies`, `dostawa-i-platnosci`, `o-autorce` wgrywa polecenie
+(z `apps/api`): `uv run --frozen --all-groups python -m sensoria.modules.content.legal_pages`. Strony powstają jako **szkice**,
+nigdy nie nadpisują edycji. Uzupełnij pola `[UZUPEŁNIJ]` (NIP, e-mail, życiorys autorki) w Strony i FAQ, każ prawnikowi sprawdzić
+treść i dopiero opublikuj.

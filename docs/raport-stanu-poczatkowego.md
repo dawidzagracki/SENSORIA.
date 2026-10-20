@@ -1,97 +1,71 @@
-# Raport: co było zrobione w projekcie, zanim przejął go Claude
+# Przegląd kodu SENSORIA — informacja zwrotna dla juniora
 
-Dokument dla Twojego juniora (i dla Ciebie). Opisuje **stan kodu w chwili przekazania** (commit `c619bde`, 2026-10-20),
-co z tego było dobre, czego brakowało i **co było po prostu błędne** — z konkretnymi przykładami i wnioskami do nauki.
-Nie jest to ocena osoby, tylko opis kodu; tam, gdzie coś wyszło dobrze, też to piszę.
+Cześć! To jest przegląd projektu w stanie, w jakim trafił do mnie (commit `c619bde`, 2026-10-20). Piszę go **do Ciebie** —
+żebyś wiedział, co Ci wyszło naprawdę dobrze, co było błędem i czego z tego możesz się nauczyć. Ocena dotyczy kodu, nie Ciebie.
+Wszystkie opisane błędy są już naprawione w repozytorium (commity po `c619bde`).
 
-Źródła: kod i testy z commitu początkowego, istniejący audyt `docs/audit/stages-01-55.md` (z 2026-10-17), moje własne uruchomienie
-testów i przegląd kodu oraz późniejsze testy na pełnym stosie (Docker).
+## Najpierw: to, co zrobiłeś dobrze 👏
 
-## 1. W jednym akapicie
+Fundament tego projektu jest **lepszy, niż się spodziewałbym po początkującym programiście**. Naprawdę. Konkretnie:
 
-Fundament i **sklep jako taki** (katalog, koszyk, rachunek VAT, dostawa, checkout tworzący zamówienie, konta klientek, RODO)
-były zbudowane **bardzo solidnie** — z testami, transakcjami, idempotencją i dbałością o pieniądze. Jednak **sklep nie mógł
-sprzedać ani wydać niczego**: nie było płatności, dostępu do kupionych plików, dokumentów, wysyłki e-maili, logowania do panelu ani
-panelu. Jira pokazywała etapy [01]–[60] jako „W trakcie weryfikacji”, ale ok. 20 z nich było niedokończonych (to samo mówił
-audyt z 17 października). Dodatkowo kilka błędów ukrywało się dlatego, że testy sprawdzały atrapy, a nie prawdziwe API.
+- **Pieniądze zrobione jak trzeba.** Grosze jako `int`, typ `Money`, arytmetyka całkowitoliczbowa HALF_UP, `RATE_0` rozróżnione od `EXEMPT`,
+  deterministyczne korekty zaokrągleń w `orders/calculator.py`. To błąd, który popełnia wielu doświadczonych ludzi (`float`) — Ty go uniknąłeś.
+- **Idempotencja checkoutu** (`orders/checkout.py`): klucz + hash żądania, ponowienie nie dubluje zamówienia, zmiana treści pod tym samym kluczem to konflikt.
+- **Współbieżność przemyślana**: `FOR UPDATE`, `SKIP LOCKED` w schedulerach, testy równoległych transakcji. Brak wyścigów na magazynie i kodach rabatowych.
+- **Fail-closed**: brak konfiguracji dostawy to kontrolowany błąd, a nie „darmowa dostawa”. Tak się myśli o bezpieczeństwie.
+- **Audyt i historia**: `price_history` z triggerem, `audit_log`, wersjonowany rejestr zgód RODO — niezmienne ślady ważne prawnie.
+- **Testy na prawdziwym PostgreSQL** (nie SQLite), ok. 260 testów API. Wyłapują realne błędy bazodanowe, a nie tylko logikę.
+- **Katalog, wyszukiwarka FTS z polskim słownikiem, próbki PDF/audio, koszyk gościa, konta klientek z eksportem i usunięciem danych** — czysto, spójnie, zgodnie z konwencjami.
+- **Uczciwa dokumentacja.** `AGENTS.md` i `docs/audit/stages-01-55.md` wprost mówią, czego *nie* da się potwierdzić. To rzadka i bardzo cenna cecha.
+- **Dostępność (a11y)** potraktowana serio od początku: tokeny, komponenty UI, testy axe.
 
-## 2. Co było zrobione dobrze (warto się uczyć)
+Jeśli utrzymasz ten poziom dbałości o szczegóły, będziesz bardzo dobrym backendowcem.
 
-| Obszar | Co zobaczyć w kodzie | Dlaczego to dobre |
-|---|---|---|
-| Pieniądze | `shared/types.py::Money`, `shared/pricing.py`, `orders/calculator.py` | grosze jako `int`, arytmetyka całkowitoliczbowa HALF_UP, VAT `RATE_0` ≠ `EXEMPT`, deterministyczne korekty zaokrągleń |
-| Idempotencja | `orders/checkout.py` (klucz + hash żądania), `price_history` | ponowienie nie dubluje zamówienia; zmiana treści z tym samym kluczem to konflikt |
-| Współbieżność | `FOR UPDATE`, `SKIP LOCKED` w schedulerach, testy równoległych transakcji | brak wyścigów przy magazynie i kodach rabatowych |
-| Fail-closed | `admin/auth.py` (przed zmianą), konfiguracja dostawy | brak konfiguracji = kontrolowany błąd, nigdy „darmowa dostawa” |
-| Historia i audyt | `price_history` z triggerem, `audit_log`, rejestr zgód RODO | niezmienne ślady, ważne prawnie |
-| Dokumentacja decyzji | `AGENTS.md`, `docs/*.md`, szczery `docs/audit/stages-01-55.md` | audyt wprost mówi, czego **nie** da się potwierdzić — to rzadkie i cenne |
-| Testy | ~260 testów API na prawdziwym PostgreSQL (nie SQLite), testy a11y | wyłapują realne błędy bazodanowe |
+## Co było źle — do poprawy i nauki
 
-## 3. Stan funkcji w chwili przekazania
+### A. Błędy w istniejącym kodzie
 
-**Działało (i było przetestowane):** szkielety FastAPI/Next.js/Docker/Caddy/CI, migracje i `audit_log`, tokeny designu i komponenty UI,
-modele produktów (4 rodzaje), kategorie, SEO, ceny i historia cen, publiczne API katalogu, wyszukiwarka FTS z polskim słownikiem,
-próbki PDF/audio, strona główna, brak wyników, koszyk gościa (z kalkulatorem VAT, kodami rabatowymi, progami dostawy, wyborem
-Paczkomatu), checkout zapisujący zamówienie `pending_payment` ze zgodami, księga magazynowa, modele voucherów (kody, ważność,
-prośby o przedłużenie, przypomnienia, prezenty), logika wysyłek, konta klientek (rejestracja, logowanie, reset, link w mailu,
-profil, adresy, zgody, eksport i usunięcie danych), historia zamówień i voucherów po stronie klientki.
+- **Strony produktów dawały HTTP 500 na prawdziwym API.** Frontend wymagał pól `meta_title`, `meta_description`, `audience_tags`, których endpoint
+  `/products/{slug}` nie zwracał. Testy przechodziły, bo korzystały z **atrapy API** z tymi polami.
+  → *Nauka: testuj też przez prawdziwe API albo miej test kontraktu (jest: `tests/test_public_catalog.py` i `apps/web/a11y-stack-tests/`).*
+- **Test migracji był nieaktualny od kilku etapów** — czerwony na każdym czystym środowisku, więc nikt nie dostawał sygnału o regresji.
+  → *Nauka: test, który zawsze jest czerwony, jest gorszy niż brak testu.*
+- **Testy zależne od zegara i zostawiające dane**: dwa testy mieszały zegar hosta z zegarem bazy, inne zostawiały klientkę i produkt, więc
+  **drugie uruchomienie testów się wywracało**.
+  → *Nauka: test ma sprzątać po sobie i nie zależeć od poprzedniego przebiegu; uruchamiaj suite dwa razy.*
+- **Rozjazd modeli z migracjami** (`alembic check` zgłaszał różnice: `customer_addresses.recipient_name`, nazwy ograniczeń).
+  → *Nauka: uruchamiaj `alembic check`; dodałem test `test_orm_metadata_matches_migrations`.*
+- **Nieistniejące klasy Tailwinda** (`text-heading`, `text-heading-1/2/3`) — nagłówki wyglądały jak zwykły tekst. Tailwind po cichu ignoruje nieznane klasy.
+  → *Nauka: używaj tylko tokenów z `tailwind.config.ts` (`title`, `subtitle`, `emphasis`…).*
+- **Omnibus (najniższa cena z 30 dni) tylko dla e-booków.** Książka, audiobook i voucher z ceną „przed obniżką” nie miały obowiązkowej informacji prawnej,
+  a karty pokazywały przekreślenie bez niej.
+  → *Nauka: wymóg prawny dotyczy wszystkich rodzajów produktów, nie tylko pierwszego, który implementujesz.*
+- **Odbiór osobisty** (`pickup_in_person`) był znany panelowi i kontu, ale checkout nie umiał go utworzyć — etap [31] nie działał end-to-end.
+- **Strony pomocy były atrapą** (`PlaceholderPage`), linki w stopce prowadziły w próżnię, a „Ustawienia cookies” otwierały modal, który niczego nie zapisywał.
+- **Weryfikacja vouchera „istniała” tylko jako funkcja** (`verification_payload`), bez trasy — kod QR kierował donikąd.
+  → *Nauka: „jest funkcja” ≠ „jest trasa”; sprawdzaj uruchomieniem, nie czytaniem.*
+- **Projekt nie był repozytorium git** (brak historii i gałęzi `main`), mimo wymagania z etapu [01].
 
-**Nie istniało albo nie działało, choć Jira sugerowała postęp:**
+### B. Etapy oznaczone jako zrobione, a niedokończone
 
-| Etapy | Czego brakowało |
-|---|---|
-| [32]–[35] | płatności Stripe, webhooki, obsługa porażek, strona potwierdzenia — `payments/` było pustym szkieletem |
-| [36]–[37] | dokumenty sprzedaży (paragon/faktura) — brak generatora i numeracji |
-| [38]–[44] | wydawanie plików: uprawnienia, linki, znakowanie PDF, biblioteka, czytnik, odtwarzacz — kupione treści cyfrowe nie miały jak trafić do klientki |
-| [45], [47] | PDF vouchera i QR — istniały tylko wiersze zadań, bez workera; brak realizacji vouchera i rejestru |
-| [49]–[50], [52] | przypomnienia, prezenty i powiadomienia o wysyłce kolejkowały zadania, ale **nic nie wysyłało maili** |
-| [54]–[55] | logowanie e-mailem/resetem — linki powstawały, ale mail nigdy nie wychodził |
-| [61]–[63] | poczta transakcyjna: brak transportu, szablonów i workera |
-| [64]–[71] | panel: `admin/auth.py` jawnie zwracał 503; brak kont, ról i jakichkolwiek ekranów |
-| [72]–[90] | opinie, zgłoszenia, strony prawne, cookies, bezpieczeństwo, kopie, monitoring, wdrożenie, dokumentacja przekazania |
+Jira pokazywała [01]–[60] jako „W trakcie weryfikacji”, ale ok. 20 z nich było niedokończonych. Sklep **nie mógł jeszcze niczego sprzedać ani wydać**:
 
-## 4. Błędy i niespójności znalezione w istniejącym kodzie
+- [32]–[35] płatności Stripe i webhooki — `payments/` było pustym szkieletem;
+- [36]–[37] paragony/faktury — brak generatora i numeracji;
+- [38]–[44] wydawanie plików, biblioteka, czytnik, odtwarzacz — kupione treści nie miały jak trafić do klientki;
+- [45], [47] PDF vouchera i realizacja — tylko wiersze zadań, bez workera;
+- [49]–[55] przypomnienia, prezenty, powiadomienia o wysyłce, linki logowania/resetu — zadania były kolejkowane, ale **żaden mail nie wychodził**;
+- [64]–[71] panel: `admin/auth.py` jawnie zwracał 503.
 
-Poniżej to, co **było błędem**, a nie brakiem funkcji. Wszystko jest już naprawione w repozytorium (commity po `c619bde`).
+→ *Nauka: etap jest gotowy dopiero, gdy (a) działa na prawdziwym stosie (Compose), (b) ma test łamiący jego regułę, (c) ma opis w `docs/`,
+(d) nie zależy od konfiguracji, której nikt nie ustawił. Status w Jirze to nie dowód.*
 
-1. **Strony produktów zwracały HTTP 500 na prawdziwym API.** Frontend (`parseCatalogProductDetail`) wymagał pól `meta_title`,
-   `meta_description`, `audience_tags`, których endpoint `/products/{slug}` nie zwracał. Testy Playwright przechodziły, bo korzystały
-   z **atrapy API** (`test-fixtures/catalog-api.mjs`), która te pola miała. *Wniosek: testy end-to-end muszą iść przez prawdziwe API
-   albo mieć test kontraktu — teraz oba są (`tests/test_public_catalog.py` pilnuje kluczy, `a11y-stack-tests/` jedzie przez cały stos).*
-2. **Test migracji był nieaktualny od kilku etapów** (lista dozwolonych tabel i rewizji) — padał na każdym czystym środowisku, więc
-   nikt nie dostawał sygnału o regresji. Do tego dwa testy zależały od zegara hosta vs. zegara bazy (dryf maszyny wirtualnej Dockera
-   powodował losowe porażki) oraz zostawiały dane (klientka, produkt), przez co **drugie uruchomienie testów się wywracało**.
-   *Wniosek: test, który zawsze czerwony lub zależny od poprzedniego przebiegu, jest gorszy niż brak testu.*
-3. **Rozjazd modeli z migracjami** (`alembic check` zgłaszał różnice): kolumna `customer_addresses.recipient_name` i nazwy ograniczeń.
-   Dodano test pilnujący zgodności (`test_orm_metadata_matches_migrations`).
-4. **Nieistniejące klasy Tailwinda** (`text-heading`, `text-heading-1/2/3`) w koszyku, checkoutcie i stronach konta — nagłówki wyglądały
-   jak zwykły tekst. Tokeny to `title`, `subtitle`, `emphasis`… (patrz `tailwind.config.ts`). *Wniosek: Tailwind po cichu ignoruje nieznane klasy.*
-5. **Najniższa cena z 30 dni (Omnibus)** liczona tylko dla e-booków; książka, audiobook i voucher z ceną „przed obniżką” nie miały
-   obowiązkowej informacji, a karty w katalogu pokazywały przekreślenie bez niej. Teraz API liczy ją dla wszystkich rodzajów, a UI ukrywa
-   przekreśloną cenę, gdy nie da się jej ustalić.
-6. **Niespójność odbioru osobistego**: kod panelu i konta znał metodę `pickup_in_person`, ale checkout nie potrafił jej wytworzyć
-   (tylko paczkomat i kurier) — „odbiór w gabinecie” z etapu [31] nie istniał. Dodano go (bezpłatny, bez adresu).
-7. **Strony „pomocy” były atrapą** (`PlaceholderPage`), a linki w stopce prowadziły do `/pomoc?temat=…` bez treści; „Ustawienia cookies”
-   otwierały demonstracyjny modal, który niczego nie zapisywał.
-8. **Audyt zawierał nieścisłość**: wskazywał, że publiczna weryfikacja vouchera „istnieje”, a w kodzie nie było takiej trasy
-   (funkcja `verification_payload` nie była używana). Kod QR kierował więc w próżnię. *Wniosek: „istnieje funkcja” ≠ „istnieje trasa”;
-   sprawdzaj uruchomieniem.*
-9. **Repozytorium nie było repozytorium git** (brak historii, brak gałęzi `main`), mimo wymagań z etapu [01]. Zainicjowano git i zacommitowano
-   stan wyjściowy jako punkt odniesienia.
+## Plan nauki (kolejność)
 
-Podczas moich prac wyszły też **dwa własne błędy, wyłapane testami** (warto je znać jako przykład działania siatki bezpieczeństwa):
-puste zmienne `STRIPE_*`/`SMTP_*` z `.env.example` były traktowane jako „skonfigurowane” (naprawione + test), oraz limit żądań liczył okna
-z mikrosekundami i nigdy się nie uruchamiał (wyłapał to test na 32 żądaniach).
-
-## 5. Czego nauczyć juniora (kolejność)
-
-1. Przeczytaj `AGENTS.md` i `docs/audit/stages-01-55.md` — zobacz, jak zapisano zasady i **uczciwe** luki.
+1. Przeczytaj `AGENTS.md` i `docs/audit/stages-01-55.md`.
 2. Przejdź ścieżkę zakupu w kodzie: `orders/checkout.py` → `payments/service.py::_confirm_paid` → `library/service.py` → `mail/bridge.py`.
-3. Uruchom testy na świeżej bazie, potem **drugi raz** (powinny przechodzić za każdym razem) i `alembic check`.
-4. Zrozum, dlaczego atrapa API ukryła błąd 500 (pkt 4.1) i jak działają testy w `apps/web/a11y-stack-tests/`.
+3. Uruchom testy na świeżej bazie, potem **drugi raz**, oraz `alembic check`.
+4. Zrozum, dlaczego atrapa API ukryła błąd 500, i jak działają testy w `apps/web/a11y-stack-tests/`.
 5. Zrób ćwiczenia z `docs/przekazanie-kodu.md` (pkt 8).
 
-## 6. Jak oceniać „gotowe” w tym projekcie
-
-Etap jest gotowy, gdy: (a) działa na **prawdziwym stosie** (Compose), (b) ma test, który łamie jego regułę, (c) ma opis w `docs/`
-i (d) nie opiera się na konfiguracji, której nikt nie ustawił. Status „W trakcie weryfikacji” w Jirze nie był dowodem żadnego z tych punktów.
+Powodzenia — fundament masz mocny, teraz dołóż nawyk sprawdzania „czy to naprawdę działa end-to-end”.
