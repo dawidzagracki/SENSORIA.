@@ -13,6 +13,7 @@ from sensoria.modules.accounts.privacy import privacy_job_scheduler
 from sensoria.modules.accounts.router import auth_router
 from sensoria.modules.accounts.router import router as accounts_router
 from sensoria.modules.admin.router import router as admin_router
+from sensoria.modules.catalog.media import router as media_router
 from sensoria.modules.catalog.router import (
     products_router,
 )
@@ -88,6 +89,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         catalog_router,
         products_router,
         product_samples_router,
+        media_router,
         orders_router,
         reorder_router,
         cart_reorder_router,
