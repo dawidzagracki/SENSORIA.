@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 from typing import Any
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from .test_accounts_auth import _csrf, _headers
 
@@ -183,9 +186,24 @@ async def test_profile_rejects_foreign_address_and_invalid_address_shape(
     assert invalid.status_code == 422
 
 
+@pytest_asyncio.fixture
+async def purge_concurrent_customers(test_database_url: str) -> AsyncIterator[None]:
+    """Independent sessions commit for real, so remove their customers afterwards."""
+    yield
+    engine = create_async_engine(test_database_url)
+    try:
+        async with engine.begin() as connection:
+            await connection.exec_driver_sql(
+                "DELETE FROM customers WHERE email LIKE 'concurrent-address-%'"
+            )
+    finally:
+        await engine.dispose()
+
+
 @pytest.mark.asyncio
 async def test_concurrent_first_addresses_leave_exactly_one_default(
     postgres_independent_client: AsyncClient,
+    purge_concurrent_customers: None,
 ) -> None:
     client = postgres_independent_client
     session_cookie, csrf = await _register(client, f"concurrent-address-{uuid4().hex}@example.test")
