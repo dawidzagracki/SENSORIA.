@@ -27,6 +27,7 @@ from sensoria.modules.orders.reorder import cart_reorder_router
 from sensoria.modules.orders.reorder import router as reorder_router
 from sensoria.modules.orders.router import router as orders_router
 from sensoria.modules.payments.router import router as payments_router
+from sensoria.modules.vouchers.pdf_worker import voucher_pdf_scheduler
 from sensoria.modules.vouchers.reminders import voucher_reminder_scheduler
 from sensoria.modules.vouchers.router import router as vouchers_router
 from sensoria.shared.exception_handlers import register_exception_handlers
@@ -41,18 +42,22 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     cleanup_task = asyncio.create_task(cleanup_scheduler(_app.state.settings))
     reminder_task = asyncio.create_task(voucher_reminder_scheduler())
     privacy_task = asyncio.create_task(privacy_job_scheduler())
+    voucher_pdf_task = asyncio.create_task(voucher_pdf_scheduler())
     try:
         yield
     finally:
         cleanup_task.cancel()
         reminder_task.cancel()
         privacy_task.cancel()
+        voucher_pdf_task.cancel()
         with suppress(asyncio.CancelledError):
             await cleanup_task
         with suppress(asyncio.CancelledError):
             await reminder_task
         with suppress(asyncio.CancelledError):
             await privacy_task
+        with suppress(asyncio.CancelledError):
+            await voucher_pdf_task
         await engine.dispose()
 
 
