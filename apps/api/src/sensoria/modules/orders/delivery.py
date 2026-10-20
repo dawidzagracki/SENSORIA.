@@ -21,6 +21,8 @@ DELIVERY_SETTING_KEY = "orders.delivery.v1"
 class DeliveryMethod(StrEnum):
     PARCEL_LOCKER = "parcel_locker"
     COURIER = "courier"
+    # Collected in the studio: never charged, never shipped.
+    PICKUP_IN_PERSON = "pickup_in_person"
 
 
 class DeliveryPolicy(BaseModel):
@@ -100,7 +102,7 @@ def _quote(
 ) -> DeliveryQuote:
     cost = (
         0
-        if free
+        if free or method is DeliveryMethod.PICKUP_IN_PERSON
         else (
             policy.parcel_locker_cost_grosz
             if method is DeliveryMethod.PARCEL_LOCKER

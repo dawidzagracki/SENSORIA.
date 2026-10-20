@@ -34,7 +34,7 @@ type CheckoutResult = {
   access_token: string;
   payment_integration: string;
 };
-type DeliveryMethod = "parcel_locker" | "courier";
+type DeliveryMethod = "parcel_locker" | "courier" | "pickup_in_person";
 type GiftDraft = {
   recipient_name: string;
   recipient_email: string;
@@ -715,9 +715,15 @@ export function CheckoutPage() {
                       title={
                         quote.method === "parcel_locker"
                           ? "Paczkomat InPost"
-                          : "Kurier InPost"
+                          : quote.method === "pickup_in_person"
+                            ? "Odbiór w gabinecie"
+                            : "Kurier InPost"
                       }
-                      description={`${money(quote.gross_grosz)} · ${quote.vat_label}`}
+                      description={
+                        quote.method === "pickup_in_person"
+                          ? "Bezpłatnie · ul. Knosały 7B/A, Olsztyn. Powiadomimy Cię, gdy zamówienie będzie gotowe."
+                          : `${money(quote.gross_grosz)} · ${quote.vat_label}`
+                      }
                       disabled={updatingDelivery}
                     />
                   ))}

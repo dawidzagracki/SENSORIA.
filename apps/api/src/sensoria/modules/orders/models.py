@@ -51,7 +51,8 @@ class Cart(UUIDMixin, TimestampMixin, Base):
             name="guest_or_customer_identity",
         ),
         CheckConstraint(
-            "delivery_method IS NULL OR delivery_method IN ('parcel_locker', 'courier')",
+            "delivery_method IS NULL OR delivery_method IN "
+            "('parcel_locker', 'courier', 'pickup_in_person')",
             name="valid_delivery_method",
         ),
     )

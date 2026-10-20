@@ -62,7 +62,7 @@ def validate_new_password(password: str) -> None:
         )
 
 
-def _csrf_digest(token: str) -> str:
+def csrf_digest(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
@@ -136,7 +136,7 @@ async def login_admin(
         AdminSession(
             admin_id=user.id,
             secret_hash=digest_secret("admin:" + raw),
-            csrf_hash=_csrf_digest(csrf),
+            csrf_hash=csrf_digest(csrf),
             idle_expires_at=now + IDLE_TTL,
             absolute_expires_at=now + ABSOLUTE_TTL,
             ip_hash=hashed_client_ip(request),
@@ -188,7 +188,7 @@ async def require_admin_principal(
         raise _unauthenticated()
     if request.method not in SAFE_METHODS:
         header = request.headers.get("x-csrf-token", "")
-        if not _origin_ok(request) or not hmac.compare_digest(_csrf_digest(header), row.csrf_hash):
+        if not _origin_ok(request) or not hmac.compare_digest(csrf_digest(header), row.csrf_hash):
             raise DomainError(
                 "ADMIN_CSRF_REJECTED", "Odśwież panel i spróbuj ponownie.", 403, NO_STORE
             )

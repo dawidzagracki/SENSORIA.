@@ -138,7 +138,9 @@ export function DiscountSummary({
                 <span>
                   {quote.method === "parcel_locker"
                     ? "Paczkomat InPost"
-                    : "Kurier"}
+                    : quote.method === "pickup_in_person"
+                      ? "Odbiór w gabinecie"
+                      : "Kurier"}
                 </span>
               </span>
               <span className="shrink-0 text-label">

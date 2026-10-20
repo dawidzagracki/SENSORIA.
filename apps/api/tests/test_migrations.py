@@ -47,6 +47,7 @@ CONTENT_PAGES_REVISION = "f67000000001"
 REVIEWS_REVISION = "f68000000001"
 SUPPORT_CASES_REVISION = "f69000000001"
 HELP_COOKIES_REVISION = "f70000000001"
+OFFICE_PICKUP_REVISION = "f71000000001"
 
 
 def _alembic_config() -> Config:
@@ -241,6 +242,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         REVIEWS_REVISION,
         SUPPORT_CASES_REVISION,
         HELP_COOKIES_REVISION,
+        OFFICE_PICKUP_REVISION,
     )
 
     if initial_state[1] in (FOUNDATION_REVISION, PRODUCT_REVISION, TAXONOMY_REVISION):
@@ -309,6 +311,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         REVIEWS_REVISION,
         SUPPORT_CASES_REVISION,
         HELP_COOKIES_REVISION,
+        OFFICE_PICKUP_REVISION,
     ):
         assert not asyncio.run(_transactional_tables_have_rows(test_database_url)), (
             "Test downgrade wymaga pustych tabel zamówień/voucherów; nie może usuwać danych."
@@ -320,7 +323,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         command.upgrade(config, "head")
         assert asyncio.run(_migration_state(test_database_url))[:2] == (
             True,
-            HELP_COOKIES_REVISION,
+            OFFICE_PICKUP_REVISION,
         )
         assert {
             "ix_products_status_price",
@@ -482,7 +485,7 @@ def test_migration_upgrade_downgrade_and_reupgrade(
         reupgraded = asyncio.run(_migration_state(test_database_url))
         assert reupgraded[:2] == (
             True,
-            HELP_COOKIES_REVISION,
+            OFFICE_PICKUP_REVISION,
         )
         assert {
             "carts",

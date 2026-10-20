@@ -80,10 +80,17 @@ async def test_login_session_csrf_and_logout(admin_env: CartEnvironment) -> None
     cookie = _cookie(client)
     session_response = await client.get("/admin/auth/session", headers={"Cookie": cookie})
     assert session_response.json()["admin"]["email"].startswith("wlas")
+    rotated = session_response.json()["csrf_token"]
+    assert rotated and rotated != body["csrf_token"]
     client.cookies.clear()
     # Unsafe methods need Origin + CSRF header.
     no_csrf = await client.post("/admin/auth/logout", headers={**ORIGIN, "Cookie": cookie})
     assert no_csrf.status_code == 403
+    stale = await client.post(
+        "/admin/auth/logout",
+        headers={**ORIGIN, "X-CSRF-Token": body["csrf_token"], "Cookie": cookie},
+    )
+    assert stale.status_code == 403  # rotation invalidated the login-time token
     bad_origin = await client.post(
         "/admin/auth/logout",
         headers={
@@ -95,7 +102,7 @@ async def test_login_session_csrf_and_logout(admin_env: CartEnvironment) -> None
     assert bad_origin.status_code == 403
     ok = await client.post(
         "/admin/auth/logout",
-        headers={**ORIGIN, "X-CSRF-Token": body["csrf_token"], "Cookie": cookie},
+        headers={**ORIGIN, "X-CSRF-Token": rotated, "Cookie": cookie},
     )
     assert ok.status_code == 204
     revoked = await client.get("/admin/auth/session", headers={"Cookie": cookie})

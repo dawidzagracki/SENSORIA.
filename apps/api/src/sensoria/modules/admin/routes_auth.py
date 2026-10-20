@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
+import secrets
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.database import get_session
+from sensoria.modules.admin.models import AdminSession
 
 from .auth import (
     NO_STORE,
     AdminPrincipal,
+    csrf_digest,
     login_admin,
     logout_admin,
     require_admin_principal,
@@ -47,16 +51,27 @@ async def login(
 
 @router.get("/session")
 async def current(
-    response: Response, principal: Annotated[AdminPrincipal, Depends(require_admin_principal)]
+    response: Response,
+    session: SessionDependency,
+    principal: Annotated[AdminPrincipal, Depends(require_admin_principal)],
 ) -> dict[str, Any]:
+    """Return the identity and a freshly rotated CSRF token (the old one stops working)."""
+    csrf = secrets.token_urlsafe(32)
+    await session.execute(
+        update(AdminSession)
+        .where(AdminSession.id == principal.session_id)
+        .values(csrf_hash=csrf_digest(csrf))
+    )
+    await session.commit()
     response.headers.update(NO_STORE)
     return {
+        "csrf_token": csrf,
         "admin": {
             "id": str(principal.id),
             "email": principal.email,
             "display_name": principal.display_name,
             "role": principal.role,
-        }
+        },
     }
 
 

@@ -69,9 +69,9 @@ export type CartView = {
   };
   delivery: {
     requires_shipping: boolean;
-    selected_method: "parcel_locker" | "courier" | null;
+    selected_method: "parcel_locker" | "courier" | "pickup_in_person" | null;
     available_quotes: Array<{
-      method: "parcel_locker" | "courier";
+      method: "parcel_locker" | "courier" | "pickup_in_person";
       gross_grosz: number;
       vat_label: string;
     }>;

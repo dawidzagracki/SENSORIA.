@@ -52,6 +52,7 @@ const POLL_LIMIT = 20;
 const deliveryLabel: Record<string, string> = {
   parcel_locker: "Paczkomat InPost",
   courier: "Kurier",
+  pickup_in_person: "Odbiór w gabinecie",
 };
 
 export function ConfirmationView({
@@ -267,7 +268,9 @@ export function ConfirmationView({
         {order.requires_shipping ? (
           <p className="mt-3 text-caption text-ink-muted">
             Dostawa: {deliveryLabel[order.delivery_method ?? ""] ?? "wysyłka"}.
-            Powiadomimy Cię e-mailem, gdy paczka zostanie nadana.
+            {order.delivery_method === "pickup_in_person"
+              ? " Powiadomimy Cię e-mailem, gdy zamówienie będzie gotowe do odbioru."
+              : " Powiadomimy Cię e-mailem, gdy paczka zostanie nadana."}
           </p>
         ) : null}
       </section>
