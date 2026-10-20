@@ -303,6 +303,15 @@ async def test_details_hide_unpublished_and_return_images_categories_and_related
     assert payload["digital"]["label"] == "EBOOK_PDF"
     assert payload["images"][0]["alt"] == "Obraz produktu"
     assert payload["categories"][0]["slug"] == "kursy"
+    # The storefront's parseCatalogProductDetail() requires these keys; omitting them made
+    # every product page answer HTTP 500 against the real API.
+    required = {
+        "id", "slug", "name", "kind", "vat_rate", "is_available", "price", "compare_at_price",
+        "short_description", "description", "meta_title", "meta_description", "images",
+        "categories", "audience_tags", "related_products", "published_at",
+    }  # fmt: skip
+    assert required <= payload.keys()
+    assert payload["meta_title"] and payload["meta_description"]
     assert [item["id"] for item in payload["related_products"]] == [str(active_related.id)]
     listing = await client_for_session.get("/products")
     assert listing.json()["total"] == 2

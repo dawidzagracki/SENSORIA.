@@ -93,10 +93,11 @@ test("potwierdzenie zamówienia pokazuje materiały, voucher i dokumenty", async
 test("czytnik: spis treści, nawigacja i powiększanie", async ({ page }) => {
   await page.goto(`/konto/czytnik/${state.entitlement_id}?order_token=${state.token}`);
   await dismissCookies(page);
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Wstęp");
-  await expect(page.getByText("Egzemplarz dla: kupujaca@sensoria.test")).toBeVisible();
-  await page.getByRole("button", { name: "Następny rozdział →" }).click();
+  // The run before this one saved progress at chapter 2, so the reader must resume there.
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Dalej");
+  await expect(page.getByText("Egzemplarz dla: kupujaca@sensoria.test")).toBeVisible();
+  await page.getByRole("button", { name: "← Poprzedni rozdział" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Wstęp");
   await page.getByRole("button", { name: "Powiększ tekst" }).click();
   await audit(page, "czytnik");
 });
@@ -150,7 +151,7 @@ test("panel: logowanie, pulpit i widoki", async ({ page }) => {
   await page.goto("/admin/zamowienia");
   await page.getByRole("link", { name: /^SEN-/ }).first().click();
   await expect(page.getByRole("heading", { level: 1, name: "Szczegóły zamówienia" })).toBeVisible();
-  await expect(page.getByText("Pozycje")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pozycje" })).toBeVisible();
   await audit(page, "szczegóły zamówienia");
 });
 

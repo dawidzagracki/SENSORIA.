@@ -195,6 +195,10 @@ class CatalogListResponse(BaseModel):
 
 class CatalogProductDetail(CatalogListItem):
     description: str | None
+    meta_title: str
+    meta_description: str
+    og_image: str | None = None
+    audience_tags: list[str] = Field(default_factory=list)
     images: list[PublicImage]
     categories: list[PublicCategoryRef]
     book: CatalogBookProductDetails | None = None

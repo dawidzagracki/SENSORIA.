@@ -43,6 +43,7 @@ from .schemas import (
     PublicImage,
 )
 from .search import canonical_query, normalize_query, search_predicate, search_rank
+from .seo import product_meta_description, product_meta_title
 from .types import ProductKind, ProductStatus
 
 Delivery = Literal["digital", "parcel"]
@@ -633,6 +634,12 @@ async def get_product_detail(session: AsyncSession, slug: str) -> CatalogProduct
     response = CatalogProductDetail(
         **item_data,
         description=product.description,
+        meta_title=product_meta_title(product.name, product.meta_title),
+        meta_description=product_meta_description(
+            product.name, product.short_description, product.description, product.meta_description
+        ),
+        og_image=product.og_image,
+        audience_tags=sorted(tag.name for tag in product.audience_tags),
         images=[PublicImage(url=image.url, alt=image.alt) for image in product.images],
         categories=[
             PublicCategoryRef(

@@ -46,7 +46,9 @@ class CustomerAddress(UUIDMixin, Base):
 
     __tablename__ = "customer_addresses"
     __table_args__ = (
-        UniqueConstraint("customer_id", "fingerprint"),
+        UniqueConstraint(
+            "customer_id", "fingerprint", name="uq_customer_addresses_customer_id_fingerprint"
+        ),
         Index("ix_customer_addresses_customer", "customer_id"),
         CheckConstraint("address_type IN ('address', 'parcel_locker')", name="valid_address_type"),
         Index(
@@ -68,6 +70,8 @@ class CustomerAddress(UUIDMixin, Base):
         String(20), nullable=False, default="address", server_default="address"
     )
     is_default: Mapped[bool] = mapped_column(nullable=False, default=False, server_default="false")
+    # Present in the schema since [56]; kept nullable and currently unused by the application.
+    recipient_name: Mapped[str | None] = mapped_column(String(200))
     fingerprint: Mapped[str] = mapped_column(String(64), nullable=False)
     address_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
@@ -83,7 +87,9 @@ class CustomerBillingProfile(UUIDMixin, Base):
 
     __tablename__ = "customer_billing_profiles"
     __table_args__ = (
-        UniqueConstraint("customer_id", "kind"),
+        UniqueConstraint(
+            "customer_id", "kind", name="uq_customer_billing_profiles_customer_id_kind"
+        ),
         CheckConstraint("kind IN ('private', 'company')", name="valid_kind"),
         Index("ix_customer_billing_profiles_customer", "customer_id"),
     )

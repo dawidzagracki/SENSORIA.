@@ -13,6 +13,11 @@ export default defineConfig({
     setupFiles: ["./vitest.setup.ts"],
     clearMocks: true,
     restoreMocks: true,
-    exclude: ["**/node_modules/**", "**/dist/**", "a11y-tests/**"],
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "a11y-tests/**",
+      "a11y-stack-tests/**",
+    ],
   },
 });

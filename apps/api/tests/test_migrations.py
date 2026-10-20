@@ -317,6 +317,10 @@ def test_migration_upgrade_downgrade_and_reupgrade(
             "Test downgrade wymaga pustych tabel zamówień/voucherów; nie może usuwać danych."
         )
 
+    # Append-only price history keeps fixture products of earlier tests alive; the destructive
+    # downgrade/upgrade below cannot run with product rows present (PostgreSQL rejects the
+    # ALTERs with "pending trigger events"), so clear only the dedicated test database.
+    asyncio.run(_truncate_catalog_fixtures(test_database_url))
     extension_existed_before = asyncio.run(_pgcrypto_installed(test_database_url))
 
     try:
@@ -645,6 +649,23 @@ async def _transactional_tables_have_rows(database_url: str) -> bool:
         await engine.dispose()
 
 
+async def _truncate_catalog_fixtures(database_url: str) -> None:
+    engine = create_async_engine(database_url)
+    try:
+        async with engine.begin() as connection:
+            tables = await connection.run_sync(
+                lambda sync_connection: set(inspect(sync_connection).get_table_names())
+            )
+            if "products" in tables:
+                await connection.exec_driver_sql(
+                    "TRUNCATE products, price_history, audit_log RESTART IDENTITY CASCADE"
+                    if "price_history" in tables
+                    else "TRUNCATE products CASCADE"
+                )
+    finally:
+        await engine.dispose()
+
+
 async def _search_extensions_installed(database_url: str) -> bool:
     engine = create_async_engine(database_url)
     try:
@@ -655,3 +676,10 @@ async def _search_extensions_installed(database_url: str) -> bool:
             return int(result.scalar_one()) == 2
     finally:
         await engine.dispose()
+
+
+def test_orm_metadata_matches_migrations(test_database_url: str) -> None:
+    """`alembic check`: models and released revisions must describe the same schema."""
+    config = _alembic_config()
+    command.upgrade(config, "head")
+    command.check(config)

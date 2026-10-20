@@ -56,7 +56,46 @@ else:
     )
 
 os.environ["ENVIRONMENT"] = "development"
+# A developer's .env may hold real integration credentials; tests must never use or depend on them.
+for _integration_key in (
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "SMTP_HOST",
+    "SMTP_USERNAME",
+    "SMTP_PASSWORD",
+    "MAIL_FROM",
+    "MAIL_REPLY_TO",
+):
+    os.environ[_integration_key] = ""
 os.environ["SECRET_KEY"] = "test-only-placeholder-not-a-secret"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def clean_catalog_fixtures_from_previous_runs() -> None:
+    """Append-only price history keeps fixture products alive between runs; start clean.
+
+    Only the dedicated `*_test` database is ever touched (the URL is validated first).
+    """
+    url = os.environ.get("TEST_DATABASE_URL")
+    if not url or not (make_url(url).database or "").endswith("_test"):
+        return
+
+    async def wipe() -> None:
+        engine = create_async_engine(url)
+        try:
+            async with engine.begin() as connection:
+                exists = await connection.exec_driver_sql("SELECT to_regclass('public.products')")
+                if exists.scalar() is not None:
+                    await connection.exec_driver_sql(
+                        "TRUNCATE products, price_history, audit_log CASCADE"
+                    )
+        finally:
+            await engine.dispose()
+
+    try:
+        asyncio.run(wipe())
+    except Exception:  # database may be unreachable or empty; real tests report that themselves
+        return
 
 
 @pytest.fixture

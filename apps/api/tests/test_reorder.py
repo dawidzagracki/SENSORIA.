@@ -37,7 +37,7 @@ from sensoria.shared.app_settings import AppSetting
 from sensoria.shared.audit_log import AuditLog
 from sensoria.shared.errors import DomainError
 from sensoria.shared.types import VatRate
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -196,7 +196,13 @@ async def test_concurrent_reorders_use_independent_postgres_transactions(
                 delete(Cart).where(Cart.id.in_([source_cart_id, current_cart_id]))
             )
             await session.execute(delete(Customer).where(Customer.id == customer_id))
-            # Product price history is append-only, so keep this isolated fixture.
+            # Product price history is append-only, so the row cannot be deleted; withdraw it
+            # instead so it never shows up in the public catalog of later tests.
+            await session.execute(
+                update(Product)
+                .where(Product.id == product.id)
+                .values(status=ProductStatus.WITHDRAWN)
+            )
         await engine.dispose()
 
 
