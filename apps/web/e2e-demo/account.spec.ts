@@ -3,6 +3,7 @@ import {
   acceptEssentialCookies,
   CUSTOMER,
   expectNoServerError,
+  findSquareControls,
   mailLink,
   pageFetch,
 } from "./helpers";
@@ -274,4 +275,63 @@ test("moje vouchery: kod QR ładuje się, a data konta jest po polsku", async ({
     .poll(() => qr.evaluate((img: HTMLImageElement) => img.naturalWidth))
     .toBeGreaterThan(0);
   await expect(page.getByText(/Klientka od października 2026/)).toBeVisible();
+});
+
+test("logowanie przez Google: wybór konta zakłada i loguje klientkę", async ({
+  page,
+}) => {
+  await page.goto("/konto");
+  await page.getByRole("link", { name: "Zaloguj się przez Google" }).click();
+  await page.waitForURL(/localhost:9911\/google\/auth/);
+  await expect(page.getByText("Tryb demonstracyjny")).toBeVisible();
+  await page.getByRole("link", { name: /Ewa Nowak/ }).click();
+  await page.waitForURL(/\/konto/);
+  await expect(page.getByRole("heading", { name: /Witaj, Ewa/ })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Moje konto" }).first(),
+  ).toBeVisible();
+  await page.goto("/konto/dane");
+  await expect(page.getByLabel("Imię")).toHaveValue("Ewa");
+});
+
+test("rejestracja: jest też przycisk Google", async ({ page }) => {
+  await page.goto("/konto");
+  await page.getByRole("button", { name: "Załóż konto" }).click();
+  await expect(
+    page.getByRole("link", { name: "Załóż konto przez Google" }),
+  ).toBeVisible();
+});
+
+test("spójność w koncie, czytniku i odtwarzaczu: brak kanciastych narożników", async ({
+  page,
+}) => {
+  await login(page);
+  const square: string[] = [];
+  const visit = async (path: string) => {
+    await page.goto(path);
+    await page.waitForTimeout(1200);
+    square.push(
+      ...(await findSquareControls(page)).map((entry) => `${path}: ${entry}`),
+    );
+  };
+  for (const path of [
+    "/konto",
+    "/konto/zamowienia",
+    "/konto/vouchery",
+    "/konto/dane",
+    "/konto/biblioteka",
+  ])
+    await visit(path);
+  await page.goto("/konto/biblioteka");
+  const reader = await page
+    .getByRole("link", { name: "Czytaj" })
+    .first()
+    .getAttribute("href");
+  const player = await page
+    .getByRole("link", { name: "Słuchaj" })
+    .first()
+    .getAttribute("href");
+  await visit(reader!);
+  await visit(player!);
+  expect(square).toEqual([]);
 });

@@ -105,3 +105,36 @@ export async function mailLink(
   }
   throw new Error(`Brak wiadomości z linkiem ${pattern} dla ${to}`);
 }
+
+/** Visible boxed controls whose corners are square (the app must have none). */
+export async function findSquareControls(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    [
+      ...document.querySelectorAll(
+        "input:not([type=hidden]):not([type=radio]):not([type=range]), select, textarea, button, .rounded-card",
+      ),
+    ]
+      .filter((el) => {
+        const box = el.getBoundingClientRect();
+        return (
+          box.width > 8 &&
+          box.height > 8 &&
+          getComputedStyle(el).visibility !== "hidden"
+        );
+      })
+      .filter((el) => {
+        const style = getComputedStyle(el);
+        const radius =
+          parseFloat(style.borderTopLeftRadius) +
+          parseFloat(style.borderBottomRightRadius);
+        const boxed =
+          style.borderTopWidth !== "0px" ||
+          style.backgroundColor !== "rgba(0, 0, 0, 0)";
+        return boxed && radius === 0;
+      })
+      .map(
+        (el) =>
+          `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 60)}`,
+      ),
+  );
+}

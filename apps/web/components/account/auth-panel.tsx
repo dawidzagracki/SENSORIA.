@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
+import { GoogleMark } from "@/components/brand/logos";
 import { Button } from "@/components/ui/button";
 import { ACCOUNT_SESSION_EVENT } from "@/components/layout/account-link";
 import { TextField } from "@/components/ui/text-field";
@@ -119,6 +120,22 @@ export function AccountAuthPanel({
   const [sessionChecked, setSessionChecked] = useState(false);
   const [email, setEmail] = useState("");
   const [linkBusy, setLinkBusy] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    void fetch(`${API}/accounts/oauth/providers`, { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : { google: false }))
+      .then((body: { google?: boolean }) =>
+        setGoogleEnabled(body.google === true),
+      )
+      .catch(() => setGoogleEnabled(false));
+  }, []);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("google") === "error")
+      setError(
+        "Nie udało się zalogować przez Google. Spróbuj ponownie albo użyj adresu e-mail.",
+      );
+  }, []);
+  const googleHref = `${API}/auth/google/start?next=${encodeURIComponent(nextPath)}`;
   useEffect(() => {
     let active = true;
     void fetch(`${API}/accounts/session`, {
@@ -362,6 +379,24 @@ export function AccountAuthPanel({
           </button>
         ))}
       </div>
+      {googleEnabled ? (
+        <>
+          <a
+            className="mt-6 flex min-h-control-lg w-full items-center justify-center gap-3 rounded-pill border border-border bg-surface px-4 py-3 font-interface text-button font-semibold text-ink transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+            href={googleHref}
+          >
+            <GoogleMark />
+            {mode === "login"
+              ? "Zaloguj się przez Google"
+              : "Załóż konto przez Google"}
+          </a>
+          <div className="my-5 flex items-center gap-4 text-caption font-bold tracking-wide text-ink-muted">
+            <span className="h-px flex-1 bg-border" />
+            LUB E-MAILEM
+            <span className="h-px flex-1 bg-border" />
+          </div>
+        </>
+      ) : null}
       <form className="mt-7 space-y-5" onSubmit={submit}>
         {mode === "register" ? (
           <div className="grid gap-5 sm:grid-cols-2">

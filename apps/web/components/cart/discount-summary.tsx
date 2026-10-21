@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState, type FormEvent } from "react";
+import { InPostLogo } from "@/components/brand/logos";
 import type { CartMutation, CartView } from "./cart-types";
 
 function formatGrosz(value: number): string {
@@ -143,7 +144,10 @@ export function DiscountSummary({
                       : "Kurier"}
                 </span>
               </span>
-              <span className="shrink-0 text-label">
+              <span className="flex shrink-0 items-center gap-3 text-label">
+                {quote.method === "pickup_in_person" ? null : (
+                  <InPostLogo className="h-6" />
+                )}
                 {formatGrosz(quote.gross_grosz)}
               </span>
             </label>

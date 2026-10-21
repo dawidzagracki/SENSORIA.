@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCartCount } from "@/components/layout/cart-count-provider";
+import { PaymentLogos } from "@/components/brand/logos";
 import { Button, Price } from "@/components/ui";
 import { addCatalogProductToCart } from "@/lib/product-cart";
 import type { VatRate } from "@/types/catalog";
@@ -113,6 +114,7 @@ export function ProductPurchaseActions({
               ? "Płatność BLIK, kartą, Google Pay lub Apple Pay. Konto nie jest wymagane."
               : "Zakup niedostępny.")}
         </p>
+        <PaymentLogos />
       </div>
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface p-4 pb-[calc(theme(spacing.4)+env(safe-area-inset-bottom))] shadow-overlay lg:hidden">
         <div className="mx-auto flex max-w-page-shell items-center gap-4">

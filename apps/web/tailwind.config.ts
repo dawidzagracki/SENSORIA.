@@ -436,6 +436,12 @@ export const radiusTokens = [
       "Zaokrąglone karty w PDF; wektorowy promień ok. 15 pt przy transformacji 0.75.",
   },
   {
+    name: "control",
+    value: "20px",
+    source:
+      "Redesign: pola formularzy i drobne kontrolki mają ten sam promień co karty — w aplikacji nie ma kanciastych narożników.",
+  },
+  {
     name: "pill",
     value: "9999px",
     source: "Kontrolki o pełnym, pigułkowym kształcie w PDF.",

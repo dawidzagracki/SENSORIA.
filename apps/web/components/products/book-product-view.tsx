@@ -5,6 +5,7 @@ import {
   ProductCover,
   ProductHeading,
 } from "@/components/products/product-detail-shared";
+import { InPostLogo } from "@/components/brand/logos";
 import { AuthorBlurb } from "@/components/products/product-info";
 import { getBookAvailability } from "@/lib/catalog-product";
 import type { CatalogProductDetail } from "@/types/catalog";
@@ -84,6 +85,7 @@ export function BookProductView({
             aria-label="Dostawa książki"
             className="space-y-2 border-y border-border py-4 text-body-small text-ink-muted"
           >
+            <InPostLogo />
             {book.shipping_business_days && book.shipping_method ? (
               <>
                 <p>Wysyłka w {book.shipping_business_days} dni robocze.</p>

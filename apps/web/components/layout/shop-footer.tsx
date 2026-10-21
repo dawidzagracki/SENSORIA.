@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { InPostLogo, PaymentLogos, StripeLogo } from "../brand/logos";
 import { BrandLogo } from "./brand-logo";
 import { CookiePreferencesAction } from "./cookie-preferences-action";
 import { copyrightText, footerColumns } from "./site-config";
@@ -56,6 +57,19 @@ export function ShopFooter({ demoEnabled }: { demoEnabled: boolean }) {
             )}
           </section>
         ))}
+      </div>
+      <div className="border-t border-border">
+        <div className="mx-auto flex max-w-page-shell flex-wrap items-center gap-x-8 gap-y-4 px-4 py-6">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="uppercase-label text-ink-muted">Płatności</span>
+            <PaymentLogos />
+            <StripeLogo />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="uppercase-label text-ink-muted">Dostawa</span>
+            <InPostLogo />
+          </div>
+        </div>
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-page-shell flex-wrap items-center justify-between gap-3 px-4 py-4 text-caption text-ink-muted">

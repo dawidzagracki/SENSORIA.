@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { InPostLogo } from "@/components/brand/logos";
 import { useOptionalCartCount } from "@/components/layout/cart-count-provider";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -281,12 +282,17 @@ export function ConfirmationView({
           <span>{money(order.amount_due_grosz)}</span>
         </p>
         {order.requires_shipping ? (
-          <p className="mt-3 text-caption text-ink-muted">
-            Dostawa: {deliveryLabel[order.delivery_method ?? ""] ?? "wysyłka"}
-            {order.delivery_summary ? ` — ${order.delivery_summary}` : ""}.
-            {order.delivery_method === "pickup_in_person"
-              ? " Powiadomimy Cię e-mailem, gdy zamówienie będzie gotowe do odbioru."
-              : " Powiadomimy Cię e-mailem, gdy paczka zostanie nadana."}
+          <p className="mt-3 flex flex-wrap items-center gap-3 text-caption text-ink-muted">
+            {order.delivery_method === "pickup_in_person" ? null : (
+              <InPostLogo />
+            )}
+            <span>
+              Dostawa: {deliveryLabel[order.delivery_method ?? ""] ?? "wysyłka"}
+              {order.delivery_summary ? ` — ${order.delivery_summary}` : ""}.
+              {order.delivery_method === "pickup_in_person"
+                ? " Powiadomimy Cię e-mailem, gdy zamówienie będzie gotowe do odbioru."
+                : " Powiadomimy Cię e-mailem, gdy paczka zostanie nadana."}
+            </span>
           </p>
         ) : null}
       </section>

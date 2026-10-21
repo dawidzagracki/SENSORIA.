@@ -22,7 +22,7 @@ Wymaga Dockera, a do wgrania audiobooka macOS-owych `say` i `ffmpeg` (głos „Z
 
 Konta (hasło wszędzie: `Demo-Sensoria-2026`):
 - Panel, właścicielka: `wlascicielka@sensoria.demo`; obsługa (mniejsze uprawnienia): `obsluga@sensoria.demo`
-- Klientka (logowanie hasłem lub „Wyślij mi link” — link przychodzi do Mailpit): `anna.kowalska@sensoria.demo`
+- Klientka (logowanie hasłem, „Zaloguj się przez Google” — atrapa z listą kont — lub „Wyślij mi link”, który przychodzi do Mailpit): `anna.kowalska@sensoria.demo`; konta Google w atrapie: Anna Kowalska, Ewa Nowak, Jan Pokazowy
 - Kody rabatowe: `WITAJ10` (−10%), `ZMYSLY20` (−20 zł, od 50 zł)
 
 ## Proponowany scenariusz (ok. 15 min)
@@ -40,7 +40,7 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
 
 ## Testy przepływów (Playwright, prawdziwy stos)
 
-`apps/web/e2e-demo/` zawiera 40 testów klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
+`apps/web/e2e-demo/` zawiera 47 testów klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
 karta → koszyk → checkout → bramka → potwierdzenie → biblioteka/czytnik/odtwarzacz, filtry i wyszukiwarka, kody rabatowe,
 dostawa (gabinet, kurier, Paczkomat), faktura na firmę, rejestracja z potwierdzeniem e-maila (z Mailpit), opinie,
 reklamacje, vouchery z QR i PDF, dokumenty, każda sekcja panelu.
@@ -71,5 +71,7 @@ docker run --rm -e DEMO_URL=http://localhost:8090 -e DEMO_HOST_MAP=1 -v "$PWD/ap
 - Płatność nie jest prawdziwa (atrapa Stripe w `demo/fake_stripe.py`); poczta trafia tylko do Mailpit.
 - Dane osobowe, NIP i teksty prawne są demonstracyjne — nie do użycia produkcyjnego.
 - Panel nie ma jeszcze 2FA (prace w gałęzi `wip/2fa-totp`).
+- Logowanie przez Google na produkcji wymaga `GOOGLE_CLIENT_ID` i `GOOGLE_CLIENT_SECRET` (przycisk pojawia się tylko wtedy); w demo działa atrapa.
+- Loga płatności i dostawy (BLIK, Visa, Mastercard, Google Pay, Apple Pay, Stripe, InPost) to uproszczone znaki rysowane w SVG — przed premierą podmień je na oficjalne materiały marek.
 - Wyszukiwarka Paczkomatów korzysta z atrapy (6 punktów: Olsztyn, Warszawa, Kraków); na produkcji — prawdziwe API InPost.
 - Pierwsze wejście po starcie może chwilę trwać; produkcyjny build web jest szybki dalej.

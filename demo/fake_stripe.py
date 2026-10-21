@@ -15,13 +15,28 @@ import time
 import urllib.request
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
 WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "whsec_demo")
 WEBHOOK_URL = os.environ.get("WEBHOOK_URL", "http://api:8000/payments/webhooks/stripe")
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "http://localhost:9911")
 SESSIONS: dict[str, dict[str, object]] = {}
-
+GOOGLE_CODES: dict[str, dict[str, object]] = {}
+GOOGLE_ACCOUNTS = [
+    ("Anna Kowalska", "Anna", "Kowalska", "anna.kowalska@sensoria.demo"),
+    ("Ewa Nowak", "Ewa", "Nowak", "ewa.nowak@sensoria.demo"),
+    ("Jan Pokazowy", "Jan", "Pokazowy", "jan.pokazowy@sensoria.demo"),
+]
+GOOGLE_PAGE = """<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zaloguj się przez Google (demo)</title>
+<style>body{{font-family:system-ui,sans-serif;background:#f6f8fc;margin:0;display:grid;place-items:center;min-height:100vh}}
+main{{background:#fff;border-radius:28px;padding:36px;max-width:420px;width:calc(100% - 32px)}}
+h1{{font-size:24px;font-weight:400;margin:8px 0 4px}}p{{color:#444;margin:0 0 16px}}
+a{{display:flex;gap:12px;align-items:center;padding:12px;border-radius:16px;color:#1f1f1f;text-decoration:none}}a:hover{{background:#f0f4f9}}
+.av{{width:36px;height:36px;border-radius:50%;background:#1a73e8;color:#fff;display:grid;place-items:center;font-weight:600}}
+small{{color:#5f6368;display:block}}.demo{{background:#fff3cd;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:16px}}</style>
+<main><p class="demo">Tryb demonstracyjny — to nie jest prawdziwe logowanie Google.</p>
+<h1>Wybierz konto</h1><p>aby kontynuować w Sensoria</p>{items}</main></html>"""
 LOCKERS = [
     ("OLS01M", "ul. Kościuszki", "12", "10-502", "Olsztyn"),
     ("OLS02M", "al. Warszawska", "98", "10-702", "Olsztyn"),
@@ -98,7 +113,13 @@ class Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", 0))
         form = parse_qs(self.rfile.read(length).decode())
         path = urlparse(self.path).path
-        if path == "/v1/checkout/sessions":
+        if path == "/google/token":
+            code = (form.get("code") or [""])[0]
+            if code in GOOGLE_CODES:
+                self._send(200, json.dumps({"access_token": "at_" + code, "token_type": "Bearer"}).encode(), "application/json")
+            else:
+                self._send(400, b'{"error":"invalid_grant"}', "application/json")
+        elif path == "/v1/checkout/sessions":
             sid = "cs_test_" + uuid.uuid4().hex[:16]
             SESSIONS[sid] = {
                 "amount": int(form["line_items[0][price_data][unit_amount]"][0]),
@@ -143,6 +164,32 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, json.dumps(locker(match[0])).encode(), "application/json")
             else:
                 self._send(404, b"{}", "application/json")
+        elif path == "/google/auth":
+            query = parse_qs(parsed.query)
+            redirect = (query.get("redirect_uri") or [""])[0]
+            state = (query.get("state") or [""])[0]
+            items = ""
+            for name, given, family, email in GOOGLE_ACCOUNTS:
+                href = "/google/pick?" + urlencode({"email": email, "name": name, "given": given, "family": family, "redirect_uri": redirect, "state": state})
+                items += f'<a href="{html.escape(href)}"><span class="av">{given[0]}</span><span>{html.escape(name)}<small>{html.escape(email)}</small></span></a>'
+            self._send(200, GOOGLE_PAGE.format(items=items).encode(), "text/html; charset=utf-8")
+        elif path == "/google/pick":
+            query = parse_qs(parsed.query)
+            code = "gc_" + uuid.uuid4().hex
+            GOOGLE_CODES[code] = {
+                "email": query["email"][0], "name": query["name"][0],
+                "given_name": query["given"][0], "family_name": query["family"][0],
+                "email_verified": True,
+            }
+            target = query["redirect_uri"][0] + "?" + urlencode({"code": code, "state": query["state"][0]})
+            self._send(302, b"", "text/plain", {"Location": target})
+        elif path == "/google/userinfo":
+            token = (self.headers.get("Authorization") or "").removeprefix("Bearer ").removeprefix("at_")
+            profile = GOOGLE_CODES.get(token)
+            if profile is None:
+                self._send(401, b"{}", "application/json")
+            else:
+                self._send(200, json.dumps(profile).encode(), "application/json")
         elif path.startswith("/pay/"):
             sid = path.split("/")[2]
             session = SESSIONS.get(sid)

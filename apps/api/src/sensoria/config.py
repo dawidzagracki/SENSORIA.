@@ -82,6 +82,12 @@ class Settings(BaseSettings):
     MAIL_FROM: str | None = None
     MAIL_REPLY_TO: str | None = None
     MAIL_WORKER_INTERVAL_SECONDS: int = Field(default=10, ge=1, le=600)
+    # "Continue with Google" is offered only when both values are set.
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: SecretStr | None = None
+    GOOGLE_AUTH_URL: str = "https://accounts.google.com/o/oauth2/v2/auth"
+    GOOGLE_TOKEN_URL: str = "https://oauth2.googleapis.com/token"
+    GOOGLE_USERINFO_URL: str = "https://openidconnect.googleapis.com/v1/userinfo"
 
     @field_validator(
         "STRIPE_SECRET_KEY",
@@ -91,6 +97,8 @@ class Settings(BaseSettings):
         "SMTP_PASSWORD",
         "MAIL_FROM",
         "MAIL_REPLY_TO",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
         mode="before",
     )
     @classmethod

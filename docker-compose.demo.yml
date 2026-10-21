@@ -11,6 +11,11 @@ services:
       SMTP_STARTTLS: "false"
       MAIL_FROM: sklep@sensoria.demo
       INPOST_POINTS_API_URL: http://fake-stripe:9911/v1/points
+      GOOGLE_CLIENT_ID: demo-google-client
+      GOOGLE_CLIENT_SECRET: demo-google-secret
+      GOOGLE_AUTH_URL: http://localhost:9911/google/auth
+      GOOGLE_TOKEN_URL: http://fake-stripe:9911/google/token
+      GOOGLE_USERINFO_URL: http://fake-stripe:9911/google/userinfo
       SITE_URL: http://localhost:8090
     depends_on:
       mailpit:

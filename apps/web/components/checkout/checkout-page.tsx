@@ -3,6 +3,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import {
+  ApplePayLogo,
+  BlikLogo,
+  GooglePayLogo,
+  InPostLogo,
+  MastercardLogo,
+  StripeLogo,
+  VisaLogo,
+} from "@/components/brand/logos";
 import { Button, Checkbox, Modal, RadioCard } from "@/components/ui";
 import type { CartView } from "@/components/cart/cart-types";
 import type { PickupPointSnapshot } from "@/components/cart/cart-types";
@@ -725,6 +734,11 @@ export function CheckoutPage() {
                           : `${money(quote.gross_grosz)} · ${quote.vat_label}`
                       }
                       disabled={updatingDelivery}
+                      trailingContent={
+                        quote.method === "pickup_in_person" ? undefined : (
+                          <InPostLogo />
+                        )
+                      }
                     />
                   ))}
                   {updatingDelivery ? (
@@ -1097,6 +1111,7 @@ export function CheckoutPage() {
                   onChange={() => setPaymentMethod("blik")}
                   title="BLIK"
                   description="Wpisujesz sześć cyfr z aplikacji banku"
+                  trailingContent={<BlikLogo />}
                 />
                 <RadioCard
                   name="payment"
@@ -1105,6 +1120,12 @@ export function CheckoutPage() {
                   onChange={() => setPaymentMethod("card")}
                   title="Karta płatnicza"
                   description="Visa, Mastercard"
+                  trailingContent={
+                    <span className="flex gap-2">
+                      <VisaLogo />
+                      <MastercardLogo />
+                    </span>
+                  }
                 />
                 <RadioCard
                   name="payment"
@@ -1113,11 +1134,20 @@ export function CheckoutPage() {
                   onChange={() => setPaymentMethod("wallet")}
                   title="Google Pay lub Apple Pay"
                   description="Płatność jednym dotknięciem"
+                  trailingContent={
+                    <span className="flex gap-2">
+                      <GooglePayLogo />
+                      <ApplePayLogo />
+                    </span>
+                  }
                 />
               </fieldset>
-              <p className="text-caption text-ink-muted">
-                Płatność obsługuje bezpieczny operator (Stripe). Dane karty nie
-                trafiają do naszego sklepu.
+              <p className="flex flex-wrap items-center gap-3 text-caption text-ink-muted">
+                <StripeLogo />
+                <span>
+                  Płatność obsługuje bezpieczny operator (Stripe). Dane karty
+                  nie trafiają do naszego sklepu.
+                </span>
               </p>
             </section>
 

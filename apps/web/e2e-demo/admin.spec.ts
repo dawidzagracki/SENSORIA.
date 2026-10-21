@@ -1,5 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { acceptEssentialCookies, ADMIN, expectNoServerError } from "./helpers";
+import {
+  acceptEssentialCookies,
+  ADMIN,
+  expectNoServerError,
+  findSquareControls,
+} from "./helpers";
 
 test.beforeEach(async ({ context, baseURL }) => {
   await acceptEssentialCookies(context, baseURL!);
@@ -138,4 +143,26 @@ test("wylogowanie z panelu", async ({ page }) => {
   await adminLogin(page);
   await page.getByRole("button", { name: "Wyloguj" }).click();
   await expect(page).toHaveURL(/\/admin\/logowanie/);
+});
+
+test("spójność w panelu: brak kanciastych narożników", async ({ page }) => {
+  await adminLogin(page);
+  const square: string[] = [];
+  for (const path of [
+    "/admin",
+    "/admin/zamowienia",
+    "/admin/produkty",
+    "/admin/vouchery",
+    "/admin/rabaty",
+    "/admin/strony",
+    "/admin/ustawienia",
+    "/admin/raporty",
+  ]) {
+    await page.goto(path);
+    await page.waitForTimeout(1200);
+    square.push(
+      ...(await findSquareControls(page)).map((entry) => `${path}: ${entry}`),
+    );
+  }
+  expect(square).toEqual([]);
 });

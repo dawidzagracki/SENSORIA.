@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   acceptEssentialCookies,
   cartCount,
+  findSquareControls,
   expectNoServerError,
 } from "./helpers";
 
@@ -246,4 +247,28 @@ test("e-book: darmowy fragment PDF otwiera się w oknie", async ({ page }) => {
     page.getByRole("dialog", { name: "Darmowy fragment PDF" }),
   ).toBeVisible();
   await expect(page.getByTitle(/Darmowy fragment produktu/)).toBeVisible();
+});
+
+test("spójność: żaden widoczny element sterujący nie ma kanciastych narożników", async ({
+  page,
+}) => {
+  await page.goto("/sklep/integracja-sensoryczna-w-codziennosci");
+  await page.getByRole("button", { name: "Do koszyka" }).first().click();
+  await expect(page.getByText("Produkt dodano do koszyka.")).toBeVisible();
+  const square: string[] = [];
+  for (const path of [
+    "/",
+    "/sklep",
+    "/koszyk",
+    "/zamowienie",
+    "/konto",
+    "/pomoc",
+    "/pomoc/zwroty-i-reklamacje",
+  ]) {
+    await page.goto(path);
+    await page.waitForTimeout(800);
+    const found = await findSquareControls(page);
+    square.push(...found.map((entry) => `${path}: ${entry}`));
+  }
+  expect(square).toEqual([]);
 });

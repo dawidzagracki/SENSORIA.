@@ -17,24 +17,25 @@ afterEach(() => {
 
 describe("account passwordless login action", () => {
   it("uses only the email and does not require a password", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValueOnce(new Response("{}", { status: 401 }))
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrf_token: "csrf-token" }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        }),
-      )
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            message:
-              "Jeśli konto istnieje, wyślemy wiadomość z linkiem do logowania.",
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-      );
+    const json = (body: unknown, status = 200) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+      });
+    const fetchMock = vi.fn(
+      async (input: RequestInfo | URL, _init?: RequestInit) => {
+        const url = String(input);
+        if (url.endsWith("/accounts/session")) return json({}, 401);
+        if (url.endsWith("/accounts/oauth/providers"))
+          return json({ google: false });
+        if (url.endsWith("/accounts/csrf"))
+          return json({ csrf_token: "csrf-token" });
+        return json({
+          message:
+            "Jeśli konto istnieje, wyślemy wiadomość z linkiem do logowania.",
+        });
+      },
+    );
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
     render(<AccountAuthPanel />);

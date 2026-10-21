@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { ContentBlocks } from "@/components/library/content-blocks";
 import type { ContentPageData } from "@/lib/content-api";
 
@@ -14,9 +15,11 @@ const date = (value: string) =>
 export function ContentPageView({
   page,
   fallbackTitle,
+  accessory,
 }: {
   page: ContentPageData | null;
   fallbackTitle: string;
+  accessory?: ReactNode;
 }) {
   return (
     <main
@@ -32,6 +35,7 @@ export function ContentPageView({
           {page.summary ? (
             <p className="mt-3 text-body text-ink-muted">{page.summary}</p>
           ) : null}
+          {accessory ? <div className="mt-6">{accessory}</div> : null}
           <div className="mt-6">
             <ContentBlocks blocks={page.blocks} />
           </div>
