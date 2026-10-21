@@ -13,7 +13,12 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.modules.accounts.auth import digest_secret, require_customer_id
-from sensoria.modules.catalog.models import Product, ProductAudiobook, ProductAudiobookChapter
+from sensoria.modules.catalog.models import (
+    Product,
+    ProductAudiobook,
+    ProductAudiobookChapter,
+    ProductImage,
+)
 from sensoria.modules.catalog.types import ProductKind
 from sensoria.modules.orders.models import Order, OrderConsent, OrderItem
 from sensoria.modules.payments.tokens import verify_order_access_token
@@ -156,12 +161,19 @@ async def entitlement_detail(
     audiobook = await session.get(ProductAudiobook, product.id)
     progress = await session.get(ContentProgress, entitlement.id)
     total_pages = sum(chapter.page_count or 0 for chapter in chapters)
+    cover_url = await session.scalar(
+        select(ProductImage.url)
+        .where(ProductImage.product_id == product.id)
+        .order_by(ProductImage.position)
+        .limit(1)
+    )
     return {
         "id": entitlement.id,
         "kind": entitlement.kind,
         "product_id": product.id,
         "title": product.name,
         "author": audiobook.narrator if audiobook else None,
+        "cover_url": cover_url,
         "order_number": order.public_number,
         "buyer_email": order.email,
         "granted_at": entitlement.granted_at,

@@ -38,9 +38,38 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
    (realizacja), klienci, opinie (moderacja), zgłoszenia, kody rabatowe, strony i FAQ, raporty (CSV), ustawienia, dziennik.
 8. **Strony formalne i cookies** — regulamin, polityka prywatności, ustawienia cookies w stopce, centrum pomocy z odstąpieniem.
 
+## Testy przepływów (Playwright, prawdziwy stos)
+
+`apps/web/e2e-demo/` zawiera 40 testów klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
+karta → koszyk → checkout → bramka → potwierdzenie → biblioteka/czytnik/odtwarzacz, filtry i wyszukiwarka, kody rabatowe,
+dostawa (gabinet, kurier, Paczkomat), faktura na firmę, rejestracja z potwierdzeniem e-maila (z Mailpit), opinie,
+reklamacje, vouchery z QR i PDF, dokumenty, każda sekcja panelu.
+
+```bash
+docker run --rm -e DEMO_URL=http://localhost:8090 -e DEMO_HOST_MAP=1 -v "$PWD/apps/web":/work -w /work \
+  mcr.microsoft.com/playwright:v1.64.1-noble npx playwright test -c playwright.demo.config.ts --project=desktop
+```
+
+(`--project=mobile` dla telefonu). Testy zostawiają zamówienia w bazie — przed pokazem zrób
+`./demo/compose.sh down -v && ./demo/start.sh`.
+
+## Błędy znalezione przy przeglądzie (do przeniesienia na `main`)
+
+- karty w katalogu linkowały do pustej strony `/produkt/…`; teraz jedna strona `/sklep/…` + przekierowanie 308;
+- przyciski „Do koszyka” w katalogu, na stronie głównej i w „Podobne” były zaślepkami;
+- linki w mailach „potwierdź e-mail” i „ustaw hasło” prowadziły do 404 (brak tras `/[token]`);
+- zakup przez zweryfikowane konto nie trafiał do historii zamówień do kolejnego logowania;
+- zakładka „Faktury” była zaślepką, a lista zamówień zwracała puste dokumenty;
+- QR vouchera w koncie miał podwójny prefiks `/api/api`;
+- panel: podmiana obrazka produktu kończyła się błędem 500;
+- obrazy `next/image` nie działały w obrazie produkcyjnym (rewrite `/api` wypieczony na `localhost:8000`);
+- koszyk po opłaceniu zamówienia nie był czyszczony; mobilny koszyk i tabele panelu były nieczytelne;
+- stały dziś test prezentu z datą w przeszłości.
+
 ## Ograniczenia wersji pokazowej
 
 - Płatność nie jest prawdziwa (atrapa Stripe w `demo/fake_stripe.py`); poczta trafia tylko do Mailpit.
 - Dane osobowe, NIP i teksty prawne są demonstracyjne — nie do użycia produkcyjnego.
 - Panel nie ma jeszcze 2FA (prace w gałęzi `wip/2fa-totp`).
+- Wyszukiwarka Paczkomatów korzysta z atrapy (6 punktów: Olsztyn, Warszawa, Kraków); na produkcji — prawdziwe API InPost.
 - Pierwsze wejście po starcie może chwilę trwać; produkcyjny build web jest szybki dalej.

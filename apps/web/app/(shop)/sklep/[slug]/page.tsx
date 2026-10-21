@@ -128,8 +128,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const product = await readProduct(slug);
-  if (!isSupportedProductKind(product))
-    redirect(`/produkt/${encodeURIComponent(slug)}`);
+  if (!isSupportedProductKind(product)) notFound();
   const canonical = publicUrl(voucherProductPath(product.slug));
   const image = product.images[0]
     ? safePublicImageUrl(product.images[0].url)
@@ -155,8 +154,7 @@ function isSupportedProductKind(product: CatalogProductDetail): boolean {
 export default async function VoucherPage({ params, searchParams }: PageProps) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   const product = await readProduct(slug);
-  if (!isSupportedProductKind(product))
-    redirect(`/produkt/${encodeURIComponent(slug)}`);
+  if (!isSupportedProductKind(product)) notFound();
 
   if (
     product.kind === "DIGITAL" ||

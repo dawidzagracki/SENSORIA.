@@ -79,7 +79,7 @@ export function Accordion({
               <button
                 aria-controls={panelId}
                 aria-expanded={expanded}
-                className="flex min-h-control-md w-full items-center justify-between gap-4 py-3 text-left font-interface text-label font-bold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+                className="flex min-h-control-md w-full items-center justify-between gap-4 py-3 text-left font-interface text-body-small font-semibold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
                 data-accordion-trigger
                 id={triggerId}
                 onClick={() => toggle(item.id)}

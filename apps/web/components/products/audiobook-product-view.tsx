@@ -13,6 +13,13 @@ import {
 } from "@/lib/catalog-product";
 import type { CatalogProductDetail } from "@/types/catalog";
 import { AudioSamplePlayer } from "@/components/products/audio-sample-player";
+import {
+  AuthorBlurb,
+  DigitalConsentNotice,
+  TrustList,
+  audioTrust,
+  digitalFaq,
+} from "@/components/products/product-info";
 
 export function AudiobookProductView({
   product,
@@ -30,18 +37,7 @@ export function AudiobookProductView({
     chapters,
   );
   const totalDuration = formatDurationPolish(sumChapterSeconds(chapters));
-  const faqItems = [
-    {
-      id: "audio-delivery",
-      title: "Kiedy otrzymam audiobook?",
-      content: (
-        <p>
-          Wydanie pliku po opłaceniu wymaga integracji zamówień. Aplikacja nie
-          udostępnia jeszcze pliku ani biblioteki klienta.
-        </p>
-      ),
-    },
-  ];
+  const faqItems = digitalFaq("audio");
 
   return (
     <main
@@ -89,26 +85,8 @@ export function AudiobookProductView({
               </div>
             ) : null}
           </dl>
-          <p className="rounded-card border border-border bg-surface-muted p-4 text-body-small text-ink">
-            Kupując treść cyfrową, potwierdzasz przy płatności zgodę na jej
-            udostępnienie przed upływem terminu odstąpienia od umowy — co
-            oznacza utratę prawa do odstąpienia. Bez tej zgody plik wyślemy po
-            14 dniach.
-            <span className="mt-2 block text-caption text-ink-muted">
-              Ta strona nie zapisuje zgody ani nie uruchamia odroczonego
-              wydania.
-            </span>
-          </p>
-          <ul className="space-y-2 border-y border-border py-4 text-body-small text-ink-muted">
-            <li>
-              Plik {audiobook.file_format ?? "w niepodanym formacie"} po
-              opłaceniu wymaga integracji zamówień [24].
-            </li>
-            <li>
-              Ponowne pobranie z konta nie jest dostępne bez integracji
-              biblioteki klienta.
-            </li>
-          </ul>
+          <DigitalConsentNotice />
+          <TrustList items={audioTrust} />
           <ProductPurchaseActions
             available={product.is_available}
             compareAtPrice={product.compare_at_price}
@@ -127,9 +105,7 @@ export function AudiobookProductView({
         aria-labelledby="audio-chapters-title"
         className="-mx-4 space-y-5 bg-surface-muted px-4 py-8 md:-mx-4 md:px-4 xl:-mx-12 xl:px-12"
       >
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          Spis rozdziałów
-        </p>
+        <p className="uppercase-label text-accent-action">Spis rozdziałów</p>
         <h2
           className="font-display text-subtitle font-bold text-ink"
           id="audio-chapters-title"
@@ -157,7 +133,7 @@ export function AudiobookProductView({
           </ol>
         ) : (
           <p className="text-body-small text-ink-muted">
-            Spis rozdziałów nie został podany.
+            Rozdziały pojawią się w odtwarzaczu po zakupie.
           </p>
         )}
         {!durationIsConsistent ? (
@@ -178,17 +154,20 @@ export function AudiobookProductView({
         aria-labelledby="audio-faq-title"
         className="mx-auto w-full max-w-content space-y-5"
       >
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          Pytania
-        </p>
+        <p className="uppercase-label text-accent-action">Pytania</p>
         <h2
           className="font-display text-subtitle font-bold text-ink"
           id="audio-faq-title"
         >
           Zanim kupisz
         </h2>
-        <Accordion defaultExpandedIds={[]} items={faqItems} mode="single" />
+        <Accordion
+          defaultExpandedIds={["delivery"]}
+          items={faqItems}
+          mode="single"
+        />
       </section>
+      <AuthorBlurb />
       <CatalogRelatedProducts
         currentId={product.id}
         products={product.related_products}

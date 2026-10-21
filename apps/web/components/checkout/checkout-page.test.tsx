@@ -112,6 +112,11 @@ function response(body: unknown, status = 200) {
   });
 }
 
+// A gift can only be scheduled for a future day, so derive it from the clock.
+const SEND_DAY = new Date(Date.now() + 5 * 86_400_000)
+  .toISOString()
+  .slice(0, 10);
+
 describe("CheckoutPage", () => {
   beforeEach(() => {
     Object.defineProperty(HTMLDialogElement.prototype, "showModal", {
@@ -300,7 +305,7 @@ describe("CheckoutPage", () => {
     await user.click(scheduledRadio);
     expect(scheduledRadio).toBeChecked();
     fireEvent.change(await screen.findByLabelText(/Dzień wysyłki/), {
-      target: { value: "2026-10-20" },
+      target: { value: SEND_DAY },
     });
     await user.click(
       screen.getByRole("checkbox", { name: /Akceptuję regulamin/ }),
@@ -328,7 +333,7 @@ describe("CheckoutPage", () => {
         recipient_email: null,
         dedication: "Wszystkiego dobrego!",
         delivery_mode: "scheduled",
-        delivery_date: "2026-10-20",
+        delivery_date: SEND_DAY,
       },
     ]);
   });

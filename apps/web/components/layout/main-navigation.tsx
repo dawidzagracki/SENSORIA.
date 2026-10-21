@@ -38,7 +38,7 @@ export function MainNavigation({
             <li key={item.href}>
               <Link
                 aria-current={current ? "page" : undefined}
-                className={`flex min-h-touch items-center rounded-card border-b-2 px-3 py-2 font-interface text-label text-ink transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${current ? "border-accent-action font-bold" : "border-transparent"}`}
+                className={`flex min-h-touch items-center rounded-card border-b-2 px-3 py-2 font-interface text-button font-medium text-ink transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${current ? "border-accent-action font-bold text-accent-action" : "border-transparent"}`}
                 href={item.href}
                 onClick={onNavigate}
               >

@@ -71,7 +71,7 @@ function Seller({ item, reload }: { item: Item; reload: () => void }) {
     <Card title="Dane sprzedawcy (paragony i faktury)">
       <Status error={error} info={info} />
       <form
-        className="mt-3 grid gap-4 sm:grid-cols-2"
+        className="mt-3 grid gap-4 md:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault();
           void save(item.key, {
@@ -155,7 +155,7 @@ function Delivery({ item, reload }: { item: Item; reload: () => void }) {
         gabinecie jest zawsze bezpłatny.
       </p>
       <form
-        className="mt-3 grid gap-4 sm:grid-cols-2"
+        className="mt-3 grid gap-4 md:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault();
           void save(item.key, {
@@ -241,7 +241,7 @@ function Simple({
     <Card title={item.label}>
       <Status error={error} info={info} />
       <form
-        className="mt-3 grid gap-4 sm:grid-cols-2"
+        className="mt-3 grid gap-4 md:grid-cols-2"
         onSubmit={(e) => {
           e.preventDefault();
           void save(

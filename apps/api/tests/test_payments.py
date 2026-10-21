@@ -259,3 +259,46 @@ async def test_session_requires_configured_provider(
         f"/payments/orders/{checkout['order_id']}/session?token={checkout['access_token']}"
     )
     assert response.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_purchase_by_a_verified_account_is_linked_when_it_is_paid(
+    cart_environment: CartEnvironment, stripe_settings: Settings
+) -> None:
+    from datetime import UTC, datetime
+
+    from sensoria.modules.accounts.models import Customer
+
+    client, factory = cart_environment
+    async with factory() as session, session.begin():
+        customer = Customer(
+            email="buyer@example.com",
+            password_hash="x",
+            first_name="Anna",
+            last_name="Kowalska",
+            email_verified_at=datetime.now(UTC),
+        )
+        session.add(customer)
+        await session.flush()
+        customer_id = customer.id
+    checkout = await _checkout(client, ProductKind.VOUCHER, factory)
+    order_id, token = checkout["order_id"], checkout["access_token"]
+    await client.post(f"/payments/orders/{order_id}/session?token={token}")
+    async with factory() as session:
+        payment = await session.scalar(select(Payment))
+        assert payment is not None
+        session_id = payment.provider_session_id
+    paid = await _post_event(
+        client,
+        _event(
+            "checkout.session.completed",
+            session_id,
+            payment_status="paid",
+            amount_total=9500,
+            currency="pln",
+        ),
+    )
+    assert paid.json()["outcome"] == "paid"
+    async with factory() as session:
+        order = await session.get(Order, UUID(order_id))
+        assert order is not None and order.customer_id == customer_id

@@ -110,7 +110,7 @@ export function ProductPurchaseActions({
         >
           {notice ||
             (available
-              ? "Zakupy wymagają potwierdzenia przez serwer koszyka."
+              ? "Płatność BLIK, kartą, Google Pay lub Apple Pay. Konto nie jest wymagane."
               : "Zakup niedostępny.")}
         </p>
       </div>

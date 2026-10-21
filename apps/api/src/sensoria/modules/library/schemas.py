@@ -57,6 +57,7 @@ class EntitlementDetail(BaseModel):
     product_id: UUID
     title: str
     author: str | None
+    cover_url: str | None = None
     order_number: str | None
     buyer_email: str
     granted_at: datetime

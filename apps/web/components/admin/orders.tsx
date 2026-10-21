@@ -81,7 +81,7 @@ function List() {
       <Card>
         <form
           role="search"
-          className="grid gap-4 sm:grid-cols-4"
+          className="grid gap-4 md:grid-cols-4"
           onSubmit={(e) => {
             e.preventDefault();
             setPage(1);
@@ -298,7 +298,7 @@ function DetailView({ id }: { id: string }) {
       <ErrorBox message={error} />
       {info ? <Alert variant="success">{info}</Alert> : null}
       <Card title={`Zamówienie ${order.number}`}>
-        <dl className="grid gap-3 sm:grid-cols-2">
+        <dl className="grid gap-3 md:grid-cols-2">
           <div>
             <dt className="text-caption text-ink-muted">Klientka</dt>
             <dd>{order.email}</dd>

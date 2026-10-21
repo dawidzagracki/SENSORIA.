@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { CartToast, useAddToCart } from "./use-add-to-cart";
 import { ProductCard, type ProductType } from "@/components/ui";
 import type { CatalogRelatedProduct } from "@/types/catalog";
 
@@ -15,7 +15,7 @@ function productType(product: CatalogRelatedProduct): ProductType {
 }
 
 export function CatalogRelatedProducts({ currentId, products }: Props) {
-  const [notice, setNotice] = useState("");
+  const { add, busyId, notice, dismiss } = useAddToCart();
   const recommendations = products
     .filter(
       (product, index, all) =>
@@ -32,9 +32,7 @@ export function CatalogRelatedProducts({ currentId, products }: Props) {
       className="-mx-4 space-y-5 bg-surface-muted px-4 py-8 md:-mx-4 md:px-4 xl:-mx-12 xl:px-12"
     >
       <div>
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          Zobacz też
-        </p>
+        <p className="uppercase-label text-accent-action">Zobacz też</p>
         <h2
           className="mt-2 font-display text-subtitle font-bold text-ink"
           id="catalog-related-title"
@@ -42,7 +40,7 @@ export function CatalogRelatedProducts({ currentId, products }: Props) {
           Podobne materiały
         </h2>
       </div>
-      <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {recommendations.map((product) => (
           <ProductCard
             description={
@@ -69,11 +67,16 @@ export function CatalogRelatedProducts({ currentId, products }: Props) {
                 ? `${product.digital.file_format} · ${product.digital.page_count} stron`
                 : (product.digital?.file_format ?? "Szczegóły produktu")
             }
-            onAddToCart={() =>
-              setNotice(
-                "Dodawanie produktów do koszyka będzie dostępne po wdrożeniu integracji [24].",
-              )
+            actionHref={
+              product.kind === "VOUCHER"
+                ? `/sklep/${encodeURIComponent(product.slug)}`
+                : undefined
             }
+            actionLabel={
+              product.kind === "VOUCHER" ? "Wybierz wariant" : "Do koszyka"
+            }
+            addLoading={busyId === product.id}
+            onAddToCart={() => void add(product.id, product.name)}
             previousPriceInGrosze={product.compare_at_price ?? undefined}
             lowestPriceInGrosze={
               product.compare_at_price
@@ -86,15 +89,7 @@ export function CatalogRelatedProducts({ currentId, products }: Props) {
           />
         ))}
       </div>
-      {notice ? (
-        <p
-          aria-live="polite"
-          className="text-body-small text-ink-muted"
-          role="status"
-        >
-          {notice}
-        </p>
-      ) : null}
+      <CartToast notice={notice} onDismiss={dismiss} />
     </section>
   );
 }

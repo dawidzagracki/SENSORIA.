@@ -31,7 +31,7 @@ from .models import (
 )
 
 ReconciliationSource = Literal[
-    "registration", "email_verification", "password_login", "login_link", "manual"
+    "registration", "email_verification", "password_login", "login_link", "manual", "payment"
 ]
 
 
@@ -186,6 +186,7 @@ async def reconcile_guest_purchases(
         "password_login",
         "login_link",
         "manual",
+        "payment",
     }:
         raise ValueError("Unsupported purchase-linking source")
     if at.tzinfo is None or at.utcoffset() is None:

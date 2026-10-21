@@ -177,10 +177,10 @@ export function ReaderView({
     : null;
 
   return (
-    <div className="min-h-screen bg-surface text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+    <div className="flex min-h-screen flex-col-reverse bg-surface text-ink lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
       <aside
         aria-label="Spis treści"
-        className="border-b border-border p-5 lg:min-h-screen lg:border-b-0 lg:border-r"
+        className="border-t border-border p-5 lg:min-h-screen lg:border-b-0 lg:border-r lg:border-t-0"
       >
         <p className="font-display text-emphasis">{detail.title}</p>
         {detail.author ? (
@@ -248,9 +248,17 @@ export function ReaderView({
         className="min-w-0 focus:outline-none"
       >
         <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-3">
-          <p className="text-body-small font-bold">
-            Rozdział {position + 1} · {currentMeta?.title}
-          </p>
+          <div className="flex min-w-0 items-center gap-3">
+            <Link
+              className="inline-flex min-h-touch items-center text-body-small font-semibold text-accent-action underline lg:hidden"
+              href="/konto/biblioteka"
+            >
+              ← Biblioteka
+            </Link>
+            <p className="min-w-0 text-body-small font-bold">
+              Rozdział {position + 1} · {currentMeta?.title}
+            </p>
+          </div>
           <div role="group" aria-label="Rozmiar tekstu" className="flex gap-2">
             <button
               type="button"

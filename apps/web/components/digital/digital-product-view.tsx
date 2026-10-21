@@ -8,6 +8,13 @@ import {
 } from "@/components/products/product-detail-shared";
 import { ProductPurchaseActions } from "@/components/products/product-purchase-actions";
 import { PdfSamplePreview } from "@/components/products/pdf-sample-preview";
+import {
+  AuthorBlurb,
+  DigitalConsentNotice,
+  TrustList,
+  digitalFaq,
+  digitalTrust,
+} from "@/components/products/product-info";
 import type { CatalogProductDetail } from "@/types/catalog";
 
 type Props = { product: CatalogProductDetail };
@@ -45,39 +52,9 @@ function DigitalCover({ product }: Props) {
 }
 
 function faqItems(product: CatalogProductDetail) {
-  return [
-    {
-      id: "delivery",
-      title: "Kiedy dostanę plik?",
-      content: (
-        <p>
-          Informacja o wydaniu pliku wymaga potwierdzenia w konfiguracji
-          zamówienia. Nota o zgodzie na wcześniejsze udostępnienie znajduje się
-          przed przyciskami zakupu.
-        </p>
-      ),
-    },
-    {
-      id: "reader",
-      title: "Czy mogę czytać na czytniku?",
-      content: (
-        <p>
-          Format pliku: {product.digital?.file_format ?? "niepodany"}. Zgodność
-          z konkretnymi urządzeniami nie została określona.
-        </p>
-      ),
-    },
-    {
-      id: "invoice",
-      title: "Czy dostanę fakturę?",
-      content: <p>Informacja o fakturach nie została zatwierdzona.</p>,
-    },
-    {
-      id: "return",
-      title: "Czy mogę zwrócić e-booka?",
-      content: <p>Zasady zwrotu wymagają zatwierdzonej treści regulaminu.</p>,
-    },
-  ];
+  return digitalFaq(
+    product.digital?.label === "COURSE_PDF" ? "course" : "ebook",
+  );
 }
 
 export function DigitalProductView({ product }: Props) {
@@ -116,16 +93,7 @@ export function DigitalProductView({ product }: Props) {
               Wydanie {digital.edition}
             </p>
           ) : null}
-          <p className="rounded-card border border-border bg-surface-muted p-4 text-body-small text-ink">
-            Kupując treść cyfrową, potwierdzasz przy płatności zgodę na jej
-            udostępnienie przed upływem terminu odstąpienia od umowy — co
-            oznacza utratę prawa do odstąpienia. Bez tej zgody plik wyślemy po
-            14 dniach.
-            <span className="mt-2 block text-caption text-ink-muted">
-              To informacja o wymaganym kroku zamówienia. Ta strona nie zapisuje
-              zgody ani nie uruchamia odroczonego wydania pliku.
-            </span>
-          </p>
+          <DigitalConsentNotice />
           <section aria-label="Dane oferty" className="space-y-4">
             {isDiscounted && product.compare_at_price !== null ? (
               <p className="inline-flex rounded-pill bg-accent-action px-3 py-2 text-label font-bold text-on-accent">
@@ -147,41 +115,13 @@ export function DigitalProductView({ product }: Props) {
               vatRate={product.vat_rate}
             />
           </section>
-          <ul className="space-y-3 border-t border-border pt-4 text-body-small text-ink-muted">
-            <li>
-              Zakup, płatność i wydawanie plików nie są jeszcze podłączone.
-            </li>
-            <li>
-              Plik cyfrowy nie jest udostępniany przed potwierdzeniem płatności.
-            </li>
-            <li>Znakowanie pliku wymaga osobnego etapu [41].</li>
-          </ul>
+          <TrustList items={digitalTrust} />
         </section>
       </article>
 
-      <section
-        aria-labelledby="digital-contents-title"
-        className="-mx-4 space-y-4 bg-surface-muted px-4 py-8 md:-mx-4 md:px-4 xl:-mx-12 xl:px-12"
-      >
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          Spis treści
-        </p>
-        <h2
-          className="font-display text-subtitle font-bold text-ink"
-          id="digital-contents-title"
-        >
-          Co znajdziesz w środku
-        </h2>
-        <p className="text-body-small text-ink-muted">
-          Spis treści nie jest jeszcze dostępny w danych tego produktu.
-        </p>
-      </section>
-
       {product.audience_tags.length > 0 ? (
         <section aria-labelledby="digital-audience-title" className="space-y-4">
-          <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-            Dla kogo
-          </p>
+          <p className="uppercase-label text-accent-action">Dla kogo</p>
           <h2
             className="font-display text-subtitle font-bold text-ink"
             id="digital-audience-title"
@@ -201,24 +141,7 @@ export function DigitalProductView({ product }: Props) {
         </section>
       ) : null}
 
-      <section
-        aria-labelledby="digital-author-title"
-        className="-mx-4 space-y-4 bg-surface-muted px-4 py-8 md:-mx-4 md:px-4 xl:-mx-12 xl:px-12"
-      >
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          O autorce
-        </p>
-        <h2
-          className="font-display text-subtitle font-bold text-ink"
-          id="digital-author-title"
-        >
-          Informacje o autorce
-        </h2>
-        <p className="text-body-small text-ink-muted">
-          Informacje o autorce nie zostały powiązane z tym produktem w danych
-          API.
-        </p>
-      </section>
+      <AuthorBlurb />
 
       <CatalogRelatedProducts
         currentId={product.id}
@@ -229,9 +152,7 @@ export function DigitalProductView({ product }: Props) {
         aria-labelledby="digital-faq-title"
         className="mx-auto w-full max-w-content space-y-5"
       >
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          Pytania
-        </p>
+        <p className="uppercase-label text-accent-action">Pytania</p>
         <h2
           className="font-display text-subtitle font-bold text-ink"
           id="digital-faq-title"
@@ -244,10 +165,6 @@ export function DigitalProductView({ product }: Props) {
           mode="single"
         />
       </section>
-      <p className="text-caption text-ink-muted">
-        Dane o fragmentach, spisie treści, autorce i warunkach produktu wymagają
-        uzupełnienia w zatwierdzonych treściach redakcyjnych.
-      </p>
     </main>
   );
 }

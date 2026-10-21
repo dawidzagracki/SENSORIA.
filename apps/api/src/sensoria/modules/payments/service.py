@@ -127,6 +127,7 @@ async def _confirm_paid(session: AsyncSession, order: Order, payment: Payment) -
     await issue_after_payment(session, order.id)
     await _queue_paid_mails(session, order)
     await mark_fulfillment_ready_after_payment(session, order_id=order.id, paid_at=paid_at)
+    await _link_to_verified_account(session, order, paid_at)
     session.add(
         AuditLog(
             actor_type=ActorType.SYSTEM,
@@ -138,6 +139,38 @@ async def _confirm_paid(session: AsyncSession, order: Order, payment: Payment) -
         )
     )
     await session.flush()
+
+
+def _delivery_summary(order: Order) -> str | None:
+    """Where the parcel goes, for the confirmation page (point or courier address)."""
+    shipping = order.shipping_data or {}
+    point = order.delivery_point_snapshot or {}
+    if point:
+        place = f"{point.get('postal_code', '')} {point.get('city', '')}".strip()
+        return f"{point.get('name', 'Paczkomat')}, {point.get('street', '')}, {place}"
+    address = shipping.get("address") or {}
+    if shipping.get("method") == "courier" and address:
+        place = f"{address.get('postal_code', '')} {address.get('city', '')}".strip()
+        return f"{address.get('street', '')}, {place}"
+    return None
+
+
+async def _link_to_verified_account(session: AsyncSession, order: Order, at: datetime) -> None:
+    """A purchase made with the address of a verified account belongs to that account at once."""
+    if order.customer_id is not None:
+        return
+    from sensoria.modules.accounts.models import Customer
+    from sensoria.modules.accounts.purchase_linking import reconcile_guest_purchases
+
+    customer_id = await session.scalar(
+        select(Customer.id).where(
+            Customer.email == order.email.strip().lower(),
+            Customer.email_verified_at.is_not(None),
+            Customer.deleted_at.is_(None),
+        )
+    )
+    if customer_id is not None:
+        await reconcile_guest_purchases(session, customer_id, source="payment", at=at)
 
 
 def _order_url(order: Order) -> str:
@@ -336,6 +369,7 @@ async def order_status_view(session: AsyncSession, *, order_id: UUID, token: str
     local, _, domain = order.email.partition("@")
     masked = f"{local[:1]}***@{domain}"
     shipping = order.shipping_data or {}
+    summary = _delivery_summary(order)
     return {
         "order_id": order.id,
         "public_number": order.public_number,
@@ -347,6 +381,7 @@ async def order_status_view(session: AsyncSession, *, order_id: UUID, token: str
         "created_at": order.created_at,
         "requires_shipping": bool(shipping),
         "delivery_method": shipping.get("method"),
+        "delivery_summary": summary,
         "items": [
             {
                 "name": item.product_name_snapshot,

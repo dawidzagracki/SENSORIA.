@@ -139,40 +139,48 @@ export const controlHeightTokens = [
   },
 ] as const;
 
+// Self-hosted variable fonts from @fontsource-variable (latin + latin-ext, so Polish letters work).
+const sans = [
+  "Plus Jakarta Sans Variable",
+  "Plus Jakarta Sans",
+  "system-ui",
+  "sans-serif",
+];
+const serif = ["Lora Variable", "Lora", "Georgia", "serif"];
 const fontStacks = {
-  display: ["DejaVu Sans", "sans-serif"],
-  body: ["Liberation Serif", "serif"],
-  interface: ["Liberation Sans", "sans-serif"],
-  decorative: ["Liberation Serif", "serif"],
+  display: sans,
+  body: sans,
+  interface: sans,
+  decorative: serif,
 } as const;
 
 export const fontTokens = [
   {
     role: "Nagłówki UI",
-    family: fontStacks.display[0],
-    style: "Bold 700",
+    family: "Plus Jakarta Sans",
+    style: "Bold 700 / ExtraBold 800",
     source:
-      "Wykryty jako DejaVuSans-Bold; pliku pełnego fontu nie ma w repozytorium.",
+      "Zamiennik zastępczego DejaVu z makiet; zmienny font hostowany lokalnie.",
   },
   {
     role: "Tekst redakcyjny",
-    family: fontStacks.body[0],
-    style: "Regular 400; dostępna też kursywa",
+    family: "Plus Jakarta Sans",
+    style: "Regular 400",
     source:
-      "Wykryty jako LiberationSerif i LiberationSerif-Italic; plików pełnych brak.",
+      "Zamiennik Liberation Serif; czytelniejszy w sklepie, hostowany lokalnie.",
   },
   {
     role: "Akcent redakcyjny",
-    family: fontStacks.decorative[0],
-    style: "Italic 400",
-    source: "Wykryty jako LiberationSerif-Italic; pełnego pliku brakuje.",
+    family: "Lora",
+    style: "Italic 400–600",
+    source:
+      "Zamiennik Liberation Serif Italic; zmienny font hostowany lokalnie.",
   },
   {
     role: "Tekst interfejsu",
-    family: fontStacks.interface[0],
-    style: "Regular 400 i Bold 700",
-    source:
-      "Wykryty jako LiberationSans i LiberationSans-Bold; plików pełnych brak.",
+    family: "Plus Jakarta Sans",
+    style: "Regular 400 – ExtraBold 800",
+    source: "Zamiennik Liberation Sans; ta sama rodzina co nagłówki.",
   },
 ] as const;
 
@@ -223,6 +231,21 @@ export const typographyTokens = [
       "16.5 pt kursywy Liberation Serif w makiecie produktu; skala po transformacji PDF 0.75.",
   },
   {
+    role: "card-title",
+    family: "interface",
+    size: "19px",
+    lineHeight: "1.3",
+    source:
+      "Nowy token (redesign): tytuły kart i sekcji; wcześniej błędnie używano 11 px.",
+  },
+  {
+    role: "button",
+    family: "interface",
+    size: "15px",
+    lineHeight: "1.2",
+    source: "Nowy token (redesign): czytelny tekst przycisków i nawigacji.",
+  },
+  {
     role: "body-small",
     family: "body",
     size: "15px",
@@ -233,16 +256,23 @@ export const typographyTokens = [
   {
     role: "caption",
     family: "interface",
-    size: "13px",
+    size: "14px",
     lineHeight: "1.45",
     source:
       "9.7 pt w obu makietach; skala odtworzona z transformacji PDF 0.75.",
   },
   {
+    role: "eyebrow",
+    family: "interface",
+    size: "12px",
+    lineHeight: "1.3",
+    source: "Nowy token (redesign): małe etykiety wersalikowe i plakietki.",
+  },
+  {
     role: "label",
     family: "interface",
-    size: "11px",
-    lineHeight: "1.25",
+    size: "14px",
+    lineHeight: "1.35",
     source:
       "8.2 pt w oznaczeniach produktów; skala odtworzona z transformacji PDF 0.75.",
   },
@@ -467,7 +497,13 @@ const config: Config = {
           [size, { lineHeight }],
         ]),
       ),
-      fontWeight: { normal: "400", bold: "700" },
+      fontWeight: {
+        normal: "400",
+        medium: "500",
+        semibold: "600",
+        bold: "700",
+        extrabold: "800",
+      },
       width: {
         ...Object.fromEntries(
           controlHeightTokens.map(({ name, value }) => [name, value]),

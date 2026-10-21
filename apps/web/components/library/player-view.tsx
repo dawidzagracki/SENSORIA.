@@ -8,6 +8,7 @@ import {
   type EntitlementDetail,
 } from "@/components/library/library-types";
 import { API, apiJson, ClientApiError, formatDuration } from "@/lib/client-api";
+import { formatDurationPolish } from "@/lib/catalog-product";
 
 const SPEEDS = [0.75, 1, 1.5] as const;
 const SAVE_EVERY_MS = 10_000;
@@ -187,8 +188,17 @@ export function PlayerView({
         <div className="mt-8 grid gap-8 md:grid-cols-[minmax(0,20rem)_1fr]">
           <div
             aria-hidden="true"
-            className="aspect-product-image rounded-card bg-gradient-to-br from-accent to-accent-action"
-          />
+            className="relative aspect-product-image overflow-hidden rounded-card bg-gradient-to-br from-accent to-accent-action shadow-overlay"
+          >
+            {detail.cover_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt=""
+                className="h-full w-full object-cover"
+                src={detail.cover_url}
+              />
+            ) : null}
+          </div>
           <div className="min-w-0">
             <p className="text-caption font-bold tracking-wide">AUDIOBOOK</p>
             <h1 className="mt-2 font-display text-title">{detail.title}</h1>
@@ -339,8 +349,7 @@ export function PlayerView({
             id="chapters"
             className="text-caption font-bold tracking-wide text-surface/80"
           >
-            ROZDZIAŁY · {Math.floor(totalSeconds / 3600)} GODZ.{" "}
-            {Math.floor((totalSeconds % 3600) / 60)} MIN
+            ROZDZIAŁY · {formatDurationPolish(totalSeconds)}
           </h2>
           <ol className="mt-3">
             {detail.audio_chapters.map((item) => (

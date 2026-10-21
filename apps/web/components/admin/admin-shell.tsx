@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
@@ -77,7 +78,7 @@ export function AdminShell({
     <div className="min-h-screen bg-surface-muted text-ink lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="border-b border-border bg-surface p-4 lg:min-h-screen lg:border-b-0 lg:border-r">
         <p className="font-display text-emphasis">
-          SENSORIA<span className="text-accent">.</span>
+          <BrandLogo />
           <span className="ml-2 text-caption font-bold text-ink-muted">
             panel
           </span>
@@ -124,7 +125,7 @@ export function AdminShell({
       <main
         id="main-content"
         tabIndex={-1}
-        className="min-w-0 p-4 focus:outline-none sm:p-8"
+        className="min-w-0 p-4 focus:outline-none md:p-8"
       >
         <h1 className="font-display text-title text-ink">{title}</h1>
         <div className="mt-6">{children(admin)}</div>

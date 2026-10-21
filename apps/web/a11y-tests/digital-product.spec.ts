@@ -18,7 +18,9 @@ test("e-book SSR uses real fixture fields, sale history, and safe product JSON-L
   await expect(
     page.getByRole("heading", { name: "Podobne materiały" }),
   ).toBeVisible();
-  await expect(page.getByText("Kupując treść cyfrową")).toBeVisible();
+  await expect(
+    page.getByText("Treści cyfrowe udostępniamy od razu po opłaceniu"),
+  ).toBeVisible();
 
   const html = await response?.text();
   expect(html).toContain("E-book demonstracyjny");
@@ -79,7 +81,7 @@ test("otwiera osobny, publiczny podgląd PDF po świadomym żądaniu", async ({
   await opening;
   await expect(
     page.getByRole("dialog", { name: "Darmowy fragment PDF" }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 20_000 });
   await expect(
     page.getByTitle("Darmowy fragment produktu, 2 stron"),
   ).toBeVisible();

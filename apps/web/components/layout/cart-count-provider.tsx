@@ -94,6 +94,11 @@ export function useCartCount() {
   return value;
 }
 
+/** For components that only refresh the counter when a provider exists (e.g. isolated tests). */
+export function useOptionalCartCount() {
+  return useContext(CartCountContext);
+}
+
 export function formatCartAccessibleName(count: number | null): string {
   if (count === null) return "Koszyk, licznik niedostępny";
   if (!Number.isSafeInteger(count) || count < 0) {

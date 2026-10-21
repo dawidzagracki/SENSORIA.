@@ -13,7 +13,7 @@ export function CartLink() {
     <Link
       aria-label={accessibleName}
       aria-current={pathname === "/koszyk" ? "page" : undefined}
-      className="inline-flex min-h-touch items-center justify-center gap-2 rounded-pill border border-accent-action px-4 py-2 font-interface text-label font-bold text-ink transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+      className="inline-flex min-h-touch items-center justify-center gap-2 rounded-pill border border-accent-action px-4 py-2 font-interface text-button font-semibold text-accent-action transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
       href="/koszyk"
     >
       <span>Koszyk</span>

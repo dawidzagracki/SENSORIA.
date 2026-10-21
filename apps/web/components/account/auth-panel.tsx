@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { ACCOUNT_SESSION_EVENT } from "@/components/layout/account-link";
 import { TextField } from "@/components/ui/text-field";
 import { safeReturnPath } from "@/lib/safe-return";
 import {
@@ -256,6 +257,9 @@ export function AccountAuthPanel({
       setLinkBusy(false);
     }
   }
+  useEffect(() => {
+    if (sessionChecked) window.dispatchEvent(new Event(ACCOUNT_SESSION_EVENT));
+  }, [customer, sessionChecked]);
   if (sessionChecked && customer) {
     return (
       <section className="w-full max-w-xl rounded-card border border-border bg-surface p-5 shadow-subtle sm:p-8">
@@ -280,7 +284,35 @@ export function AccountAuthPanel({
         <div className="mt-4">
           <PurchaseLinkingNotice />
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <nav
+          aria-label="Twoje konto"
+          className="mt-6 grid gap-3 sm:grid-cols-2"
+        >
+          {[
+            [
+              "Moja biblioteka",
+              "E-booki, kursy i audiobooki",
+              "/konto/biblioteka",
+            ],
+            ["Zamówienia", "Historia, faktury, śledzenie", "/konto/zamowienia"],
+            ["Moje vouchery", "Kody, ważność, prezenty", "/konto/vouchery"],
+            ["Dane i zgody", "Adresy, prywatność, eksport", "/konto/dane"],
+          ].map(([title, hint, href]) => (
+            <Link
+              className="rounded-card border border-border bg-surface p-4 transition hover:-translate-y-0.5 hover:border-accent hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+              href={href}
+              key={href}
+            >
+              <span className="block font-display text-body font-extrabold text-ink">
+                {title}
+              </span>
+              <span className="mt-1 block text-caption text-ink-muted">
+                {hint}
+              </span>
+            </Link>
+          ))}
+        </nav>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <Link
             className="inline-flex min-h-control-lg items-center justify-center rounded-pill border border-border px-4 py-3 text-label font-bold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
             href="/konto/zmien-haslo"
@@ -550,8 +582,11 @@ function PasswordConfirm({
 
 export function AccountRecoveryForm({
   mode,
+  initialToken = "",
 }: {
   mode: "request" | "reset" | "verify";
+  /** Token from a path-style e-mail link; the fragment form (#token=…) still works. */
+  initialToken?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -561,14 +596,22 @@ export function AccountRecoveryForm({
   useEffect(() => {
     const fragmentToken =
       new URLSearchParams(window.location.hash.slice(1)).get("token") || "";
-    setToken(fragmentToken);
-    if (fragmentToken)
+    const found = initialToken || fragmentToken;
+    setToken(found);
+    if (initialToken)
+      // Keep the bearer secret out of history, referrers and shared screenshots.
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname.replace(/\/[^/]+$/, ""),
+      );
+    else if (fragmentToken)
       window.history.replaceState(
         null,
         "",
         `${window.location.pathname}${window.location.search}`,
       );
-  }, []);
+  }, [initialToken]);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);

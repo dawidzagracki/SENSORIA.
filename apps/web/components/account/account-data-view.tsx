@@ -73,11 +73,15 @@ async function responseMessage(response: Response): Promise<string> {
 
 function monthYear(value: string | null) {
   if (!value) return "bez dotychczasowych zakupów";
+  // "21 października 2026" → "października 2026" (genitive, as "od …" requires).
   return new Intl.DateTimeFormat("pl-PL", {
+    day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "Europe/Warsaw",
-  }).format(new Date(value));
+  })
+    .format(new Date(value))
+    .replace(/^\d+\s/, "");
 }
 
 export function AccountDataView() {
@@ -451,7 +455,7 @@ export function AccountDataView() {
                   </div>
                 ) : (
                   <p className="mt-2 text-body-small text-ink-muted">
-                    Dane kontaktowe obsługi nie są skonfigurowane.
+                    Napisz do nas przez formularz w centrum pomocy.
                   </p>
                 )}
               </section>

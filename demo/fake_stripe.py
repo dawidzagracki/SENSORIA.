@@ -22,6 +22,28 @@ WEBHOOK_URL = os.environ.get("WEBHOOK_URL", "http://api:8000/payments/webhooks/s
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "http://localhost:9911")
 SESSIONS: dict[str, dict[str, object]] = {}
 
+LOCKERS = [
+    ("OLS01M", "ul. Kościuszki", "12", "10-502", "Olsztyn"),
+    ("OLS02M", "al. Warszawska", "98", "10-702", "Olsztyn"),
+    ("OLS03M", "ul. Knosały", "5", "10-015", "Olsztyn"),
+    ("WAW01M", "ul. Marszałkowska", "10", "00-590", "Warszawa"),
+    ("WAW02M", "ul. Puławska", "40", "02-512", "Warszawa"),
+    ("KRK01M", "ul. Długa", "20", "31-147", "Kraków"),
+]
+
+
+def locker(entry: tuple[str, str, str, str, str]) -> dict[str, object]:
+    code, street, building, post_code, city = entry
+    return {
+        "name": code,
+        "display_name": f"Paczkomat {code}",
+        "status": "Operating",
+        "type": ["parcel_locker"],
+        "functions": ["parcel_collect", "parcel_send"],
+        "opening_hours": "24/7",
+        "address_details": {"street": street, "building_number": building, "post_code": post_code, "city": city},
+    }
+
 PAGE = """<!doctype html><html lang="pl"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Płatność (tryb demonstracyjny)</title>
 <style>body{{font-family:system-ui,sans-serif;background:#f6f4f0;margin:0;display:grid;place-items:center;min-height:100vh}}
@@ -103,8 +125,25 @@ class Handler(BaseHTTPRequestHandler):
             self._send(404, b"", "text/plain")
 
     def do_GET(self) -> None:  # noqa: N802
-        path = urlparse(self.path).path
-        if path.startswith("/pay/"):
+        parsed = urlparse(self.path)
+        path = parsed.path
+        if path == "/v1/points":
+            query = parse_qs(parsed.query)
+            city = (query.get("city") or [""])[0].lower()
+            code = (query.get("post_code") or [""])[0].replace("-", "")
+            hits = [
+                locker(entry)
+                for entry in LOCKERS
+                if (city and city in entry[4].lower()) or (code and entry[3].replace("-", "").startswith(code[:2]))
+            ]
+            self._send(200, json.dumps({"items": hits}).encode(), "application/json")
+        elif path.startswith("/v1/points/"):
+            match = [entry for entry in LOCKERS if entry[0] == path.rsplit("/", 1)[1]]
+            if match:
+                self._send(200, json.dumps(locker(match[0])).encode(), "application/json")
+            else:
+                self._send(404, b"{}", "application/json")
+        elif path.startswith("/pay/"):
             sid = path.split("/")[2]
             session = SESSIONS.get(sid)
             if session is None:

@@ -123,7 +123,7 @@ function Detail({
     <Card title={`Voucher ${v.code}`}>
       <ErrorBox message={error} />
       {info ? <Alert variant="success">{info}</Alert> : null}
-      <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+      <dl className="mt-3 grid gap-3 md:grid-cols-2">
         <div>
           <dt className="text-caption text-ink-muted">Usługa</dt>
           <dd>{v.service_name}</dd>

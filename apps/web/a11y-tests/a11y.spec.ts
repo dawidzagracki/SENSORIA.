@@ -216,7 +216,10 @@ test("widoczne kontrolki i etykiety checkbox/radio mają obszar aktywny 44 × 44
   for (const route of ["/", "/dev/tokeny"]) {
     await page.goto(route);
     const routeUndersized = await page
-      .locator("a[href], button, input, select, textarea")
+      .locator(
+        // The Next.js dev-tools badge only exists under `next dev`.
+        "a[href], button:not([aria-label='Open Next.js Dev Tools']), input, select, textarea",
+      )
       .evaluateAll((elements) =>
         elements
           .map((element) => {

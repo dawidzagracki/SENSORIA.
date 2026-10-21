@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     LOGIN_LINK_COOLDOWN_SECONDS: int = Field(default=900, ge=60, le=86400)
     LOGIN_LINK_INVALID_LIMIT: int = Field(default=20, ge=3, le=200)
     INPOST_POINTS_TIMEOUT_SECONDS: int = Field(default=5, ge=1, le=20)
+    # Operator configuration (presentation stacks point it at a local stand-in).
+    INPOST_POINTS_API_URL: str = "https://api-pl-points.easypack24.net/v1/points"
     STRIPE_SECRET_KEY: SecretStr | None = None
     STRIPE_WEBHOOK_SECRET: SecretStr | None = None
     STRIPE_API_BASE: str = "https://api.stripe.com"

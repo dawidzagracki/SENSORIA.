@@ -164,6 +164,9 @@ def main() -> None:
         "company.seller.v1": {"name": "Sensoria Terapia — Anna Parakiewicz", "street": "ul. Knosały 7B/A", "postal_code": "10-015", "city": "Olsztyn", "nip": "5260250995"},
         "orders.delivery.v1": {"parcel_locker_cost_grosz": 1200, "courier_cost_grosz": 1800, "free_shipping_threshold_grosz": 15000, "incentive_threshold_grosz": 5000, "vat_rate": "RATE_23"},
         "ops.alerts.v1": {"email": "wlascicielka@sensoria.demo"},
+        "vouchers.public.v1": {"contact_email": "kontakt@sensoria.demo", "contact_phone": "+48 600 100 200",
+                               "booking_url": "https://sensoria.shop/rezerwacja",
+                               "booking_instructions": "Zadzwoń lub napisz, podając kod vouchera — umówimy termin dopasowany do Ciebie."},
     }.items():
         s, b, _ = A("PUT", f"/settings/{key}", {"value": value})
         step(f"ustawienie {key}", s == 200, b)
@@ -251,17 +254,8 @@ def main() -> None:
     s, b, _ = A("PUT", f"/products/{course}/chapters", {"chapters": chapter_blocks}); step("rozdziały czytnika kursu", s == 200, b)
     publish(course, "kurs")
 
-    # categories / audience tags straight in SQL (no admin endpoint for them)
-    sql = f"""
-    INSERT INTO product_categories (product_id, category_id)
-      SELECT p.id, c.id FROM products p CROSS JOIN categories c
-      WHERE (p.id IN ('{v1}','{v2}') AND c.slug = (SELECT slug FROM categories ORDER BY name LIMIT 1))
-         OR (p.id IN ('{book}','{audio}','{ebook}','{course}'))
-      ON CONFLICT DO NOTHING;
-    INSERT INTO product_audience_tags (product_id, audience_tag_id)
-      SELECT p.id, t.id FROM products p CROSS JOIN audience_tags t WHERE p.id IN ('{v1}','{v2}','{book}','{audio}','{ebook}','{course}')
-      ON CONFLICT DO NOTHING;"""
-    compose("exec", "-T", "db", "psql", "-U", "sensoria", "-d", "sensoria", "-c", sql)
+    # categories and audiences (no admin endpoint for them)
+    compose("exec", "-T", "api", "python", "-", stdin=open(os.path.join(ROOT, "demo", "seed_taxonomy.py"), "rb").read())
     step("kategorie i odbiorcy", True)
 
     # free samples (separate prepared files)

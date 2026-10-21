@@ -180,7 +180,11 @@ export function NoResults({
           </div>
           {!settings.contact_email && !settings.contact_phone ? (
             <p className="mt-3 text-caption text-ink-muted">
-              Dane kontaktowe nie są obecnie skonfigurowane.
+              Zajrzyj też do{" "}
+              <a className="underline" href="/pomoc">
+                centrum pomocy
+              </a>
+              .
             </p>
           ) : null}
         </div>
@@ -194,10 +198,10 @@ export function NoResults({
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {related.map((product) => (
               <ProductCard
-                actionHref={`/produkt/${encodeURIComponent(product.slug)}`}
+                actionHref={`/sklep/${encodeURIComponent(product.slug)}`}
                 actionLabel="Zobacz"
                 description={product.short_description ?? ""}
-                href={`/produkt/${encodeURIComponent(product.slug)}`}
+                href={`/sklep/${encodeURIComponent(product.slug)}`}
                 image={
                   product.image ? (
                     <Image

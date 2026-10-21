@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Alert } from "@/components/ui/alert";
 
 export function Card({
@@ -90,8 +90,17 @@ export function Table({
   head: string[];
   children: ReactNode;
 }) {
+  const root = useRef<HTMLDivElement>(null);
+  // On narrow screens rows become cards; each cell is labelled by its column heading.
+  useEffect(() => {
+    root.current?.querySelectorAll("tbody tr").forEach((row) => {
+      row.querySelectorAll("td").forEach((cell, index) => {
+        if (head[index]) cell.setAttribute("data-label", head[index]);
+      });
+    });
+  });
   return (
-    <div className="overflow-x-auto">
+    <div className="responsive-table overflow-x-auto" ref={root}>
       <table className="w-full min-w-[40rem] border-collapse text-left text-body-small">
         <caption className="sr-only">{caption}</caption>
         <thead>

@@ -33,6 +33,7 @@ class OrderStatusResponse(BaseModel):
     created_at: datetime
     requires_shipping: bool
     delivery_method: str | None
+    delivery_summary: str | None = None
     items: list[OrderItemView]
     can_retry_payment: bool
     server_time: datetime

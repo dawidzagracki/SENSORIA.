@@ -20,7 +20,7 @@ export function Badge({ label }: BadgeProps) {
 
   return (
     <span
-      className="inline-flex items-center rounded-pill px-3 py-2 font-interface text-label font-bold"
+      className="inline-flex items-center whitespace-nowrap rounded-pill px-3 py-1 font-interface text-eyebrow font-bold tracking-caps"
       style={{
         backgroundColor: colorTokens[token.background].value,
         color: colorTokens[token.foreground].value,

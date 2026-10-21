@@ -5,6 +5,7 @@ import {
   ProductCover,
   ProductHeading,
 } from "@/components/products/product-detail-shared";
+import { AuthorBlurb } from "@/components/products/product-info";
 import { getBookAvailability } from "@/lib/catalog-product";
 import type { CatalogProductDetail } from "@/types/catalog";
 
@@ -89,14 +90,17 @@ export function BookProductView({
                 <p>{book.shipping_method}</p>
               </>
             ) : (
-              <p>Szczegóły dostawy nie zostały podane dla tego produktu.</p>
+              <p>
+                Wysyłamy InPostem (Paczkomat lub kurier) albo wydajemy w
+                gabinecie w Olsztynie. Koszt zobaczysz w koszyku.
+              </p>
             )}
           </section>
           <p className="rounded-card border border-border bg-surface-muted p-4 text-body-small text-ink">
             Masz 14 dni na odstąpienie od umowy.{" "}
             <a
               className="underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
-              href="/pomoc?temat=zwroty-i-reklamacje"
+              href="/pomoc/zwroty-i-reklamacje"
             >
               Informacje o zwrotach
             </a>
@@ -143,6 +147,7 @@ export function BookProductView({
           </ul>
         </section>
       ) : null}
+      <AuthorBlurb />
       <CatalogRelatedProducts
         currentId={product.id}
         products={product.related_products}

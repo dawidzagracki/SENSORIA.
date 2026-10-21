@@ -32,11 +32,9 @@ describe("MyOrdersView", () => {
     ).toBeInTheDocument();
     screen.getByRole("button", { name: "Faktury" }).click();
     await waitFor(() =>
-      expect(screen.getByText("Dokumenty sprzedaży")).toBeInTheDocument(),
+      expect(screen.getByText("Brak dokumentów sprzedaży")).toBeInTheDocument(),
     );
-    expect(
-      screen.getByText(/nie pokazujemy fikcyjnych dokumentów/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/po opłaceniu zamówienia/)).toBeInTheDocument();
   });
 
   it("does not render an API error as an empty order history", async () => {

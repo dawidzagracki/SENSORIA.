@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useOptionalCartCount } from "@/components/layout/cart-count-provider";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DownloadButton } from "@/components/library/download-button";
@@ -28,6 +29,7 @@ type OrderStatus = {
   created_at: string;
   requires_shipping: boolean;
   delivery_method: string | null;
+  delivery_summary?: string | null;
   items: Array<{
     name: string | null;
     quantity: number;
@@ -72,6 +74,7 @@ export function ConfirmationView({
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
   const [retrying, setRetrying] = useState(false);
   const polls = useRef(0);
+  const acceptConfirmedCount = useOptionalCartCount()?.acceptConfirmedCount;
 
   const query = token ? `?token=${encodeURIComponent(token)}` : "";
   const tokenParam = token ? `?order_token=${encodeURIComponent(token)}` : "";
@@ -120,6 +123,18 @@ export function ConfirmationView({
   useEffect(() => {
     void load();
   }, [load]);
+
+  // The paid order is final: empty the basket this browser used for it.
+  const clearedCart = useRef(false);
+  useEffect(() => {
+    if (order?.status !== "paid" || clearedCart.current) return;
+    clearedCart.current = true;
+    void fetch("/api/cart", { method: "DELETE", credentials: "include" })
+      .then((response) => {
+        if (response.ok) acceptConfirmedCount?.(0);
+      })
+      .catch(() => undefined);
+  }, [order?.status, acceptConfirmedCount]);
 
   // Right after the hosted payment page the webhook may still be in flight.
   useEffect(() => {
@@ -267,7 +282,8 @@ export function ConfirmationView({
         </p>
         {order.requires_shipping ? (
           <p className="mt-3 text-caption text-ink-muted">
-            Dostawa: {deliveryLabel[order.delivery_method ?? ""] ?? "wysyłka"}.
+            Dostawa: {deliveryLabel[order.delivery_method ?? ""] ?? "wysyłka"}
+            {order.delivery_summary ? ` — ${order.delivery_summary}` : ""}.
             {order.delivery_method === "pickup_in_person"
               ? " Powiadomimy Cię e-mailem, gdy zamówienie będzie gotowe do odbioru."
               : " Powiadomimy Cię e-mailem, gdy paczka zostanie nadana."}

@@ -503,7 +503,7 @@ function Discounts() {
       {info ? <Alert variant="success">{info}</Alert> : null}
       <Card title="Nowy kod rabatowy">
         <form
-          className="grid gap-4 sm:grid-cols-3"
+          className="grid gap-4 md:grid-cols-3"
           onSubmit={(e) => {
             e.preventDefault();
             void create();

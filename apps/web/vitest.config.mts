@@ -18,6 +18,7 @@ export default defineConfig({
       "**/dist/**",
       "a11y-tests/**",
       "a11y-stack-tests/**",
+      "e2e-demo/**",
     ],
   },
 });

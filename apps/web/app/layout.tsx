@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/lora";
+import "@fontsource-variable/lora/wght-italic.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

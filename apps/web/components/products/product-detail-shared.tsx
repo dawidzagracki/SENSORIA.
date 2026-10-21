@@ -49,11 +49,11 @@ export function ProductCover({
   const image = product.images[0];
   return (
     <figure className="rounded-card bg-surface-muted p-4 shadow-subtle md:p-6">
-      <div className="relative mx-auto aspect-ebook-cover w-full max-w-content overflow-hidden rounded-card bg-surface">
+      <div className="relative mx-auto aspect-ebook-cover w-full max-w-content overflow-hidden rounded-card bg-surface shadow-overlay">
         {image ? (
           <Image
             alt={image.alt}
-            className="object-contain"
+            className="object-cover"
             fill
             priority
             sizes="(min-width: 1024px) 38vw, 100vw"
@@ -85,12 +85,10 @@ export function ProductHeading({
   return (
     <header className="min-w-0 space-y-4">
       {taxonomyLabel ? (
-        <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-          {taxonomyLabel}
-        </p>
+        <p className="uppercase-label text-accent-action">{taxonomyLabel}</p>
       ) : null}
       <Badge label={label} />
-      <h1 className="break-words font-display text-title font-bold text-ink">
+      <h1 className="break-words font-display text-title font-extrabold tracking-tight text-ink">
         {product.name}
       </h1>
       {product.short_description ? (

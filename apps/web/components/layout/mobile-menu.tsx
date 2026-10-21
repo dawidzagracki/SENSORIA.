@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "../ui/button";
 import { Modal } from "../ui/modal";
 import { breakpointTokens } from "../../tailwind.config";
@@ -17,10 +18,14 @@ export function MobileMenu({
   desktopNavigationRef: React.RefObject<HTMLElement | null>;
 }) {
   const [open, setOpen] = useState(false);
+  const openRef = useRef(false);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
   useEffect(() => {
     const media = window.matchMedia(`(min-width: ${desktopBreakpoint})`);
     function closeAtDesktop(event: MediaQueryListEvent) {
-      if (!event.matches) return;
+      if (!event.matches || !openRef.current) return;
       setOpen(false);
       window.requestAnimationFrame(() => {
         desktopNavigationRef.current?.querySelector<HTMLElement>("a")?.focus();
@@ -46,7 +51,20 @@ export function MobileMenu({
         open={open}
         title="Nawigacja główna"
       >
-        {open ? <MainNavigation onNavigate={() => setOpen(false)} /> : null}
+        {open ? (
+          <>
+            <MainNavigation onNavigate={() => setOpen(false)} />
+            <div className="mt-4 border-t border-border pt-4">
+              <Link
+                className="flex min-h-touch items-center rounded-card px-3 py-2 font-interface text-button font-semibold text-accent-action hover:bg-surface-muted"
+                href="/konto"
+                onClick={() => setOpen(false)}
+              >
+                Zaloguj się / moje konto
+              </Link>
+            </div>
+          </>
+        ) : null}
       </Modal>
     </div>
   );

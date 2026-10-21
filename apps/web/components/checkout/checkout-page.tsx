@@ -1116,13 +1116,8 @@ export function CheckoutPage() {
                 />
               </fieldset>
               <p className="text-caption text-ink-muted">
-                Po podłączeniu Stripe dane karty będzie obsługiwać operator; nie
-                będziemy ich przechowywać.
-              </p>
-              <p className="rounded-control bg-warning/10 p-3 text-caption text-ink">
-                Operator Stripe nie jest jeszcze skonfigurowany. Złożenie
-                formularza zapisuje zamówienie jako oczekujące, ale nie
-                uruchamia płatności.
+                Płatność obsługuje bezpieczny operator (Stripe). Dane karty nie
+                trafiają do naszego sklepu.
               </p>
             </section>
 
@@ -1184,8 +1179,12 @@ export function CheckoutPage() {
                         {item.name}
                       </p>
                       <p className="text-caption text-ink-muted">
-                        {item.variant_kind ?? item.details} · {item.quantity}{" "}
-                        szt.
+                        {item.variant_kind === "IN_PERSON"
+                          ? "w gabinecie"
+                          : item.variant_kind === "ONLINE"
+                            ? "online"
+                            : item.details}{" "}
+                        · {item.quantity} szt.
                       </p>
                     </div>
                     <span className="shrink-0 text-label text-ink">
@@ -1264,8 +1263,8 @@ export function CheckoutPage() {
                 {busy ? "Zapisujemy zamówienie…" : "Zamawiam i płacę"}
               </button>
               <p className="text-caption text-ink-muted">
-                Nie musisz zakładać konta. Płatność online nie jest obecnie
-                uruchomiona.
+                Nie musisz zakładać konta. Po kliknięciu przejdziesz do
+                bezpiecznej płatności.
               </p>
             </section>
           </aside>

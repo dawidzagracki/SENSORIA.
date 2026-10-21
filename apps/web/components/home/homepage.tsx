@@ -139,17 +139,17 @@ function HeroProductCard({
   priority?: boolean;
 }) {
   const position = {
-    voucher: "lg:absolute lg:left-30 lg:top-1/4 lg:z-20 lg:w-5/12 lg:-rotate-2",
-    audiobook: "lg:absolute lg:right-0 lg:top-16 lg:z-10 lg:w-1/3 lg:rotate-2",
+    voucher: "lg:absolute lg:left-0 lg:top-16 lg:z-20 lg:w-[50%] lg:-rotate-3",
+    audiobook: "lg:absolute lg:right-0 lg:top-0 lg:z-10 lg:w-[40%] lg:rotate-3",
     course:
-      "lg:absolute lg:right-0 lg:top-1/2 lg:z-30 lg:w-1/3 lg:-translate-x-16 lg:-translate-y-12 lg:-rotate-1",
+      "lg:absolute lg:bottom-0 lg:right-[10%] lg:z-30 lg:w-[40%] lg:-rotate-2",
   }[slot];
   const type = productTypeLabel(product);
 
   return (
     <Link
       aria-label={`${type}: ${product.name}, ${formatMoney(product.price)}`}
-      className={`group min-w-0 rounded-card border border-border bg-surface p-3 shadow-subtle transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:p-4 ${position}`}
+      className={`group w-[72%] shrink-0 snap-center rounded-card border border-border bg-surface p-3 shadow-subtle transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:w-[44%] sm:p-4 lg:w-auto ${position}`}
       href={`/sklep/${encodeURIComponent(product.slug)}`}
     >
       <div
@@ -173,7 +173,7 @@ function HeroProductCard({
         </div>
       </div>
       <div className="min-w-0 space-y-2 p-1 pt-3">
-        <h2 className="line-clamp-2 font-interface text-label font-bold text-ink">
+        <h2 className="line-clamp-2 font-display text-body-small font-extrabold text-ink">
           {product.name}
         </h2>
         {/* No reduced-price claim without the Omnibus 30-day price, which this feed lacks. */}
@@ -264,16 +264,16 @@ function HeroCategoryCard({
     );
 
   const position = {
-    voucher: "lg:absolute lg:left-30 lg:top-1/4 lg:z-20 lg:w-5/12 lg:-rotate-2",
-    audiobook: "lg:absolute lg:right-0 lg:top-16 lg:z-10 lg:w-1/3 lg:rotate-2",
+    voucher: "lg:absolute lg:left-0 lg:top-16 lg:z-20 lg:w-[50%] lg:-rotate-3",
+    audiobook: "lg:absolute lg:right-0 lg:top-0 lg:z-10 lg:w-[40%] lg:rotate-3",
     course:
-      "lg:absolute lg:right-0 lg:top-1/2 lg:z-30 lg:w-1/3 lg:-translate-x-16 lg:-translate-y-12 lg:-rotate-1",
+      "lg:absolute lg:bottom-0 lg:right-[10%] lg:z-30 lg:w-[40%] lg:-rotate-2",
   }[category.slot];
 
   return (
     <Link
       aria-label={`${category.label}: ${category.title}`}
-      className={`group min-w-0 rounded-card border border-border bg-surface p-3 shadow-subtle transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:p-4 ${position}`}
+      className={`group w-[72%] shrink-0 snap-center rounded-card border border-border bg-surface p-3 shadow-subtle transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:w-[44%] sm:p-4 lg:w-auto ${position}`}
       href={category.href}
     >
       <span className="uppercase-label text-accent-action">
@@ -305,7 +305,7 @@ export function Homepage({
     <main className="page-shell min-h-screen" id="main-content" tabIndex={-1}>
       <section
         aria-labelledby="home-title"
-        className="grid gap-8 py-8 md:gap-12 lg:grid-cols-[3fr_5fr] lg:items-start lg:py-12"
+        className="grid gap-12 py-10 md:gap-16 lg:grid-cols-[5fr_6fr] lg:items-center lg:py-16"
       >
         <div className="min-w-0">
           <p className="uppercase-label mb-6 flex items-center gap-3 text-accent-action">
@@ -313,7 +313,7 @@ export function Homepage({
             {content.eyebrow}
           </p>
           <h1
-            className="max-w-content font-display text-title font-bold leading-tight text-ink md:text-display xl:text-home"
+            className="max-w-content text-balance font-display text-title font-extrabold leading-tight tracking-tight text-ink md:text-display"
             id="home-title"
           >
             {content.headline.before_emphasis}{" "}
@@ -327,13 +327,13 @@ export function Homepage({
           </p>
           <div className="mt-6 flex flex-wrap gap-3 lg:mt-12">
             <Link
-              className="inline-flex min-h-control-lg items-center justify-center rounded-pill border border-accent-action bg-accent-action px-6 py-4 font-interface text-body-small font-bold text-surface transition-colors hover:border-accent hover:bg-accent hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              className="inline-flex min-h-control-lg items-center justify-center rounded-pill border border-accent-action bg-accent-action px-8 py-4 font-interface text-body font-semibold text-surface transition-colors hover:border-accent hover:bg-accent hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               href={content.catalog_button_target}
             >
               {content.catalog_button_label}
             </Link>
             <Link
-              className="inline-flex min-h-control-lg items-center justify-center rounded-pill border border-accent-action bg-surface px-6 py-4 font-interface text-body-small font-bold text-ink transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+              className="inline-flex min-h-control-lg items-center justify-center rounded-pill border border-accent-action bg-surface px-8 py-4 font-interface text-body font-semibold text-accent-action transition-colors hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               href={voucherHref}
             >
               {content.voucher_button_label}
@@ -345,7 +345,7 @@ export function Homepage({
           >
             {content.benefits.map((benefit) => (
               <li
-                className="flex min-h-touch items-center gap-3 rounded-pill border border-border bg-surface-muted px-3 py-2 font-interface text-caption font-bold text-ink"
+                className="flex min-h-touch items-center gap-3 rounded-pill border border-border bg-surface-muted px-4 py-2 font-interface text-caption font-semibold text-ink"
                 key={benefit.icon}
               >
                 <span className="text-accent-action">
@@ -366,16 +366,16 @@ export function Homepage({
 
         <div
           aria-label="Polecane rodzaje materiałów"
-          className="relative min-w-0 lg:aspect-square lg:w-hero lg:max-w-none lg:overflow-hidden"
+          className="relative min-w-0 lg:h-[34rem]"
           role="group"
         >
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 hidden items-center justify-center lg:flex"
+            className="pointer-events-none absolute inset-0 hidden items-center justify-center overflow-hidden lg:flex"
           >
-            <div className="aspect-square w-full scale-125 rounded-pill border border-accent/40" />
-            <div className="absolute aspect-square w-5/6 scale-125 rounded-pill border border-dashed border-accent/40" />
-            <div className="absolute aspect-square w-2/3 scale-125 rounded-pill border border-accent/40" />
+            <div className="aspect-square h-full rounded-pill border border-accent/40" />
+            <div className="absolute aspect-square h-5/6 rounded-pill border border-dashed border-accent/40" />
+            <div className="absolute aspect-square h-2/3 rounded-pill bg-surface-muted" />
           </div>
           {catalogUnavailable ? (
             <Alert title="Nie można pobrać produktów" variant="error">
@@ -383,7 +383,7 @@ export function Homepage({
               przykładowymi danymi.
             </Alert>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:block lg:aspect-square">
+            <div className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 lg:mx-0 lg:block lg:h-full lg:overflow-visible lg:px-0 lg:pb-0">
               {featuredCategories.map((category) => {
                 const product = featured[category.slot];
                 return product ? (
@@ -406,7 +406,7 @@ export function Homepage({
 
       <section
         aria-labelledby="recommended-title"
-        className="border-t border-border py-8 md:py-12"
+        className="border-t border-border py-12 md:py-16"
       >
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -414,14 +414,14 @@ export function Homepage({
               WYBRANE DLA CIEBIE
             </p>
             <h2
-              className="mt-2 font-interface text-title font-bold text-ink"
+              className="mt-2 font-display text-title font-extrabold tracking-tight text-ink"
               id="recommended-title"
             >
               Polecane materiały
             </h2>
           </div>
           <Link
-            className="inline-flex min-h-touch items-center rounded-pill px-4 font-interface text-caption font-bold text-ink underline decoration-accent-action underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+            className="inline-flex min-h-touch items-center rounded-pill px-4 font-interface text-button font-semibold text-accent-action underline decoration-accent-action underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
             href="/sklep"
           >
             Zobacz cały katalog

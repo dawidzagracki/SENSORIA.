@@ -10,6 +10,7 @@ services:
       SMTP_PORT: "1025"
       SMTP_STARTTLS: "false"
       MAIL_FROM: sklep@sensoria.demo
+      INPOST_POINTS_API_URL: http://fake-stripe:9911/v1/points
       SITE_URL: http://localhost:8090
     depends_on:
       mailpit:

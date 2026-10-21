@@ -74,7 +74,7 @@ function List() {
   return (
     <div className="space-y-4">
       <Card>
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-4">
           <Field label="Szukaj">
             <input
               className={inputClass}
@@ -552,7 +552,7 @@ function Editor({ id, role }: { id: string; role: string }) {
         }
       >
         <form
-          className="grid gap-4 sm:grid-cols-2"
+          className="grid gap-4 md:grid-cols-2"
           onSubmit={(e) => {
             e.preventDefault();
             void run(
@@ -616,7 +616,7 @@ function Editor({ id, role }: { id: string; role: string }) {
             />
           </Field>
           {priceChanged ? (
-            <div className="sm:col-span-2">
+            <div className="md:col-span-2">
               <Field label="Powód zmiany ceny (zapisywany w historii)">
                 <input
                   className={inputClass}
@@ -628,7 +628,7 @@ function Editor({ id, role }: { id: string; role: string }) {
               </Field>
             </div>
           ) : null}
-          <div className="sm:col-span-2">
+          <div className="md:col-span-2">
             <Field label="Opis">
               <textarea
                 className={`${inputClass} py-2`}
@@ -806,7 +806,7 @@ function Editor({ id, role }: { id: string; role: string }) {
               <li className="text-ink-muted">Brak plików.</li>
             ) : null}
           </ul>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
             <Field label="Etykieta pliku">
               <input
                 className={inputClass}

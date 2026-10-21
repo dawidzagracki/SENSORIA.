@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { BrandLogo } from "./brand-logo";
 import { CookiePreferencesAction } from "./cookie-preferences-action";
 import { copyrightText, footerColumns } from "./site-config";
 
 export function ShopFooter({ demoEnabled }: { demoEnabled: boolean }) {
   return (
     <footer className="bg-footer">
-      <div className="mx-auto grid max-w-page-shell grid-cols-1 gap-8 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-page-shell grid-cols-1 gap-8 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
         {footerColumns.map((column, index) => (
           <section
             aria-labelledby={`footer-column-${index}`}
@@ -22,11 +23,11 @@ export function ShopFooter({ demoEnabled }: { demoEnabled: boolean }) {
                 {column.items.map((item, index) =>
                   item.href ? (
                     <Link
-                      className="inline-flex min-h-touch items-center rounded-card font-display text-subtitle font-bold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+                      className="inline-flex min-h-touch items-center rounded-card text-[26px] leading-none text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
                       href={item.href}
                       key={item.label}
                     >
-                      {item.label}
+                      <BrandLogo />
                     </Link>
                   ) : (
                     <p key={`${item.label}-${index}`}>{item.label}</p>

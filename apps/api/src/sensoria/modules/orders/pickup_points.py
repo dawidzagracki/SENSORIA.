@@ -144,7 +144,8 @@ async def search_points(query: str, settings: Settings | None = None) -> PickupP
         params["post_code"] = value
     else:
         params["city"] = value
-    data = await _fetch(f"{POINTS_API}?{urlencode(params)}", settings or get_settings())
+    active = settings or get_settings()
+    data = await _fetch(f"{active.INPOST_POINTS_API_URL}?{urlencode(params)}", active)
     raw_items = data.get("items")
     if not isinstance(raw_items, list):
         raise DomainError(
@@ -159,9 +160,10 @@ async def get_point(code: str, settings: Settings | None = None) -> PickupPointS
     normalized = code.strip().upper()
     if not POINT_CODE_RE.fullmatch(normalized):
         raise DomainError("INPOST_POINT_INVALID", "Podaj prawidłowy kod Paczkomatu.", 422)
+    active = settings or get_settings()
     data = await _fetch(
-        f"{POINTS_API}/{normalized}",
-        settings or get_settings(),
+        f"{active.INPOST_POINTS_API_URL}/{normalized}",
+        active,
         missing_point_is_invalid=True,
     )
     point = _safe_point(data)

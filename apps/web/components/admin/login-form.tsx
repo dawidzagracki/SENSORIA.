@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { useState, type FormEvent } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ export function AdminLoginForm() {
       className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-10 focus:outline-none"
     >
       <p className="font-display text-emphasis">
-        SENSORIA<span className="text-accent">.</span>
+        <BrandLogo />
       </p>
       <h1 className="mt-2 font-display text-title text-ink">Panel sklepu</h1>
       <form onSubmit={submit} className="mt-6 space-y-4" noValidate>

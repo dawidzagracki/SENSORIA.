@@ -74,13 +74,17 @@ const fullDate = (value: string) =>
     year: "numeric",
     timeZone: "Europe/Warsaw",
   }).format(new Date(value));
+// "21 października 2026" → "października 2026" (genitive, as "od …" requires).
 const monthYear = (value: string | null) =>
   value
     ? new Intl.DateTimeFormat("pl-PL", {
+        day: "numeric",
         month: "long",
         year: "numeric",
         timeZone: "Europe/Warsaw",
-      }).format(new Date(value))
+      })
+        .format(new Date(value))
+        .replace(/^\d+\s/, "")
     : "bez dotychczasowych zakupów";
 const fulfillmentLabel: Record<string, string> = {
   awaiting_fulfillment: "W REALIZACJI",
@@ -263,7 +267,7 @@ export function MyOrdersView() {
               </a>
             ) : (
               <p className="mt-2 text-ink-muted">
-                Dane kontaktowe obsługi nie są skonfigurowane.
+                Napisz do nas przez formularz w centrum pomocy.
               </p>
             )}
             {data?.contact_phone ? (
@@ -274,9 +278,12 @@ export function MyOrdersView() {
                 {data.contact_phone}
               </a>
             ) : null}
-            <p className="mt-2 text-ink-muted">
-              Informacja o czasie odpowiedzi nie jest skonfigurowana.
-            </p>
+            <Link
+              className="mt-2 inline-block font-semibold text-accent-action underline"
+              href="/pomoc"
+            >
+              Centrum pomocy
+            </Link>
           </section>
         </aside>
         <section className="min-w-0" aria-label="Historia zamówień">
@@ -328,15 +335,56 @@ export function MyOrdersView() {
             </div>
           ) : null}
           {!loading && !error && filter === "invoices" ? (
-            <div className="rounded-card border border-border bg-surface p-8">
-              <h2 className="font-display text-subtitle font-bold">
-                Dokumenty sprzedaży
-              </h2>
-              <p className="mt-2 text-body-small text-ink-muted">
-                Moduł dokumentów [36] nie jest dostępny w tej wersji, dlatego
-                nie pokazujemy fikcyjnych dokumentów ani przycisków pobrania.
-              </p>
-            </div>
+            orders.length === 0 ? (
+              <div className="rounded-card border border-border bg-surface p-8 text-center">
+                <h2 className="font-display text-subtitle">
+                  Brak dokumentów sprzedaży
+                </h2>
+                <p className="mt-2 text-body-small text-ink-muted">
+                  Paragon lub fakturę znajdziesz tutaj po opłaceniu zamówienia.
+                </p>
+              </div>
+            ) : (
+              <section
+                aria-label="Dokumenty sprzedaży"
+                className="rounded-card border border-border bg-surface"
+              >
+                <ul className="divide-y divide-border">
+                  {orders.flatMap((order) =>
+                    order.documents.map((document) => (
+                      <li
+                        className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5"
+                        key={document.id}
+                      >
+                        <div className="min-w-0">
+                          <p className="font-display text-body font-extrabold">
+                            {document.type === "invoice"
+                              ? "Faktura VAT"
+                              : "Paragon"}{" "}
+                            {document.number}
+                          </p>
+                          <p className="text-caption text-ink-muted">
+                            {fullDate(document.date)} · zamówienie{" "}
+                            {order.number}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="font-semibold">
+                            {money(document.amount_grosz)}
+                          </span>
+                          <a
+                            className="inline-flex min-h-touch items-center rounded-pill border border-accent-action px-4 text-button font-semibold text-accent-action hover:bg-surface-muted"
+                            href={`${API}/documents/${document.id}/pdf`}
+                          >
+                            Pobierz PDF
+                          </a>
+                        </div>
+                      </li>
+                    )),
+                  )}
+                </ul>
+              </section>
+            )
           ) : null}
           {!loading &&
           !error &&
@@ -456,12 +504,30 @@ export function MyOrdersView() {
                     {order.documents.map((document) => (
                       <a
                         key={document.id}
-                        href={`${API}/accounts/orders/${order.id}/documents/${document.id}`}
-                        className="inline-flex min-h-touch items-center rounded-pill border border-border px-4 text-body-small font-semibold"
+                        href={`${API}/documents/${document.id}/pdf`}
+                        className="inline-flex min-h-touch items-center rounded-pill border border-border px-4 text-body-small font-semibold hover:bg-surface-muted"
                       >
-                        Pobierz {document.type}
+                        {document.type === "invoice"
+                          ? "Faktura VAT (PDF)"
+                          : "Paragon (PDF)"}
                       </a>
                     ))}
+                    {order.status === "paid" ? (
+                      <>
+                        <Link
+                          className="inline-flex min-h-touch items-center rounded-pill border border-border px-4 text-body-small font-semibold hover:bg-surface-muted"
+                          href={`/opinie/nowa?order=${encodeURIComponent(order.id)}`}
+                        >
+                          Wystaw opinię
+                        </Link>
+                        <Link
+                          className="inline-flex min-h-touch items-center rounded-pill border border-border px-4 text-body-small font-semibold hover:bg-surface-muted"
+                          href={`/pomoc/zwroty-i-reklamacje?order=${encodeURIComponent(order.id)}`}
+                        >
+                          Reklamacja lub zwrot
+                        </Link>
+                      </>
+                    ) : null}
                   </div>
                 </footer>
                 {expanded === order.id ? (

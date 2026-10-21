@@ -8,11 +8,12 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import false, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.database import get_session
 from sensoria.modules.catalog.models import Product, ProductImage
+from sensoria.modules.documents.models import SalesDocument
 from sensoria.modules.orders.models import Order, OrderItem, Shipment
 from sensoria.modules.orders.shipments import build_shipment_tracking_url, load_tracking_policy
 from sensoria.shared.app_settings import AppSetting
@@ -162,8 +163,7 @@ async def list_customer_orders(
             (Order.status == "paid") & Order.fulfillment_status.in_(("delivered", "picked_up"))
         )
     elif status_filter == "invoices":
-        # Document generation [36] is not present. The separate documents contract is empty.
-        base = base.where(false())
+        base = base.where(Order.id.in_(select(SalesDocument.order_id)))
 
     total = int(await session.scalar(select(func.count()).select_from(base.subquery())) or 0)
     counts = {
@@ -206,7 +206,19 @@ async def list_customer_orders(
             )
             or 0
         ),
-        "invoices": 0,
+        "invoices": int(
+            await session.scalar(
+                select(func.count()).select_from(
+                    select(Order.id)
+                    .where(
+                        Order.customer_id == customer_id,
+                        Order.id.in_(select(SalesDocument.order_id)),
+                    )
+                    .subquery()
+                )
+            )
+            or 0
+        ),
     }
     order_rows = list(
         (
@@ -262,6 +274,28 @@ async def list_customer_orders(
                 await session.scalars(select(Shipment).where(Shipment.order_id.in_(order_ids)))
             ).all()
         }
+    documents_by_order: dict[UUID, list[dict[str, Any]]] = {}
+    if order_ids:
+        for document in (
+            await session.scalars(
+                select(SalesDocument)
+                .where(SalesDocument.order_id.in_(order_ids))
+                .order_by(SalesDocument.issued_at)
+            )
+        ).all():
+            documents_by_order.setdefault(document.order_id, []).append(
+                {
+                    "id": str(document.id),
+                    "type": document.kind,
+                    "number": document.number,
+                    "date": document.issued_at.isoformat(),
+                    "amount_grosz": int(document.data.get("total_grosz", 0))
+                    if isinstance(document.data, dict)
+                    else 0,
+                    "currency": "PLN",
+                    "status": "issued",
+                }
+            )
     policy = None
     if any(shipments.values()):
         try:
@@ -331,7 +365,7 @@ async def list_customer_orders(
                 delivery_point=order.delivery_point_snapshot,
                 items=items_by_order[order.id],
                 shipment=ship_info,
-                documents=[],
+                documents=documents_by_order.get(order.id, []),
             )
         )
     return await _history_response(

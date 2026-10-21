@@ -37,7 +37,7 @@ export function getPublicSiteUrl(): URL {
 }
 
 export function productPath(slug: string): string {
-  return `/produkt/${encodeURIComponent(slug)}`;
+  return `/sklep/${encodeURIComponent(slug)}`;
 }
 
 export function voucherProductPath(slug: string, variant?: string): string {

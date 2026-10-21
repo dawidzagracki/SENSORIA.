@@ -17,6 +17,7 @@ export type ProductCardProps = {
   isBestseller?: boolean;
   metric: string;
   onAddToCart?: () => void;
+  addLoading?: boolean;
   previousPriceInGrosze?: number;
   lowestPriceInGrosze?: number | null;
   priceInGrosze: number;
@@ -34,6 +35,7 @@ export function ProductCard({
   isBestseller = false,
   metric,
   onAddToCart,
+  addLoading = false,
   previousPriceInGrosze,
   lowestPriceInGrosze,
   priceInGrosze,
@@ -45,10 +47,10 @@ export function ProductCard({
   }
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface shadow-subtle">
+    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-border bg-surface shadow-subtle transition duration-200 hover:-translate-y-1 hover:shadow-overlay motion-reduce:hover:translate-y-0">
       <div
         aria-label={imageAlt}
-        className="relative aspect-product-image overflow-hidden bg-surface-muted"
+        className="relative aspect-product-image overflow-hidden bg-surface-muted [&_img]:transition-transform [&_img]:duration-300 group-hover:[&_img]:scale-105 motion-reduce:group-hover:[&_img]:scale-100"
         role="img"
       >
         {image}
@@ -57,8 +59,8 @@ export function ProductCard({
           {isBestseller ? <Badge label="BESTSELLER" /> : null}
         </div>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-interface text-label font-bold text-ink">
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="font-display text-card-title font-extrabold text-ink">
           {href ? (
             <Link
               className="inline-flex min-h-touch items-center focus-visible:rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
@@ -82,7 +84,7 @@ export function ProductCard({
           </div>
           {actionHref ? (
             <Link
-              className="inline-flex min-h-control-md w-full items-center justify-center rounded-pill border border-accent-action bg-surface px-4 py-3 font-interface text-label font-bold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 hover:bg-surface-muted"
+              className="inline-flex min-h-control-md w-full items-center justify-center rounded-pill border border-accent-action bg-surface px-4 py-3 font-interface text-button font-semibold text-accent-action focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 hover:bg-surface-muted"
               href={actionHref}
             >
               {actionLabel}
@@ -90,6 +92,7 @@ export function ProductCard({
           ) : (
             <Button
               className="w-full"
+              loading={addLoading}
               onClick={onAddToCart}
               variant="secondary"
             >

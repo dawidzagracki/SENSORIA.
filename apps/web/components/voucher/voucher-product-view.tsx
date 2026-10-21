@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useCartCount } from "@/components/layout/cart-count-provider";
@@ -78,6 +80,32 @@ function formatApiError(error: unknown): string {
   return error instanceof Error
     ? error.message
     : "Nie udało się wykonać operacji. Spróbuj ponownie później.";
+}
+
+function VoucherCover({ product }: { product: CatalogProductDetail }) {
+  const image = product.images[0];
+  if (!image) return <TicketPreview product={product} />;
+  return (
+    <figure className="min-w-0 space-y-3">
+      <div className="relative aspect-ebook-cover w-full overflow-hidden rounded-card bg-surface-muted shadow-subtle lg:aspect-square">
+        <Image
+          alt={image.alt}
+          className="object-cover"
+          fill
+          priority
+          sizes="(min-width: 1024px) 40vw, 100vw"
+          src={image.url}
+          unoptimized
+        />
+        <div className="absolute left-4 top-4">
+          <Badge label="VOUCHER" />
+        </div>
+      </div>
+      <figcaption className="text-center text-caption text-ink-muted">
+        Voucher przychodzi na e-mail jako plik PDF z kodem i kodem QR.
+      </figcaption>
+    </figure>
+  );
 }
 
 function TicketPreview({ product }: { product: CatalogProductDetail }) {
@@ -248,8 +276,8 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
       content: (
         <p>
           Voucher jest ważny {product.voucher?.validity_months ?? "—"} mies.
-          Szczegółowe warunki po upływie ważności nie są jeszcze dostępne w
-          zatwierdzonych treściach. Skontaktuj się z nami przed zakupem.
+          Jeśli nie zdążysz, poproś o przedłużenie w koncie klienta albo
+          wiadomością do nas — przedłużamy ważność po kontakcie.
         </p>
       ),
     },
@@ -258,8 +286,8 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
       title: "Czy dostanę fakturę?",
       content: (
         <p>
-          Informacja o fakturach nie została jeszcze określona w zatwierdzonych
-          treściach. Skontaktuj się z nami przed zakupem.
+          Paragon wystawiamy automatycznie. Fakturę VAT na firmę wystawimy,
+          jeśli podasz NIP w zamówieniu.
         </p>
       ),
     },
@@ -268,8 +296,12 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
       title: "Czy mogę zwrócić voucher?",
       content: (
         <p>
-          Zasady zwrotu wymagają potwierdzenia w aktualnym regulaminie. Nie
-          podajemy tu niezatwierdzonej obietnicy zwrotu.
+          Masz 14 dni na odstąpienie od umowy od dnia zakupu — napisz do nas lub
+          skorzystaj z formularza na stronie{" "}
+          <Link className="underline" href="/pomoc/odstapienie">
+            odstąpienie od umowy
+          </Link>
+          .
         </p>
       ),
     },
@@ -311,14 +343,14 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
         ]}
       />
       <article className="grid min-w-0 gap-8 lg:grid-cols-2 lg:gap-12">
-        <TicketPreview product={product} />
+        <VoucherCover product={product} />
         <section
           aria-labelledby="voucher-title"
           className="min-w-0 space-y-5 lg:sticky lg:top-24 lg:self-start"
         >
           <Badge label="VOUCHER" />
           <h1
-            className="break-words font-display text-title font-bold text-ink"
+            className="break-words font-display text-title font-extrabold tracking-tight text-ink"
             id="voucher-title"
           >
             {product.name}
@@ -407,7 +439,7 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
               role="status"
             >
               {notice ||
-                "Kliknij „Kup voucher”, aby dodać wybrany wariant do koszyka."}
+                "Wybierz formę spotkania, a potem kliknij „Kup voucher”."}
             </p>
             <ul className="space-y-3 border-t border-border pt-4 text-body-small text-ink-muted">
               <li>
@@ -425,11 +457,6 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
                 kontakcie z nami.
               </li>
             </ul>
-            <p className="text-caption text-ink-muted">
-              Powyższe informacje opisują treść makiety. Płatność, wysyłka,
-              rezerwacja terminu i przedłużanie nie są jeszcze obsługiwane przez
-              aplikację.
-            </p>
           </div>
         </section>
       </article>
@@ -439,9 +466,7 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
         className="-mx-4 space-y-6 bg-surface-muted px-4 py-8 md:-mx-4 md:px-4 xl:-mx-12 xl:px-12"
       >
         <div>
-          <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-            Jak to działa
-          </p>
+          <p className="uppercase-label text-accent-action">Jak to działa</p>
           <h2
             className="mt-2 font-display text-subtitle font-bold text-ink"
             id="steps-title"
@@ -474,9 +499,7 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
         className="mx-auto w-full max-w-content space-y-5"
       >
         <div>
-          <p className="text-label font-bold uppercase tracking-caps text-accent-action">
-            Pytania
-          </p>
+          <p className="uppercase-label text-accent-action">Pytania</p>
           <h2
             className="mt-2 font-display text-subtitle font-bold text-ink"
             id="faq-title"

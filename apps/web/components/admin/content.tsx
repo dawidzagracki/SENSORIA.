@@ -100,7 +100,7 @@ function PageEditor() {
         z prawnikiem przed publikacją. Format: „## ” nagłówek, „&gt; ” cytat, „-
         ” punkt listy, pusta linia rozdziela akapity.
       </p>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <Field label="Strona">
           <select
             className={inputClass}
@@ -139,7 +139,7 @@ function PageEditor() {
             onChange={(e) => setSummary(e.target.value)}
           />
         </Field>
-        <div className="sm:col-span-2">
+        <div className="md:col-span-2">
           <Field label="Treść">
             <textarea
               className={`${inputClass} py-2`}
@@ -217,7 +217,7 @@ function FaqEditor() {
   return (
     <Card title="Centrum pomocy — pytania i odpowiedzi">
       <ErrorBox message={error} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         <Field label="Kategoria">
           <input
             className={inputClass}
@@ -235,7 +235,7 @@ function FaqEditor() {
             }
           />
         </Field>
-        <div className="sm:col-span-2">
+        <div className="md:col-span-2">
           <Field label="Pytanie">
             <input
               className={inputClass}
@@ -244,7 +244,7 @@ function FaqEditor() {
             />
           </Field>
         </div>
-        <div className="sm:col-span-2">
+        <div className="md:col-span-2">
           <Field label="Odpowiedź (akapity oddziel pustą linią)">
             <textarea
               className={`${inputClass} py-2`}
@@ -448,7 +448,7 @@ function Reports() {
       {sales ? (
         <>
           <Card title="Podsumowanie">
-            <dl className="grid gap-4 sm:grid-cols-5">
+            <dl className="grid gap-4 md:grid-cols-5">
               {(
                 [
                   ["Zamówienia", String(sales.totals.orders)],

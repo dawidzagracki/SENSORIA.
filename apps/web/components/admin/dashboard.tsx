@@ -76,7 +76,7 @@ function Dash() {
         ))}
       </section>
       <Card title="Wymaga uwagi">
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {ATTENTION.map(([key, label, href]) => {
             const value = data.attention[key] ?? 0;
             return (

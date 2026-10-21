@@ -15,6 +15,7 @@ export type EntitlementDetail = {
   product_id: string;
   title: string;
   author: string | null;
+  cover_url?: string | null;
   order_number: string | null;
   buyer_email: string;
   granted_at: string;

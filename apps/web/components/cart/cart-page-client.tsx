@@ -160,8 +160,8 @@ function CartLine({
   const quantity = pendingQuantity ?? item.quantity;
   const canChangeQuantity = item.kind === "BOOK";
   return (
-    <article className="grid min-w-0 gap-4 rounded-card border border-border bg-surface p-4 sm:grid-cols-[7rem_minmax(0,1fr)_auto] sm:items-center sm:p-5">
-      <div className="relative aspect-product-image w-full overflow-hidden rounded-card bg-surface-muted sm:w-28">
+    <article className="grid min-w-0 grid-cols-[5.5rem_minmax(0,1fr)] gap-4 rounded-card border border-border bg-surface p-4 md:grid-cols-[7rem_minmax(0,1fr)_auto] md:items-center md:p-5">
+      <div className="relative aspect-product-image w-full overflow-hidden rounded-card bg-surface-muted md:w-28">
         {item.image ? (
           <Image
             alt=""
@@ -179,7 +179,7 @@ function CartLine({
       </div>
       <div className="min-w-0">
         <p className="text-caption text-ink-muted">{itemKindLabel(item)}</p>
-        <h2 className="mt-1 break-words font-interface text-label font-bold text-ink">
+        <h2 className="mt-1 break-words font-display text-body-small font-extrabold text-ink">
           <Link
             className="rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
             href={`/sklep/${encodeURIComponent(item.slug)}`}
@@ -265,7 +265,7 @@ function CartLine({
           </p>
         )}
       </div>
-      <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+      <div className="col-span-2 flex items-center justify-between gap-4 border-t border-border pt-3 md:col-span-1 md:flex-col md:items-end md:justify-center md:border-0 md:pt-0">
         <strong className="font-interface text-subtitle text-ink">
           {formatGrosz(item.line_total_grosz)}
         </strong>

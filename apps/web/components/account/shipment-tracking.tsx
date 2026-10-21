@@ -224,7 +224,7 @@ export function ShipmentTracking({ shipment, variant }: Props) {
       className="grid min-w-0 gap-4 rounded-card border border-border bg-surface-muted p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:p-5"
     >
       <div className="min-w-0 space-y-2">
-        <p className="font-interface text-label font-bold uppercase tracking-caps text-accent-action">
+        <p className="font-interface uppercase-label text-accent-action">
           {status.label}
         </p>
         {address && (

@@ -73,11 +73,15 @@ function formatDate(value: string, options: Intl.DateTimeFormatOptions = {}) {
 
 function monthYear(value: string | null) {
   if (!value) return "bez dotychczasowych zakupów";
+  // "21 października 2026" → "października 2026" (genitive, as "od …" requires).
   return new Intl.DateTimeFormat("pl-PL", {
+    day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "Europe/Warsaw",
-  }).format(new Date(value));
+  })
+    .format(new Date(value))
+    .replace(/^\d+\s/, "");
 }
 
 function initials(name: string | null) {
@@ -452,7 +456,7 @@ export function MyVouchersView() {
               </a>
             ) : (
               <p className="mt-2 text-body text-ink-muted">
-                Dane kontaktowe obsługi nie są skonfigurowane.
+                Napisz do nas przez formularz w centrum pomocy.
               </p>
             )}
             {data?.contact_phone ? (
@@ -463,9 +467,12 @@ export function MyVouchersView() {
                 {data.contact_phone}
               </a>
             ) : null}
-            <p className="mt-3 text-caption text-ink-muted">
-              Informacja o czasie odpowiedzi nie jest obecnie skonfigurowana.
-            </p>
+            <a
+              className="mt-3 inline-block text-body-small font-semibold text-accent underline"
+              href="/pomoc"
+            >
+              Centrum pomocy
+            </a>
           </section>
         </aside>
         <section aria-label="Lista voucherów" className="min-w-0">
@@ -583,7 +590,7 @@ export function MyVouchersView() {
                             className={`size-full object-contain ${isHistorical ? "opacity-60 grayscale" : ""}`}
                             height={96}
                             unoptimized
-                            src={apiPath(voucher.qr_path)}
+                            src={voucher.qr_path}
                             width={96}
                           />
                         </div>
@@ -764,9 +771,12 @@ export function MyVouchersView() {
                 Napisz do nas
               </a>
             ) : (
-              <p className="text-caption text-ink-muted">
-                Kontakt nie jest skonfigurowany.
-              </p>
+              <a
+                className="inline-flex min-h-touch items-center rounded-control bg-accent px-4 font-semibold text-white"
+                href="/pomoc"
+              >
+                Centrum pomocy
+              </a>
             )}
           </div>
         ) : null}

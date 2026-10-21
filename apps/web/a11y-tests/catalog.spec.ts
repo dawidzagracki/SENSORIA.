@@ -39,17 +39,17 @@ test("filtry, wyszukiwanie, sortowanie i historia zapisują stan w URL", async (
 }) => {
   await page.goto("/sklep?category=vouchery&page=3&per_page=24&q=terapia");
   await expect(
-    page.getByRole("radio", { name: /Vouchery na wizyty/ }),
-  ).toBeChecked();
-  await page.getByRole("radio", { name: /Kursy PDF/ }).click();
+    page.getByRole("button", { name: /Vouchery na wizyty/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: /Kursy PDF/ }).click();
   await expect(page).toHaveURL(/category=kursy-pdf/);
   await expect(page).toHaveURL(/q=terapia/);
   await expect(page).not.toHaveURL(/page=3/);
   await page.goBack();
   await expect(page).toHaveURL(/category=vouchery/);
   await expect(
-    page.getByRole("radio", { name: /Vouchery na wizyty/ }),
-  ).toBeChecked();
+    page.getByRole("button", { name: /Vouchery na wizyty/ }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.goForward();
   await expect(page).toHaveURL(/category=kursy-pdf/);
 
@@ -72,15 +72,24 @@ test("filtry wielokrotne zachowują parametry API i zerują numer strony", async
   await page.goto(
     "/sklep?category=kursy-pdf&kind=DIGITAL&audience=rodzice&price_min=0&price_max=5000&delivery=digital&sort=price_desc&page=2&per_page=48&q=integracja",
   );
-  await expect(page.getByRole("radio", { name: /Kursy PDF/ })).toBeChecked();
-  await expect(page.getByRole("radio", { name: /Rodzice/ })).toBeChecked();
-  await expect(page.getByRole("radio", { name: /do 50 zł/ })).toBeChecked();
+  await expect(page.getByRole("button", { name: /Kursy PDF/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: /Rodzice/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(page.getByRole("button", { name: /do 50 zł/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await expect(
-    page.getByRole("radio", { name: /Od razu na mailu/ }),
-  ).toBeChecked();
+    page.getByRole("button", { name: /Od razu na mailu/ }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByLabel("Szukaj")).toHaveValue("integracja");
   await expect(page.getByLabel("Sortuj")).toHaveValue("price_desc");
-  await page.getByRole("radio", { name: /Vouchery na wizyty/ }).click();
+  await page.getByRole("button", { name: /Vouchery na wizyty/ }).click();
   await expect(page).toHaveURL(/category=vouchery/);
   await expect(page).toHaveURL(/kind=DIGITAL/);
   await expect(page).toHaveURL(/audience=rodzice/);
@@ -142,14 +151,16 @@ test("siatka zmienia liczbę kolumn przy szerokościach responsywnych", async ({
   for (const [width, expectedColumns] of [
     [360, 1],
     [768, 2],
-    [1024, 3],
+    [1024, 2],
+    [1280, 3],
   ] as const) {
     await page.setViewportSize({ width, height: 900 });
     const result = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       viewport: window.innerWidth,
       columns: getComputedStyle(
-        document.querySelector("article")?.parentElement as Element,
+        document.querySelector('section[aria-label="Produkty"] article')
+          ?.parentElement as Element,
       ).gridTemplateColumns.split(" ").length,
     }));
     expect(result.scrollWidth).toBe(result.viewport);
@@ -181,7 +192,7 @@ test("wyszukiwanie bez wyników pokazuje ustawienia i bezpieczne rekomendacje", 
   await expect(page.locator("article")).toHaveCount(3);
   await expect(
     page.getByRole("link", { name: "Zobacz", exact: true }).first(),
-  ).toHaveAttribute("href", /\/produkt\//);
+  ).toHaveAttribute("href", /\/sklep\//);
   await page.setViewportSize({ width: 360, height: 900 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
     360,
@@ -240,7 +251,9 @@ test("wyniki poza zakresem i niezaufane q nie są traktowane jak pusty katalog",
 }) => {
   await page.goto("/sklep?page=4&per_page=12");
   await expect(
-    page.getByText("Ta strona nie zawiera produktów", { exact: true }),
+    page
+      .getByText("Ta strona nie zawiera produktów", { exact: true })
+      .locator("visible=true"),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: /Brak wyników/ })).toHaveCount(
     0,
@@ -279,7 +292,9 @@ test("sam filtr bez wyników nie twierdzi, że temat nie istnieje", async ({
 test("błąd API nie jest prezentowany jako brak wyników", async ({ page }) => {
   await page.goto("/sklep?q=error");
   await expect(
-    page.getByText("Nie udało się pobrać katalogu", { exact: true }),
+    page
+      .getByText("Nie udało się pobrać katalogu", { exact: true })
+      .locator("visible=true"),
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: /Brak wyników/ })).toHaveCount(
     0,

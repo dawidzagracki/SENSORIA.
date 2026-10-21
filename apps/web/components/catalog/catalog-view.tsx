@@ -9,11 +9,10 @@ import {
   Button,
   Modal,
   ProductCard,
-  Radio,
   Select,
-  TextField,
 } from "@/components/ui";
 import { NoResults } from "@/components/catalog/no-results";
+import { CartToast, useAddToCart } from "@/components/products/use-add-to-cart";
 import {
   catalogPriceBands,
   countActiveCatalogFilters,
@@ -109,6 +108,55 @@ function SkeletonCards() {
   );
 }
 
+function FilterGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <fieldset>
+      <legend className="uppercase-label mb-3 text-ink-muted">{title}</legend>
+      <div className="flex flex-wrap gap-2">{children}</div>
+    </fieldset>
+  );
+}
+
+function Chip({
+  label,
+  count,
+  pressed,
+  onClick,
+}: {
+  label: string;
+  count?: string;
+  pressed: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      aria-pressed={pressed}
+      className={`inline-flex min-h-touch items-center gap-2 rounded-pill border px-4 py-2 font-interface text-caption font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface ${
+        pressed
+          ? "border-accent-action bg-accent-action text-surface"
+          : "border-border bg-surface text-ink hover:border-accent hover:bg-surface-muted"
+      }`}
+      onClick={onClick}
+      type="button"
+    >
+      <span>{label}</span>
+      {count ? (
+        <span
+          className={`rounded-pill px-2 text-label ${pressed ? "bg-surface text-accent-action" : "bg-surface-muted text-ink-muted"}`}
+        >
+          {count}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
 type CatalogViewProps = {
   data: CatalogListResponse;
   allCategoriesTotal: number;
@@ -134,7 +182,7 @@ export function CatalogView({
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [listView, setListView] = useState(false);
   const [searchText, setSearchText] = useState(params.get("q") ?? "");
-  const [cartNotice, setCartNotice] = useState(false);
+  const { add, busyId, notice, dismiss } = useAddToCart();
   const activeFilters = countActiveCatalogFilters(params);
   const query = (params.get("q") ?? "").trim();
   const showNoResults =
@@ -165,142 +213,99 @@ export function CatalogView({
   }
 
   function renderFilters(suffix: string) {
+    const priceChecked = (band: (typeof catalogPriceBands)[number]) =>
+      params.get("price_min") === band.min &&
+      params.get("price_max") === band.max;
+    const noPrice = !params.has("price_min") && !params.has("price_max");
     return (
-      <div className="space-y-6">
-        <fieldset>
-          <legend className="uppercase-label mb-2">Kategorie</legend>
-          <div className="space-y-1">
-            <Radio
-              checked={!params.has("category")}
-              label={
-                <span className="flex w-full justify-between gap-2">
-                  <span>Wszystkie</span>
-                  <span className="text-caption">
-                    {countLabel(allCategoriesTotal)}
-                  </span>
-                </span>
-              }
-              name={`category-${suffix}`}
-              onChange={() => navigate({ category: null })}
+      <div className="space-y-7">
+        <FilterGroup title="Kategorie">
+          <Chip
+            count={countLabel(allCategoriesTotal)}
+            label="Wszystkie"
+            onClick={() => navigate({ category: null })}
+            pressed={!params.has("category")}
+          />
+          {data.facets.categories.map((option) => (
+            <Chip
+              count={countLabel(option.count)}
+              key={option.value}
+              label={categoryLabel(option.label)}
+              onClick={() => navigate({ category: option.value })}
+              pressed={params.get("category") === option.value}
             />
-            {data.facets.categories.map((option) => (
-              <Radio
-                checked={params.get("category") === option.value}
-                key={option.value}
-                label={
-                  <span className="flex w-full justify-between gap-2">
-                    <span>{categoryLabel(option.label)}</span>
-                    <span className="text-caption text-ink-muted">
-                      {countLabel(option.count)}
-                    </span>
-                  </span>
-                }
-                name={`category-${suffix}`}
-                onChange={() => navigate({ category: option.value })}
-              />
-            ))}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend className="uppercase-label mb-2">Dla kogo</legend>
-          <div className="space-y-1">
-            <Radio
-              checked={!params.has("audience")}
+          ))}
+        </FilterGroup>
+        {data.facets.audiences.length ? (
+          <FilterGroup title="Dla kogo">
+            <Chip
               label="Wszyscy"
-              name={`audience-${suffix}`}
-              onChange={() => navigate({ audience: null })}
+              onClick={() => navigate({ audience: null })}
+              pressed={!params.has("audience")}
             />
             {data.facets.audiences.map((option) => (
-              <Radio
-                checked={params.get("audience") === option.value}
+              <Chip
+                count={option.count.toLocaleString("pl-PL")}
                 key={option.value}
-                label={
-                  <span className="flex w-full justify-between gap-2">
-                    <span>{option.label}</span>
-                    <span className="text-caption text-ink-muted">
-                      {option.count.toLocaleString("pl-PL")}
-                    </span>
-                  </span>
-                }
-                name={`audience-${suffix}`}
-                onChange={() => navigate({ audience: option.value })}
+                label={option.label}
+                onClick={() => navigate({ audience: option.value })}
+                pressed={params.get("audience") === option.value}
               />
             ))}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend className="uppercase-label mb-2">Cena</legend>
-          <div className="space-y-1">
-            <Radio
-              checked={!params.has("price_min") && !params.has("price_max")}
-              label="Każda cena"
-              name={`price-${suffix}`}
-              onChange={() => navigate({ price_min: null, price_max: null })}
-            />
-            {catalogPriceBands.map((band) => {
-              const option = data.facets.prices.find(
-                (item) => item.value === band.value,
-              );
-              const checked =
-                params.get("price_min") === band.min &&
-                params.get("price_max") === band.max;
-              return (
-                <Radio
-                  checked={checked}
-                  key={band.value}
-                  label={
-                    <span className="flex w-full justify-between gap-2">
-                      <span>{band.label}</span>
-                      <span className="text-caption text-ink-muted">
-                        {(option?.count ?? 0).toLocaleString("pl-PL")}
-                      </span>
-                    </span>
-                  }
-                  name={`price-${suffix}`}
-                  onChange={() => choosePrice(band.value)}
-                />
-              );
-            })}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend className="uppercase-label mb-2">Dostawa</legend>
-          <div className="space-y-1">
-            <Radio
-              checked={!params.has("delivery")}
-              label="Każdy sposób"
-              name={`delivery-${suffix}`}
-              onChange={() => navigate({ delivery: null })}
-            />
-            {data.facets.deliveries.map((option) => (
-              <Radio
-                checked={params.get("delivery") === option.value}
-                key={option.value}
-                label={
-                  <span className="flex w-full justify-between gap-2">
-                    <span>
-                      {option.value === "digital"
-                        ? "Od razu na mailu"
-                        : "Paczkomat InPost"}
-                    </span>
-                    <span className="text-caption text-ink-muted">
-                      {option.count.toLocaleString("pl-PL")}
-                    </span>
-                  </span>
-                }
-                name={`delivery-${suffix}`}
-                onChange={() => navigate({ delivery: option.value })}
+          </FilterGroup>
+        ) : null}
+        <FilterGroup title="Cena">
+          <Chip
+            label="Każda cena"
+            onClick={() => navigate({ price_min: null, price_max: null })}
+            pressed={noPrice}
+          />
+          {catalogPriceBands.map((band) => {
+            const option = data.facets.prices.find(
+              (item) => item.value === band.value,
+            );
+            return (
+              <Chip
+                count={(option?.count ?? 0).toLocaleString("pl-PL")}
+                key={band.value}
+                label={band.label}
+                onClick={() => choosePrice(band.value)}
+                pressed={priceChecked(band)}
               />
-            ))}
-          </div>
-        </fieldset>
-        <Button
-          className="w-full"
-          onClick={() => navigate({}, true)}
-          variant="text"
-        >
-          Wyczyść filtry
-        </Button>
+            );
+          })}
+        </FilterGroup>
+        <FilterGroup title="Dostawa">
+          <Chip
+            label="Każdy sposób"
+            onClick={() => navigate({ delivery: null })}
+            pressed={!params.has("delivery")}
+          />
+          {data.facets.deliveries.map((option) => (
+            <Chip
+              count={option.count.toLocaleString("pl-PL")}
+              key={option.value}
+              label={
+                option.value === "digital"
+                  ? "Od razu na mailu"
+                  : "Paczkomat InPost"
+              }
+              onClick={() => navigate({ delivery: option.value })}
+              pressed={params.get("delivery") === option.value}
+            />
+          ))}
+        </FilterGroup>
+        {activeFilters > 0 ? (
+          <Button
+            className="w-full"
+            onClick={() => navigate({}, true)}
+            size="sm"
+            variant="secondary"
+          >
+            Wyczyść filtry ({activeFilters})
+          </Button>
+        ) : null}
+        <span className="sr-only">{suffix}</span>
       </div>
     );
   }
@@ -358,12 +363,12 @@ export function CatalogView({
         <>
           <section
             aria-labelledby="catalog-title"
-            className="my-6 grid gap-6 rounded-card bg-surface-muted p-6 lg:grid-cols-2 lg:items-center lg:p-8"
+            className="my-6 grid gap-6 rounded-card bg-surface-muted p-6 md:p-8 lg:grid-cols-[3fr_2fr] lg:items-center lg:p-10"
           >
             <div className="min-w-0">
               <p className="uppercase-label text-accent-action">Sklep</p>
               <h1
-                className="mt-3 max-w-content font-display text-title font-bold text-ink"
+                className="mt-3 max-w-content font-display text-title font-extrabold tracking-tight text-ink md:text-display"
                 id="catalog-title"
               >
                 Materiały, które{" "}
@@ -377,9 +382,9 @@ export function CatalogView({
                 roku.
               </p>
             </div>
-            <dl className="grid grid-cols-1 gap-4 text-center md:grid-cols-3 md:w-full">
+            <dl className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <dt className="font-interface text-subtitle font-bold text-accent-action">
+                <dt className="font-display text-subtitle font-extrabold text-accent-action md:text-title">
                   {loadError ? "—" : globalTotal.toLocaleString("pl-PL")}
                 </dt>
                 <dd className="text-caption text-ink-muted">
@@ -387,7 +392,7 @@ export function CatalogView({
                 </dd>
               </div>
               <div>
-                <dt className="font-interface text-subtitle font-bold text-accent-action">
+                <dt className="font-display text-subtitle font-extrabold text-accent-action md:text-title">
                   27 lat
                 </dt>
                 <dd className="text-caption text-ink-muted">
@@ -395,7 +400,7 @@ export function CatalogView({
                 </dd>
               </div>
               <div>
-                <dt className="font-interface text-subtitle font-bold text-accent-action">
+                <dt className="font-display text-subtitle font-extrabold text-accent-action md:text-title">
                   15 s
                 </dt>
                 <dd className="text-caption text-ink-muted">
@@ -405,53 +410,88 @@ export function CatalogView({
             </dl>
           </section>
 
-          <div className="grid gap-6 lg:grid-cols-4">
-            <aside
-              aria-label="Filtry katalogu"
-              className="hidden lg:col-span-1 lg:block"
-            >
-              {loadError ? null : renderFilters("desktop")}
+          <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+            <aside aria-label="Filtry katalogu" className="hidden lg:block">
+              <div className="sticky top-24 rounded-card border border-border bg-surface p-6 shadow-subtle">
+                {loadError ? null : renderFilters("desktop")}
+              </div>
             </aside>
             <section
               aria-label="Produkty"
               aria-busy={isPending}
-              className="min-w-0 lg:col-span-3"
+              className="min-w-0"
             >
-              <div className="mb-4 flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
-                <div className="flex min-w-0 flex-1 flex-wrap items-end gap-3">
+              <form
+                className="mb-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  navigate({ q: searchText || null });
+                }}
+                role="search"
+              >
+                <label className="sr-only" htmlFor="catalog-search">
+                  Szukaj w katalogu
+                </label>
+                <div className="relative">
+                  <svg
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-ink-muted"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-4.3-4.3"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeWidth="1.8"
+                    />
+                  </svg>
+                  <input
+                    className="min-h-control-lg w-full rounded-pill border border-border bg-surface py-3 pl-14 pr-32 text-body text-ink shadow-subtle placeholder:text-ink-muted focus-visible:border-accent-action focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+                    id="catalog-search"
+                    maxLength={160}
+                    name="q"
+                    onChange={(event) => setSearchText(event.target.value)}
+                    placeholder="Szukaj w sklepie"
+                    type="search"
+                    value={searchText}
+                  />
+                  <button
+                    className="absolute right-2 top-1/2 min-h-touch -translate-y-1/2 rounded-pill bg-accent-action px-5 font-interface text-button font-semibold text-surface hover:bg-accent hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2"
+                    type="submit"
+                  >
+                    Szukaj
+                  </button>
+                </div>
+              </form>
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     className="lg:hidden"
                     disabled={Boolean(loadError)}
                     onClick={() => setMobileFiltersOpen(true)}
+                    size="sm"
                     variant="secondary"
                   >
                     Filtry{activeFilters ? ` (${activeFilters})` : ""}
                   </Button>
-                  <form
-                    className="w-full flex-1 md:max-w-wide"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      navigate({ q: searchText || null });
-                    }}
-                  >
-                    <TextField
-                      aria-label="Szukaj w katalogu"
-                      label="Szukaj"
-                      maxLength={160}
-                      name="q"
-                      onChange={(event) => setSearchText(event.target.value)}
-                      placeholder="Wpisz nazwę lub temat"
-                      value={searchText}
-                    />
-                  </form>
                   <p
                     aria-live="polite"
-                    className="pb-2 text-body-small font-bold text-ink"
+                    className="text-body-small font-semibold text-ink"
                   >
                     {loadError ? "Wyniki niedostępne" : resultLabel(data.total)}
                   </p>
+                  {activeFilters > 0 || query ? (
+                    <button
+                      className="min-h-touch rounded-pill px-3 text-caption font-semibold text-accent-action underline underline-offset-4 hover:text-ink"
+                      onClick={() => navigate({}, true)}
+                      type="button"
+                    >
+                      Wyczyść wszystko
+                    </button>
+                  ) : null}
                 </div>
-                <div className="flex flex-wrap items-end gap-2">
+                <div className="flex flex-wrap items-center gap-3">
                   <Select
                     className="min-w-48"
                     label="Sortuj"
@@ -469,7 +509,7 @@ export function CatalogView({
                   </Select>
                   <div
                     aria-label="Widok produktów"
-                    className="flex gap-1"
+                    className="hidden gap-1 self-end md:flex"
                     role="group"
                   >
                     <Button
@@ -533,13 +573,13 @@ export function CatalogView({
                   className={
                     listView
                       ? "grid grid-cols-1 gap-4"
-                      : "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                      : "grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3"
                   }
                 >
                   {products.map((product) => (
                     <ProductCard
                       description={product.short_description ?? ""}
-                      href={`/produkt/${encodeURIComponent(product.slug)}`}
+                      href={`/sklep/${encodeURIComponent(product.slug)}`}
                       image={
                         product.image ? (
                           <Image
@@ -559,7 +599,18 @@ export function CatalogView({
                       imageAlt={product.image?.alt ?? "Brak zdjęcia produktu"}
                       key={product.id}
                       metric={metric(product)}
-                      onAddToCart={() => setCartNotice(true)}
+                      actionHref={
+                        product.kind === "VOUCHER"
+                          ? `/sklep/${encodeURIComponent(product.slug)}`
+                          : undefined
+                      }
+                      actionLabel={
+                        product.kind === "VOUCHER"
+                          ? "Wybierz wariant"
+                          : "Do koszyka"
+                      }
+                      addLoading={busyId === product.id}
+                      onAddToCart={() => void add(product.id, product.name)}
                       previousPriceInGrosze={
                         product.compare_at_price ?? undefined
                       }
@@ -579,23 +630,7 @@ export function CatalogView({
                   Nie znaleziono produktów spełniających wybrane warunki.
                 </p>
               )}
-              {cartNotice ? (
-                <Alert title="Koszyk" variant="info">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span>
-                      Dodawanie produktów nie jest jeszcze dostępne. Ta
-                      integracja powstanie w etapie koszyka.
-                    </span>
-                    <Button
-                      onClick={() => setCartNotice(false)}
-                      size="sm"
-                      variant="secondary"
-                    >
-                      Zamknij
-                    </Button>
-                  </div>
-                </Alert>
-              ) : null}
+              <CartToast notice={notice} onDismiss={dismiss} />
               {data.total_pages > 1 && !loadError ? (
                 <nav
                   aria-label="Stronicowanie produktów"

@@ -13,16 +13,16 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "border border-accent-action bg-accent-action text-surface hover:border-accent hover:bg-accent hover:text-ink",
+    "border border-accent-action bg-accent-action text-surface shadow-subtle hover:-translate-y-px hover:border-accent hover:bg-accent hover:text-ink motion-reduce:hover:translate-y-0",
   secondary:
-    "border border-accent-action bg-surface text-ink hover:bg-surface-muted",
+    "border border-accent-action bg-surface text-accent-action hover:bg-surface-muted",
   text: "border border-transparent bg-transparent text-ink hover:bg-surface-muted",
 };
 
 const sizes: Record<ButtonSize, string> = {
-  sm: "min-h-control-sm px-3 py-2 text-caption",
-  md: "min-h-control-md px-4 py-3 text-label",
-  lg: "min-h-control-lg px-6 py-4 text-body-small",
+  sm: "min-h-control-sm px-4 py-2 text-caption",
+  md: "min-h-control-md px-5 py-3 text-button",
+  lg: "min-h-control-lg px-8 py-4 text-body",
 };
 
 export function Button({
@@ -40,7 +40,7 @@ export function Button({
     <button
       {...props}
       aria-busy={loading || undefined}
-      className={`inline-flex items-center justify-center gap-2 rounded-pill font-interface font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60 ${sizes[size]} ${variants[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-pill font-interface font-semibold transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface disabled:cursor-not-allowed disabled:opacity-60 ${sizes[size]} ${variants[variant]} ${className}`}
       disabled={disabled || loading}
       type={type}
     >
