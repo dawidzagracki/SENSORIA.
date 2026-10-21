@@ -1,0 +1,48 @@
+# Presentation stack: fake payment gateway + Mailpit, demo credentials. Never use in production.
+# Use ./demo/compose.sh (wraps: docker compose -p sensoria-demo --env-file demo/.env.demo ...).
+services:
+  api:
+    environment:
+      STRIPE_SECRET_KEY: sk_test_demo
+      STRIPE_WEBHOOK_SECRET: whsec_demo
+      STRIPE_API_BASE: http://fake-stripe:9911
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_STARTTLS: "false"
+      MAIL_FROM: sklep@sensoria.demo
+      SITE_URL: http://localhost:8090
+    depends_on:
+      mailpit:
+        condition: service_started
+      fake-stripe:
+        condition: service_started
+
+  # Production build (no on-demand compilation) so every page is fast during the presentation.
+  web:
+    build:
+      target: runtime
+    command: !reset null
+    volumes: !reset []
+    environment:
+      ENVIRONMENT: development
+
+  fake-stripe:
+    image: python:3.12-slim
+    command: ["python", "/app/fake_stripe.py"]
+    environment:
+      STRIPE_WEBHOOK_SECRET: whsec_demo
+      WEBHOOK_URL: http://api:8000/payments/webhooks/stripe
+      PUBLIC_URL: http://localhost:9911
+    volumes:
+      - ./demo/fake_stripe.py:/app/fake_stripe.py:ro
+    ports:
+      - "127.0.0.1:9911:9911"
+    networks:
+      - sensoria
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "127.0.0.1:8025:8025"
+    networks:
+      - sensoria

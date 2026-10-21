@@ -17,6 +17,7 @@ from typing import Any
 from sqlalchemy import select
 
 from sensoria.database import SessionFactory
+from sensoria.modules.admin import models as _admin_models  # noqa: F401  (registers FK targets)
 
 from .models import ContentPage
 

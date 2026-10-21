@@ -23,6 +23,9 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY apps/web/ ./
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+# next.config rewrites are baked at build time; the image optimizer fetches /api/media through them.
+ARG API_URL=http://api:8000
+ENV API_URL=${API_URL}
 RUN npm run build
 
 FROM node:22-alpine AS runtime
