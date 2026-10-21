@@ -381,14 +381,17 @@ async def patch_product(
                 value = getattr(payload, name)
                 setattr(product, name, value.strip() if isinstance(value, str) else value)
         if "images" in fields and payload.images is not None:
-            product.images[:] = [
+            # Delete first: (product_id, position) is unique, so replacing in one flush collides.
+            product.images.clear()
+            await session.flush()
+            product.images.extend(
                 ProductImage(
                     url=str(i.get("url", ""))[:2048],
                     alt=str(i.get("alt", ""))[:500],
                     position=idx,
                 )
                 for idx, i in enumerate(payload.images)
-            ]
+            )
         price_fields = {"price", "compare_at_price", "vat_rate"} & fields
         if price_fields:
             if not payload.price_change_reason:
