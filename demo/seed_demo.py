@@ -178,9 +178,12 @@ def main() -> None:
             A("POST", f"/products/{item['id']}/withdraw")
 
     def upload_cover(key: str) -> dict:
-        generated = os.path.join(ROOT, "demo", "covers", f"{key}.png")  # AI-made covers win when present
-        content = open(generated, "rb").read() if os.path.exists(generated) else covers[key]
-        body, ctype = multipart({}, f"{key}.png", content, "image/png")
+        generated = os.path.join(ROOT, "demo", "covers", f"{key}.jpg")  # AI-made covers win when present
+        if os.path.exists(generated):
+            content, name, mime = open(generated, "rb").read(), f"{key}.jpg", "image/jpeg"
+        else:
+            content, name, mime = covers[key], f"{key}.png", "image/png"
+        body, ctype = multipart({}, name, content, mime)
         s, b, _ = A("POST", "/products/images", raw=body, ctype=ctype)
         step(f"okładka {key}", s == 201, b)
         return {"url": b["url"], "alt": "Okładka"}
