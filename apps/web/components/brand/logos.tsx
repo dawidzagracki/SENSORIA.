@@ -129,25 +129,14 @@ export function ApplePayLogo({ className }: LogoProps) {
 
 export function InPostLogo({ className }: LogoProps) {
   return (
-    <svg
-      aria-label="InPost"
-      className={`h-7 w-auto shrink-0 ${className ?? ""}`}
-      role="img"
-      viewBox="0 0 64 28"
-    >
-      <title>InPost</title>
-      <rect fill="#ffcd00" height="28" rx="9" width="64" />
-      <text
-        fill="#111"
-        fontFamily="Plus Jakarta Sans Variable, system-ui, sans-serif"
-        fontSize="13"
-        fontWeight="800"
-        x="9"
-        y="19"
-      >
-        InPost
-      </text>
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      alt="InPost"
+      className={`h-10 w-auto shrink-0 ${className ?? ""}`}
+      height={241}
+      src="/brand/inpost.png"
+      width={400}
+    />
   );
 }
 

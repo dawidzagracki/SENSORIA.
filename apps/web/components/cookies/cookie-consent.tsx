@@ -183,7 +183,7 @@ export function CookieConsent() {
             Wybór możesz zmienić w każdej chwili w stopce strony.
           </p>
           {notice ? (
-            <p className="text-body-small text-danger" role="alert">
+            <p className="text-body-small text-on-danger" role="alert">
               {notice}
             </p>
           ) : null}

@@ -150,7 +150,7 @@ export function AudioSamplePlayer({
         Darmowy fragment · pełna wersja dostępna w sensoria.shop
       </p>
       {error ? (
-        <p className="text-body-small text-danger" role="alert">
+        <p className="text-body-small text-on-danger" role="alert">
           {error}
         </p>
       ) : null}

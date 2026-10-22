@@ -124,6 +124,8 @@ export type PickupPointSnapshot = {
   postal_code: string;
   city: string;
   opening_hours: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   point_types: string[];
   functions: string[];
   status: string;

@@ -144,6 +144,8 @@ class PickupPointSnapshot(BaseModel):
     postal_code: str
     city: str
     opening_hours: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     point_types: list[str]
     functions: list[str]
     status: str

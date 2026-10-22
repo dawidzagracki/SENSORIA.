@@ -2,6 +2,7 @@
 
 import { useId, useState, type FormEvent } from "react";
 import { InPostLogo } from "@/components/brand/logos";
+import { VatBreakdown } from "@/components/cart/vat-breakdown";
 import type { CartMutation, CartView } from "./cart-types";
 
 function formatGrosz(value: number): string {
@@ -188,28 +189,6 @@ export function DiscountSummary({
             <dd>{formatGrosz(calculation.delivery.gross_grosz)}</dd>
           </div>
         ) : null}
-        {calculation.exempt.gross_grosz > 0 ? (
-          <div className="flex justify-between gap-4 text-ink-muted">
-            <dt>W tym sprzedaż zwolniona z VAT</dt>
-            <dd>{formatGrosz(calculation.exempt.gross_grosz)}</dd>
-          </div>
-        ) : null}
-        {calculation.vat_groups.map((group) => (
-          <div
-            className="flex justify-between gap-4 text-ink-muted"
-            key={group.vat_rate}
-          >
-            <dt>W tym VAT {group.vat_label}</dt>
-            <dd>{formatGrosz(group.tax_grosz)}</dd>
-          </div>
-        ))}
-        {calculation.delivery.tax_grosz > 0 &&
-        calculation.delivery.vat_label ? (
-          <div className="flex justify-between gap-4 text-ink-muted">
-            <dt>W tym VAT od dostawy {calculation.delivery.vat_label}</dt>
-            <dd>{formatGrosz(calculation.delivery.tax_grosz)}</dd>
-          </div>
-        ) : null}
         <div className="flex justify-between gap-4 border-t border-border pt-3 font-semibold">
           <dt>
             {calculation.amount_due_is_final ? "Razem" : "Suma produktów"}
@@ -222,6 +201,13 @@ export function DiscountSummary({
           </p>
         ) : null}
       </dl>
+      <VatBreakdown
+        deliveryTaxGrosz={calculation.delivery.tax_grosz}
+        deliveryVatLabel={calculation.delivery.vat_label}
+        exemptGrossGrosz={calculation.exempt.gross_grosz}
+        format={formatGrosz}
+        groups={calculation.vat_groups}
+      />
       <p className="text-caption text-ink-muted">
         Kwoty i rabat są obliczane przez serwer.
       </p>

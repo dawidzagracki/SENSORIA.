@@ -96,7 +96,7 @@ export function DigitalProductView({ product }: Props) {
           <DigitalConsentNotice />
           <section aria-label="Dane oferty" className="space-y-4">
             {isDiscounted && product.compare_at_price !== null ? (
-              <p className="inline-flex rounded-pill bg-accent-action px-3 py-2 text-label font-bold text-on-accent">
+              <p className="inline-flex rounded-pill bg-accent-action px-3 py-2 text-label font-bold text-surface">
                 −{discountPercent(product.price, product.compare_at_price)}%
               </p>
             ) : null}

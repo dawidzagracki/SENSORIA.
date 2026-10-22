@@ -38,17 +38,17 @@ small{{color:#5f6368;display:block}}.demo{{background:#fff3cd;border-radius:8px;
 <main><p class="demo">Tryb demonstracyjny — to nie jest prawdziwe logowanie Google.</p>
 <h1>Wybierz konto</h1><p>aby kontynuować w Sensoria</p>{items}</main></html>"""
 LOCKERS = [
-    ("OLS01M", "ul. Kościuszki", "12", "10-502", "Olsztyn"),
-    ("OLS02M", "al. Warszawska", "98", "10-702", "Olsztyn"),
-    ("OLS03M", "ul. Knosały", "5", "10-015", "Olsztyn"),
-    ("WAW01M", "ul. Marszałkowska", "10", "00-590", "Warszawa"),
-    ("WAW02M", "ul. Puławska", "40", "02-512", "Warszawa"),
-    ("KRK01M", "ul. Długa", "20", "31-147", "Kraków"),
+    ("OLS01M", "ul. Kościuszki", "12", "10-502", "Olsztyn", 53.7784, 20.4801),
+    ("OLS02M", "al. Warszawska", "98", "10-702", "Olsztyn", 53.7541, 20.4583),
+    ("OLS03M", "ul. Knosały", "5", "10-015", "Olsztyn", 53.7899, 20.5012),
+    ("WAW01M", "ul. Marszałkowska", "10", "00-590", "Warszawa", 52.2297, 21.0122),
+    ("WAW02M", "ul. Puławska", "40", "02-512", "Warszawa", 52.2002, 21.0245),
+    ("KRK01M", "ul. Długa", "20", "31-147", "Kraków", 50.0647, 19.9450),
 ]
 
 
-def locker(entry: tuple[str, str, str, str, str]) -> dict[str, object]:
-    code, street, building, post_code, city = entry
+def locker(entry: tuple[str, str, str, str, str, float, float]) -> dict[str, object]:
+    code, street, building, post_code, city, lat, lon = entry
     return {
         "name": code,
         "display_name": f"Paczkomat {code}",
@@ -56,6 +56,7 @@ def locker(entry: tuple[str, str, str, str, str]) -> dict[str, object]:
         "type": ["parcel_locker"],
         "functions": ["parcel_collect", "parcel_send"],
         "opening_hours": "24/7",
+        "location": {"latitude": lat, "longitude": lon},
         "address_details": {"street": street, "building_number": building, "post_code": post_code, "city": city},
     }
 

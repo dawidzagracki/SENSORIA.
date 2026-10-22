@@ -733,7 +733,7 @@ export function CartPageClient() {
         <section className="mx-auto max-w-3xl rounded-card bg-surface-muted px-6 py-10 text-center sm:px-10">
           <div
             aria-hidden="true"
-            className="mx-auto mb-5 flex h-control-lg w-control-lg items-center justify-center rounded-pill bg-accent-action text-on-accent"
+            className="mx-auto mb-5 flex h-control-lg w-control-lg items-center justify-center rounded-pill bg-accent-action text-surface"
           >
             <svg
               className="h-8 w-8"
@@ -839,7 +839,7 @@ export function CartPageClient() {
         />
       ) : null}
       {error ? (
-        <p role="alert" className="mb-4 text-body text-danger">
+        <p role="alert" className="mb-4 text-body text-on-danger">
           {error}
         </p>
       ) : null}

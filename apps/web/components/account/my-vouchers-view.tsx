@@ -411,7 +411,7 @@ export function MyVouchersView() {
     <main className="min-h-screen bg-surface-muted text-ink">
       <section className="bg-gradient-to-br from-surface-muted to-surface px-4 py-10 md:px-8 md:py-14">
         <div className="mx-auto max-w-page-shell">
-          <p className="text-caption font-bold tracking-wide text-accent">
+          <p className="text-caption font-bold tracking-wide text-accent-action">
             TWOJE KONTO
           </p>
           <h1 className="mt-2 font-display text-title font-bold md:text-display">
@@ -433,7 +433,7 @@ export function MyVouchersView() {
           >
             <div
               aria-hidden="true"
-              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent"
+              className="flex size-12 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bold text-accent-action"
             >
               {initials(data?.customer_name ?? null)}
             </div>
@@ -449,7 +449,7 @@ export function MyVouchersView() {
             <h2 className="font-semibold">Potrzebujesz pomocy?</h2>
             {data?.contact_email ? (
               <a
-                className="mt-2 block break-all text-body text-accent underline"
+                className="mt-2 block break-all text-body text-accent-action underline"
                 href={`mailto:${data.contact_email}`}
               >
                 {data.contact_email}
@@ -461,14 +461,14 @@ export function MyVouchersView() {
             )}
             {data?.contact_phone ? (
               <a
-                className="mt-1 block text-body text-accent underline"
+                className="mt-1 block text-body text-accent-action underline"
                 href={`tel:${data.contact_phone}`}
               >
                 {data.contact_phone}
               </a>
             ) : null}
             <a
-              className="mt-3 inline-block text-body-small font-semibold text-accent underline"
+              className="mt-3 inline-block text-body-small font-semibold text-accent-action underline"
               href="/pomoc"
             >
               Centrum pomocy
@@ -757,7 +757,7 @@ export function MyVouchersView() {
             </p>
             {data?.booking_url ? (
               <a
-                className="inline-flex min-h-touch items-center rounded-control bg-accent px-4 font-semibold text-white"
+                className="inline-flex min-h-touch items-center rounded-control bg-accent-action px-4 font-semibold text-white"
                 href={data.booking_url}
                 rel="noreferrer"
               >
@@ -765,14 +765,14 @@ export function MyVouchersView() {
               </a>
             ) : data?.contact_email ? (
               <a
-                className="inline-flex min-h-touch items-center rounded-control bg-accent px-4 font-semibold text-white"
+                className="inline-flex min-h-touch items-center rounded-control bg-accent-action px-4 font-semibold text-white"
                 href={`mailto:${data.contact_email}`}
               >
                 Napisz do nas
               </a>
             ) : (
               <a
-                className="inline-flex min-h-touch items-center rounded-control bg-accent px-4 font-semibold text-white"
+                className="inline-flex min-h-touch items-center rounded-control bg-accent-action px-4 font-semibold text-white"
                 href="/pomoc"
               >
                 Centrum pomocy
@@ -828,7 +828,7 @@ export function MyVouchersView() {
                     />
                   </label>
                   {extensionError ? (
-                    <p className="text-caption text-danger" role="alert">
+                    <p className="text-caption text-on-danger" role="alert">
                       {extensionError}
                     </p>
                   ) : null}

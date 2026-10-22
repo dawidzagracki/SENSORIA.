@@ -13,6 +13,8 @@ import {
   VisaLogo,
 } from "@/components/brand/logos";
 import { Button, Checkbox, Modal, RadioCard } from "@/components/ui";
+import { PickupMap } from "@/components/checkout/pickup-map";
+import { VatBreakdown } from "@/components/cart/vat-breakdown";
 import type { CartView } from "@/components/cart/cart-types";
 import type { PickupPointSnapshot } from "@/components/cart/cart-types";
 import { useCartCount } from "@/components/layout/cart-count-provider";
@@ -144,6 +146,7 @@ export function CheckoutPage() {
   const [pickupQuery, setPickupQuery] = useState("");
   const [pickupCode, setPickupCode] = useState("");
   const [pickupPoints, setPickupPoints] = useState<PickupPointSnapshot[]>([]);
+  const [activePickupCode, setActivePickupCode] = useState<string | null>(null);
   const [pickupBusy, setPickupBusy] = useState(false);
   const [pickupError, setPickupError] = useState("");
   const [pickupStatus, setPickupStatus] = useState("");
@@ -264,6 +267,7 @@ export function CheckoutPage() {
       if (!response.ok) throw new Error(await errorMessage(response));
       const data = (await response.json()) as { items: PickupPointSnapshot[] };
       setPickupPoints(data.items);
+      setActivePickupCode(null);
       if (data.items.length === 0)
         setPickupStatus("Nie znaleziono punktów w tej lokalizacji.");
     } catch (caught) {
@@ -813,7 +817,7 @@ export function CheckoutPage() {
                         ) : null}
                       </div>
                     ) : (
-                      <p className="text-caption text-danger">
+                      <p className="rounded-control bg-danger p-3 text-body-small font-semibold text-on-danger">
                         Wybierz punkt odbioru. Bez potwierdzonego Paczkomatu nie
                         można złożyć zamówienia.
                       </p>
@@ -1069,7 +1073,7 @@ export function CheckoutPage() {
                     <input
                       required
                       inputMode="numeric"
-                      autoComplete="tax-id"
+                      autoComplete="off"
                       value={nip}
                       onChange={(event) => setNip(event.target.value)}
                       className="mt-2 min-h-touch w-full rounded-control border border-border px-3"
@@ -1178,7 +1182,7 @@ export function CheckoutPage() {
             {error ? (
               <p
                 role="alert"
-                className="rounded-control border border-danger p-3 text-body text-danger"
+                className="rounded-control border border-danger p-3 text-body text-on-danger"
               >
                 {error}
               </p>
@@ -1258,27 +1262,17 @@ export function CheckoutPage() {
                     {cart.delivery_point.postal_code} {cart.delivery_point.city}
                   </div>
                 ) : null}
-                {cart.calculation.exempt.gross_grosz > 0 ? (
-                  <div className="flex justify-between gap-3">
-                    <span>Sprzedaż zwolniona z VAT</span>
-                    <span>{money(cart.calculation.exempt.gross_grosz)}</span>
-                  </div>
-                ) : null}
-                {cart.calculation.vat_groups
-                  .filter((group) => group.gross_grosz > 0)
-                  .map((group) => (
-                    <div
-                      key={group.vat_rate}
-                      className="flex justify-between gap-3"
-                    >
-                      <span>VAT {group.vat_label}</span>
-                      <span>{money(group.tax_grosz)}</span>
-                    </div>
-                  ))}
                 <div className="flex justify-between gap-3 border-t border-border pt-3 font-bold">
                   <span>Do zapłaty</span>
                   <span>{money(cart.calculation.amount_due_grosz)}</span>
                 </div>
+                <VatBreakdown
+                  deliveryTaxGrosz={cart.calculation.delivery.tax_grosz}
+                  deliveryVatLabel={cart.calculation.delivery.vat_label}
+                  exemptGrossGrosz={cart.calculation.exempt.gross_grosz}
+                  format={money}
+                  groups={cart.calculation.vat_groups}
+                />
               </div>
               <button
                 type="submit"
@@ -1334,11 +1328,22 @@ export function CheckoutPage() {
             </Button>
           </form>
           {pickupPoints.length ? (
+            <PickupMap
+              activeCode={activePickupCode}
+              onActivate={setActivePickupCode}
+              points={pickupPoints}
+            />
+          ) : null}
+          {pickupPoints.length ? (
             <ul className="space-y-3" aria-label="Wyniki wyszukiwania punktów">
               {pickupPoints.map((point) => (
                 <li
                   key={point.code}
-                  className="min-w-0 rounded-control border border-border p-3"
+                  className={`min-w-0 rounded-control border p-3 ${
+                    point.code === activePickupCode
+                      ? "border-accent-action bg-surface-muted"
+                      : "border-border"
+                  }`}
                 >
                   <p className="break-words font-bold text-label text-ink">
                     {point.code} · {point.name}
@@ -1355,6 +1360,7 @@ export function CheckoutPage() {
                     className="mt-3"
                     disabled={pickupBusy}
                     onClick={() => void selectPickupPoint(point.code)}
+                    onFocus={() => setActivePickupCode(point.code)}
                     size="sm"
                     variant="secondary"
                   >
@@ -1394,7 +1400,7 @@ export function CheckoutPage() {
             </Button>
           </form>
           {pickupError ? (
-            <p role="alert" className="text-caption text-danger">
+            <p role="alert" className="text-caption text-on-danger">
               {pickupError}
             </p>
           ) : null}

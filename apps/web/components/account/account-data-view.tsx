@@ -392,7 +392,7 @@ export function AccountDataView() {
                   <div className="flex items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-action font-bold text-on-accent"
+                      className="grid size-11 shrink-0 place-items-center rounded-full bg-accent-action font-bold text-surface"
                     >
                       {initials}
                     </span>
@@ -624,7 +624,7 @@ export function AccountDataView() {
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="font-bold">{address.label}</h3>
                                 {address.is_default && (
-                                  <span className="shrink-0 whitespace-nowrap rounded-full bg-accent-action px-3 py-1 text-caption font-bold text-on-accent">
+                                  <span className="shrink-0 whitespace-nowrap rounded-full bg-accent-action px-3 py-1 text-caption font-bold text-surface">
                                     DOMYŚLNY
                                   </span>
                                 )}

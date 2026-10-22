@@ -81,6 +81,19 @@ def _safe_point(raw: dict[str, Any]) -> PickupPointSnapshot | None:
         return None
     if isinstance(building, str) and building.strip():
         street = f"{street} {building}"
+    location = raw.get("location")
+    latitude = longitude = None
+    if isinstance(location, dict):
+        lat, lon = location.get("latitude"), location.get("longitude")
+        if (
+            isinstance(lat, (int, float))
+            and isinstance(lon, (int, float))
+            and not isinstance(lat, bool)
+            and not isinstance(lon, bool)
+            and -90 <= lat <= 90
+            and -180 <= lon <= 180
+        ):
+            latitude, longitude = float(lat), float(lon)
     return PickupPointSnapshot(
         code=name,
         name=str(raw.get("display_name") or f"InPost Paczkomat {name}"),
@@ -92,6 +105,8 @@ def _safe_point(raw: dict[str, Any]) -> PickupPointSnapshot | None:
         ),
         point_types=types,
         functions=functions,
+        latitude=latitude,
+        longitude=longitude,
         status="Operating",
         verified_at=datetime.now(UTC),
     )

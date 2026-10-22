@@ -72,8 +72,17 @@ test("książka: wybór Paczkomatu z wyszukiwarki punktów", async ({ page }) =>
   await page.getByRole("button", { name: "Szukaj punktów" }).click();
   const point = page.getByRole("button", { name: "Wybierz ten punkt" }).first();
   await expect(point).toBeVisible();
-  await point.click();
-  await expect(page.getByText(/OLS0\dM/).first()).toBeVisible();
+  await expect(page.getByTestId("pickup-map")).toBeVisible();
+  const markers = page.locator(".leaflet-marker-icon");
+  await expect(markers).toHaveCount(3);
+  await markers.nth(1).click();
+  const active = page.locator("li.border-accent-action");
+  await expect(active).toHaveCount(1);
+  const activeCode = (await active.innerText()).match(/OLS0\dM/)?.[0];
+  await active.getByRole("button", { name: "Wybierz ten punkt" }).click();
+  await expect(
+    page.getByText(new RegExp(activeCode ?? "OLS0\\dM")).first(),
+  ).toBeVisible();
   await acceptTermsAndPay(page);
   await expect(page.getByText(/OLS0\dM/).first()).toBeVisible();
 });

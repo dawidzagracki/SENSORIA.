@@ -69,7 +69,7 @@ export function PdfSamplePreview({
       </Button>
       {error ? (
         <p
-          className="text-body-small text-danger"
+          className="text-body-small text-on-danger"
           id="pdf-sample-error"
           role="alert"
         >

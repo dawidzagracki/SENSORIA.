@@ -129,7 +129,7 @@ export function ReorderButton({
         </p>
       ) : null}
       {error ? (
-        <p className="mt-1 max-w-xs text-caption text-danger" role="alert">
+        <p className="mt-1 max-w-xs text-caption text-on-danger" role="alert">
           {error}
         </p>
       ) : null}
