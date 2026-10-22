@@ -59,7 +59,8 @@ def _summary(order: Order, item_count: int) -> dict[str, Any]:
         "amount_due_grosz": order.amount_due_grosz,
         "payment_method": order.payment_method,
         "item_count": item_count,
-        "requires_shipping": order.shipping_data is not None,
+        "requires_shipping": isinstance(order.shipping_data, dict)
+        and bool(order.shipping_data.get("method")),
     }
 
 
@@ -79,7 +80,11 @@ async def list_orders(
     if status:
         statement = statement.where(Order.status == status)
     if fulfillment:
-        statement = statement.where(Order.fulfillment_status == fulfillment)
+        # Digital and voucher orders ship themselves; only physical ones need fulfilment.
+        statement = statement.where(
+            Order.fulfillment_status == fulfillment,
+            Order.shipping_data["method"].astext.is_not(None),
+        )
     if q:
         needle = f"%{q.strip().lower()}%"
         statement = statement.where(

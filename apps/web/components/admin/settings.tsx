@@ -229,7 +229,12 @@ function Simple({
 }: {
   item: Item;
   reload: () => void;
-  fields: Array<{ key: string; label: string; type?: "number" }>;
+  fields: Array<{
+    key: string;
+    label: string;
+    type?: "number";
+    placeholder?: string;
+  }>;
 }) {
   const [f, setF] = useState<Record<string, string>>(
     Object.fromEntries(
@@ -260,6 +265,7 @@ function Simple({
             <input
               className={inputClass}
               value={f[x.key] ?? ""}
+              placeholder={x.placeholder}
               onChange={(e) => setF({ ...f, [x.key]: e.target.value })}
             />
           </Field>
@@ -342,6 +348,7 @@ function Editor() {
               key: "delay_days",
               label: "Po ilu dniach od zakupu prosić o opinię (1–90)",
               type: "number",
+              placeholder: "domyślnie 7",
             },
           ]}
         />

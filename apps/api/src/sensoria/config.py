@@ -62,6 +62,8 @@ class Settings(BaseSettings):
     SAMPLE_SESSION_REQUEST_LIMIT: int = Field(default=24, ge=1, le=200)
     TRUSTED_PROXY_CIDRS: str = ""
     LOGIN_LINK_EMAIL_LIMIT: int = Field(default=4, ge=2, le=20)
+    EMAIL_CODE_EMAIL_LIMIT: int = Field(default=5, ge=2, le=1000)
+    EMAIL_CODE_IP_LIMIT: int = Field(default=20, ge=2, le=5000)
     LOGIN_LINK_IP_LIMIT: int = Field(default=20, ge=3, le=200)
     LOGIN_LINK_WINDOW_SECONDS: int = Field(default=3600, ge=60, le=86400)
     LOGIN_LINK_COOLDOWN_SECONDS: int = Field(default=900, ge=60, le=86400)

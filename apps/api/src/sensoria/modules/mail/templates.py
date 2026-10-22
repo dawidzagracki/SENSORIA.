@@ -235,7 +235,21 @@ def _link_mail(
     return render
 
 
+def email_code(v: dict[str, Any]) -> Rendered:
+    _require(v, "code")
+    subject = "Twój kod logowania do SENSORIA"
+    body = (
+        "<p>Wpisz ten kod w sklepie, aby zobaczyć swoje zakupy, e-booki, kursy i audiobooki. "
+        "Kod jest ważny 10 minut.</p>"
+        f'<p style="margin:24px 0;font-size:32px;font-weight:800;letter-spacing:.3em;'
+        f'color:{ACCENT}">{_e(v["code"])}</p>'
+        "<p>Jeśli to nie Ty prosiłaś o kod, zignoruj tę wiadomość.</p>"
+    )
+    return subject, layout(subject, body), f"Twój kod logowania: {v['code']} (ważny 10 minut)."
+
+
 TEMPLATES: dict[str, Callable[[dict[str, Any]], Rendered]] = {
+    "email_code": email_code,
     "order_confirmation": order_confirmation,
     "payment_failed": payment_failed,
     "digital_access": digital_access,

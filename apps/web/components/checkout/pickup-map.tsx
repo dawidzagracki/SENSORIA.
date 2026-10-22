@@ -6,10 +6,13 @@ import type { Map as LeafletMap, Marker } from "leaflet";
 
 import type { PickupPointSnapshot } from "@/components/cart/cart-types";
 
+export type PickupMapHandle = { center: () => [number, number] | null };
+
 type PickupMapProps = {
   points: PickupPointSnapshot[];
   activeCode: string | null;
   onActivate: (code: string) => void;
+  onReady?: (handle: PickupMapHandle) => void;
 };
 
 type LocatedPoint = PickupPointSnapshot & {
@@ -29,14 +32,21 @@ function markerHtml(code: string, active: boolean) {
   return `<span class="flex h-11 w-11 items-center justify-center rounded-pill border-2 border-surface text-caption font-bold shadow-subtle ${tone}">${active ? "✓" : "P"}</span><span class="sr-only">${code}</span>`;
 }
 
-export function PickupMap({ points, activeCode, onActivate }: PickupMapProps) {
+export function PickupMap({
+  points,
+  activeCode,
+  onActivate,
+  onReady,
+}: PickupMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
   const markersRef = useRef<Map<string, Marker>>(new Map());
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const onActivateRef = useRef(onActivate);
+  const onReadyRef = useRef(onReady);
   useEffect(() => {
     onActivateRef.current = onActivate;
+    onReadyRef.current = onReady;
   });
 
   const items = located(points);
@@ -54,6 +64,9 @@ export function PickupMap({ points, activeCode, onActivate }: PickupMapProps) {
       markersRef.current.clear();
       const map = leaflet.map(containerRef.current, { scrollWheelZoom: false });
       mapRef.current = map;
+      const observer = new ResizeObserver(() => map.invalidateSize());
+      observer.observe(containerRef.current);
+      map.on("unload", () => observer.disconnect());
       leaflet
         .tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
@@ -61,6 +74,12 @@ export function PickupMap({ points, activeCode, onActivate }: PickupMapProps) {
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         })
         .addTo(map);
+      onReadyRef.current?.({
+        center: () => {
+          const c = map.getCenter();
+          return [c.lat, c.lng];
+        },
+      });
       const bounds = leaflet.latLngBounds([]);
       for (const point of items) {
         const marker = leaflet
@@ -81,6 +100,8 @@ export function PickupMap({ points, activeCode, onActivate }: PickupMapProps) {
       }
       if (bounds.isValid()) {
         map.fitBounds(bounds, { padding: [32, 32], maxZoom: 15 });
+      } else {
+        map.setView([52.1, 19.4], 6);
       }
     }
     void build();
@@ -117,9 +138,6 @@ export function PickupMap({ points, activeCode, onActivate }: PickupMapProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCode, signature]);
 
-  if (!items.length) {
-    return null;
-  }
   return (
     <div
       aria-label="Mapa Paczkomatów"

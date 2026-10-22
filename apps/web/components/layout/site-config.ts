@@ -8,10 +8,11 @@ export const productCategoryLinks = [
   { label: "Kursy", href: "/sklep?category=kursy-pdf" },
 ] as const;
 
+// Product categories live in the catalog filters; the header keeps only top-level destinations.
 export const primaryNavigationLinks = [
-  ...productCategoryLinks.slice(0, 3),
-  productCategoryLinks[3],
+  { label: "Sklep", href: "/sklep" },
   { label: "O autorce", href: "/o-autorce" },
+  { label: "Pomoc", href: "/pomoc" },
 ] as const;
 
 export const footerColumns = [

@@ -63,6 +63,8 @@ class EntitlementDetail(BaseModel):
     granted_at: datetime
     files: list[FileInfo]
     reader_chapters: list[ReaderChapterInfo]
+    reader_mode: str = "none"
+    pdf_file_id: UUID | None = None
     audio_chapters: list[AudioChapterInfo]
     total_pages: int | None
     progress: Progress

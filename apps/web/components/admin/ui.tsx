@@ -56,11 +56,11 @@ export function Pager({
   return (
     <nav
       aria-label="Stronicowanie"
-      className="mt-4 flex items-center gap-3 text-body-small"
+      className="mt-4 flex flex-wrap items-center justify-between gap-3 text-body-small"
     >
       <button
         type="button"
-        className="min-h-touch rounded-pill border border-border px-4 disabled:opacity-40"
+        className="min-h-touch whitespace-nowrap rounded-pill border border-border px-4 disabled:opacity-40"
         disabled={page <= 1}
         onClick={() => onPage(page - 1)}
       >
@@ -71,7 +71,7 @@ export function Pager({
       </span>
       <button
         type="button"
-        className="min-h-touch rounded-pill border border-border px-4 disabled:opacity-40"
+        className="min-h-touch whitespace-nowrap rounded-pill border border-border px-4 disabled:opacity-40"
         disabled={page >= pages}
         onClick={() => onPage(page + 1)}
       >

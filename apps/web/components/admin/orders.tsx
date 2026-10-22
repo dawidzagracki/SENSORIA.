@@ -111,7 +111,7 @@ function List() {
               ))}
             </select>
           </Field>
-          <Field label="Realizacja">
+          <Field label="Realizacja (tylko przesyłki fizyczne)">
             <select
               className={inputClass}
               value={fulfillment}
@@ -139,7 +139,7 @@ function List() {
             head={[
               "Numer",
               "Data",
-              "Klientka",
+              "Klient",
               "Kwota",
               "Płatność",
               "Realizacja",
@@ -300,7 +300,7 @@ function DetailView({ id }: { id: string }) {
       <Card title={`Zamówienie ${order.number}`}>
         <dl className="grid gap-3 md:grid-cols-2">
           <div>
-            <dt className="text-caption text-ink-muted">Klientka</dt>
+            <dt className="text-caption text-ink-muted">Klient</dt>
             <dd>{order.email}</dd>
           </div>
           <div>
@@ -407,7 +407,7 @@ function DetailView({ id }: { id: string }) {
                       "ready",
                       `/orders/${id}/pickup-ready`,
                       {},
-                      "Klientka dostanie powiadomienie o odbiorze.",
+                      "Klient dostanie powiadomienie o odbiorze.",
                     )
                   }
                 >
@@ -446,7 +446,7 @@ function DetailView({ id }: { id: string }) {
                       "ship",
                       `/orders/${id}/ship`,
                       { json: { carrier, tracking_number: tracking } },
-                      "Przesyłka nadana — klientka dostanie powiadomienie.",
+                      "Przesyłka nadana — klient dostanie powiadomienie.",
                     )
                   }
                 >
@@ -481,7 +481,7 @@ function DetailView({ id }: { id: string }) {
           </p>
         )}
       </Card>
-      <Card title="Wiadomości do klientki">
+      <Card title="Wiadomości do klienta">
         <Table
           caption="Wysłane wiadomości"
           head={["Szablon", "Status", "Próby", "Wysłano"]}

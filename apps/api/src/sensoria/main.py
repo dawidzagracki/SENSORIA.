@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from sensoria.config import Settings, get_settings
 from sensoria.database import engine
+from sensoria.modules.accounts.email_code import email_code_router
 from sensoria.modules.accounts.oauth import google_router
 from sensoria.modules.accounts.privacy import privacy_job_scheduler
 from sensoria.modules.accounts.router import auth_router
@@ -116,6 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         accounts_router,
         auth_router,
         google_router,
+        email_code_router,
         admin_router,
     ):
         app.include_router(router)

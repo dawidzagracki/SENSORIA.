@@ -19,16 +19,23 @@ import { formatDate, formatDateTime, money } from "@/lib/client-api";
 
 /* ------------------------------ customers ------------------------------ */
 type Customer = {
-  id: string;
   email: string;
-  first_name: string;
-  last_name: string;
-  phone: string | null;
-  email_verified: boolean;
-  created_at: string;
+  name: string | null;
+  has_account: boolean;
+  orders_count: number;
+  paid_total_grosz: number;
+  last_order_at: string | null;
+  account_created_at: string | null;
   last_login_at: string | null;
 };
-type CustomerDetail = Customer & {
+type CustomerDetail = {
+  email: string;
+  name: string | null;
+  phone: string | null;
+  has_account: boolean;
+  email_verified: boolean;
+  account_created_at: string | null;
+  last_login_at: string | null;
   orders_count: number;
   paid_total_grosz: number;
   orders: Array<{
@@ -55,7 +62,7 @@ function Customers() {
       if (q.trim()) p.set("q", q.trim());
       setData(await adminJson(`/customers?${p}`));
     } catch (e) {
-      setError(errorText(e, "Nie udało się wczytać klientek."));
+      setError(errorText(e, "Nie udało się wczytać klientów."));
     }
   }, [page, q]);
   useEffect(() => {
@@ -64,6 +71,9 @@ function Customers() {
   return (
     <div className="space-y-4">
       <Card>
+        <p className="mb-3 text-body-small text-ink-muted">
+          Klientem jest każda osoba, która kupiła w sklepie — także bez konta.
+        </p>
         <form
           role="search"
           onSubmit={(e) => {
@@ -86,33 +96,36 @@ function Customers() {
       {data ? (
         <Card>
           <Table
-            caption="Klientki"
+            caption="Klienci"
             head={[
               "E-mail",
               "Imię i nazwisko",
-              "Konto od",
-              "Ostatnie logowanie",
+              "Konto",
+              "Zamówienia",
+              "Wydano",
+              "Ostatni zakup",
               "",
             ]}
           >
             {data.items.map((c) => (
-              <tr key={c.id}>
+              <tr key={c.email}>
+                <td className="px-3 py-2">{c.email}</td>
+                <td className="px-3 py-2">{c.name ?? "—"}</td>
                 <td className="px-3 py-2">
-                  {c.email}
-                  {c.email_verified ? "" : " (niepotwierdzony)"}
+                  {c.has_account ? "Z kontem" : "Gość"}
                 </td>
-                <td className="px-3 py-2">
-                  {c.first_name} {c.last_name}
-                </td>
-                <td className="px-3 py-2">{formatDate(c.created_at)}</td>
-                <td className="px-3 py-2">{formatDateTime(c.last_login_at)}</td>
+                <td className="px-3 py-2">{c.orders_count}</td>
+                <td className="px-3 py-2">{money(c.paid_total_grosz)}</td>
+                <td className="px-3 py-2">{formatDate(c.last_order_at)}</td>
                 <td className="px-3 py-2">
                   <button
                     type="button"
                     className="min-h-touch text-accent-action underline"
                     onClick={async () =>
                       setDetail(
-                        await adminJson<CustomerDetail>(`/customers/${c.id}`),
+                        await adminJson<CustomerDetail>(
+                          `/customers/detail?email=${encodeURIComponent(c.email)}`,
+                        ),
                       )
                     }
                   >
@@ -131,10 +144,15 @@ function Customers() {
         </Card>
       ) : null}
       {detail ? (
-        <Card title={`${detail.first_name} ${detail.last_name}`}>
+        <Card title={detail.name ?? detail.email}>
           <p>
             {detail.email}
             {detail.phone ? ` · ${detail.phone}` : ""}
+          </p>
+          <p className="mt-1 text-body-small text-ink-muted">
+            {detail.has_account
+              ? `Konto od ${formatDate(detail.account_created_at)}${detail.email_verified ? "" : " (e-mail niepotwierdzony)"} · ostatnie logowanie: ${formatDateTime(detail.last_login_at)}`
+              : "Klient bez konta (zakupy jako gość)."}
           </p>
           <p className="mt-1 text-body-small text-ink-muted">
             Zamówień: {detail.orders_count} · suma opłaconych:{" "}

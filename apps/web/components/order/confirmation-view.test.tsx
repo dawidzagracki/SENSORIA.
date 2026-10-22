@@ -101,7 +101,7 @@ describe("ConfirmationView", () => {
       name: /Zamówienie opłacone/,
     });
     expect(
-      await screen.findByRole("link", { name: "Czytaj w przeglądarce" }),
+      await screen.findByRole("link", { name: "Czytaj jako kurs" }),
     ).toHaveAttribute(
       "href",
       expect.stringContaining(`/konto/czytnik/e-1?order_token=${TOKEN}`),

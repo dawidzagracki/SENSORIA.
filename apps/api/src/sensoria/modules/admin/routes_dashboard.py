@@ -50,7 +50,7 @@ async def dashboard(session: SessionDependency, _admin: Staff) -> dict[str, Any]
             .where(
                 Order.status == "paid",
                 Order.fulfillment_status == "awaiting_fulfillment",
-                Order.shipping_data.is_not(None),
+                Order.shipping_data["method"].astext.is_not(None),
             )
         )
         or 0

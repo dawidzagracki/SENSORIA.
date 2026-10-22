@@ -154,3 +154,24 @@ test("voucher w prezencie: dane obdarowanej osoby i termin wysyłki", async ({
     page.getByText(/Dane prezentowe|obdarowan/i).first(),
   ).toBeVisible();
 });
+
+test("mapa Paczkomatów: miasta z całej Polski i wyszukiwanie w okolicy mapy", async ({
+  page,
+}) => {
+  await addBookAndOpenCheckout(page);
+  await fillBuyer(page);
+  await page.locator("label", { hasText: "Paczkomat InPost" }).click();
+  await page.getByRole("button", { name: "Wybierz Paczkomat" }).click();
+  await expect(page.getByTestId("pickup-map")).toBeVisible();
+  await page.getByLabel("Miasto lub kod pocztowy").fill("Gdańsk");
+  await page.getByRole("button", { name: "Szukaj punktów" }).click();
+  await expect(page.locator(".leaflet-marker-icon")).toHaveCount(5);
+  await page.getByRole("button", { name: "Szukaj w tej okolicy mapy" }).click();
+  await expect(page.getByText(/Znaleziono punkty/)).toBeVisible();
+  await page.locator(".leaflet-marker-icon").first().click();
+  await page
+    .locator("li.border-accent-action")
+    .getByRole("button", { name: "Wybierz ten punkt" })
+    .click();
+  await expect(page.getByText(/GDA0\dM/).first()).toBeVisible();
+});

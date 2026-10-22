@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, Query, Request
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +16,7 @@ from sensoria.modules.accounts.auth import require_customer_id
 from sensoria.modules.catalog.models import Product
 from sensoria.modules.library import service
 from sensoria.modules.library.models import EbookChapter, ProductFile
+from sensoria.modules.library.pdf_course import render_page
 from sensoria.modules.library.schemas import (
     ChapterResponse,
     DownloadLinkRequest,
@@ -155,7 +157,9 @@ async def read_reader_chapter(
     entitlement, order = await service.authorize_entitlement(
         session, request, entitlement_id, order_token
     )
-    chapter = await service.read_chapter(session, entitlement, position)
+    product = await session.get(Product, entitlement.product_id)
+    assert product is not None
+    footer = f"Egzemplarz dla: {order.email} · zamówienie {order.public_number}"
     total = int(
         await session.scalar(
             select(func.count())
@@ -164,14 +168,61 @@ async def read_reader_chapter(
         )
         or 0
     )
-    product = await session.get(Product, entitlement.product_id)
-    assert product is not None
+    if total == 0:
+        course = await service.pdf_course(session, entitlement.product_id)
+        if course is None:
+            raise DomainError("CHAPTER_NOT_FOUND", "Nie znaleziono rozdziału.", 404)
+        _file, _pages, chapters = course
+        if not 0 <= position < len(chapters):
+            raise DomainError("CHAPTER_NOT_FOUND", "Nie znaleziono rozdziału.", 404)
+        picked = chapters[position]
+        return ChapterResponse(
+            position=picked.position,
+            title=picked.title,
+            blocks=[
+                {"type": "pdf_page", "page": number}
+                for number in range(picked.start + 1, picked.end + 2)
+            ],
+            total_chapters=len(chapters),
+            footer=footer,
+        )
+    chapter = await service.read_chapter(session, entitlement, position)
     return ChapterResponse(
         position=chapter.position,
         title=chapter.title,
         blocks=chapter.blocks,
         total_chapters=total,
-        footer=f"Egzemplarz dla: {order.email} · zamówienie {order.public_number}",
+        footer=footer,
+    )
+
+
+@router.get("/entitlements/{entitlement_id}/pages/{page}")
+async def read_pdf_page(
+    entitlement_id: UUID,
+    page: int,
+    request: Request,
+    session: SessionDependency,
+    order_token: OrderToken = None,
+    width: Annotated[int, Query(ge=320, le=1600)] = 1000,
+) -> Response:
+    """One buyer-stamped PDF page rendered as an image (course view)."""
+    entitlement, _order = await service.authorize_entitlement(
+        session, request, entitlement_id, order_token
+    )
+    course = await service.pdf_course(session, entitlement.product_id)
+    if course is None:
+        raise DomainError("PAGE_NOT_FOUND", "Nie znaleziono strony.", 404)
+    product_file, _total, _chapters = course
+    stored, _media, _name = await service.prepare_file_for_entitlement(
+        session, entitlement, product_file
+    )
+    await session.commit()
+    path = StorageService().resolve_file(stored)
+    image = await asyncio.to_thread(render_page, path, page, width)
+    return Response(
+        image,
+        media_type="image/png",
+        headers={"Cache-Control": "private, max-age=3600", "Referrer-Policy": "no-referrer"},
     )
 
 

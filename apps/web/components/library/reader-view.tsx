@@ -117,6 +117,12 @@ export function ReaderView({
     setPosition(Math.max(0, Math.min(next, detail.reader_chapters.length - 1)));
   }
 
+  function finish() {
+    if (completed.includes(position)) return;
+    setCompleted((value) => [...value, position].sort((a, b) => a - b));
+    void save({ position, completed_position: position });
+  }
+
   function changeScale(delta: number) {
     const index = SCALES.indexOf(scale);
     const next =
@@ -171,6 +177,10 @@ export function ReaderView({
 
   const total = detail.reader_chapters.length;
   const percent = Math.round((completed.length / total) * 100);
+  const isPdf = detail.reader_mode === "pdf";
+  const pdfFiles = detail.files.filter((f) => f.kind === "pdf");
+  const pageUrl = (page: number) =>
+    `/api/library/entitlements/${entitlementId}/pages/${page}${q}`;
   const currentMeta = detail.reader_chapters[position];
   const pagesRead = detail.total_pages
     ? Math.round((completed.length / total) * detail.total_pages)
@@ -200,10 +210,27 @@ export function ReaderView({
           />
         </div>
         <p className="mt-2 text-caption font-bold text-ink-muted">
-          {pagesRead !== null && detail.total_pages
-            ? `Przeczytane ${pagesRead} z ${detail.total_pages} stron`
-            : `Przeczytane rozdziały: ${completed.length} z ${total}`}
+          Ukończono {percent}% · zostało {100 - percent}%
         </p>
+        <p className="text-caption text-ink-muted">
+          {pagesRead !== null && detail.total_pages
+            ? `Przeczytane ${pagesRead} z ${detail.total_pages} stron · `
+            : ""}
+          rozdziały: {completed.length} z {total}
+        </p>
+        {pdfFiles.length ? (
+          <div className="mt-4 space-y-2">
+            {pdfFiles.map((file) => (
+              <DownloadButton
+                key={file.id}
+                entitlementId={entitlementId}
+                fileId={file.id}
+                orderToken={orderToken}
+                label="Pobierz PDF"
+              />
+            ))}
+          </div>
+        ) : null}
         <h2 className="mt-6 text-caption font-bold tracking-wide text-ink-muted">
           SPIS TREŚCI
         </h2>
@@ -220,7 +247,10 @@ export function ReaderView({
                     : "hover:bg-surface-muted"
                 }`}
               >
-                <span aria-hidden="true" className="w-5 text-caption font-bold">
+                <span
+                  aria-hidden="true"
+                  className="w-6 shrink-0 text-caption font-bold"
+                >
                   {completed.includes(item.position)
                     ? "✓"
                     : String(item.position + 1).padStart(2, "0")}
@@ -256,10 +286,14 @@ export function ReaderView({
               ← Biblioteka
             </Link>
             <p className="min-w-0 text-body-small font-bold">
-              Rozdział {position + 1} · {currentMeta?.title}
+              Rozdział {position + 1} z {total} · {currentMeta?.title}
             </p>
           </div>
-          <div role="group" aria-label="Rozmiar tekstu" className="flex gap-2">
+          <div
+            role="group"
+            aria-label="Rozmiar tekstu"
+            className={`flex gap-2 ${isPdf ? "hidden" : ""}`}
+          >
             <button
               type="button"
               aria-label="Zmniejsz tekst"
@@ -281,8 +315,8 @@ export function ReaderView({
           </div>
         </div>
         <article
-          className="mx-auto max-w-content px-5 py-10"
-          style={{ fontSize: `${scale}%` }}
+          className={`mx-auto px-5 py-10 ${isPdf ? "max-w-4xl" : "max-w-content"}`}
+          style={isPdf ? undefined : { fontSize: `${scale}%` }}
         >
           <p className="text-caption font-bold tracking-wide text-accent-action">
             ROZDZIAŁ {position + 1}
@@ -295,7 +329,10 @@ export function ReaderView({
             {chapter?.title ?? currentMeta?.title}
           </h1>
           {chapter ? (
-            <ContentBlocks blocks={chapter.blocks} />
+            <ContentBlocks
+              blocks={chapter.blocks}
+              pageUrl={isPdf ? pageUrl : undefined}
+            />
           ) : (
             <p role="status" aria-busy="true" className="mt-6">
               Wczytujemy rozdział…
@@ -313,14 +350,26 @@ export function ReaderView({
             >
               ← Poprzedni rozdział
             </button>
-            <button
-              type="button"
-              onClick={() => go(position + 1)}
-              disabled={position >= total - 1}
-              className="min-h-touch rounded-pill bg-accent-action px-5 font-interface text-label font-bold text-surface disabled:opacity-40"
-            >
-              Następny rozdział →
-            </button>
+            {position >= total - 1 ? (
+              <button
+                type="button"
+                onClick={finish}
+                disabled={completed.includes(position)}
+                className="min-h-touch rounded-pill bg-accent-action px-5 font-interface text-label font-bold text-surface disabled:opacity-60"
+              >
+                {completed.includes(position)
+                  ? "Ukończono ✓"
+                  : "Zakończ i oznacz jako ukończony"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => go(position + 1)}
+                className="min-h-touch rounded-pill bg-accent-action px-5 font-interface text-label font-bold text-surface"
+              >
+                Następny rozdział →
+              </button>
+            )}
           </nav>
           {chapter ? (
             <p className="mt-8 text-center text-body-small text-ink-muted">

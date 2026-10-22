@@ -126,7 +126,7 @@ test("axe: konto, biblioteka, czytnik i odtwarzacz", async ({ page }) => {
     found.push(...(await violations(page, path)));
   }
   const reader = (await page
-    .getByRole("link", { name: "Czytaj" })
+    .getByRole("link", { name: /Czytaj|Kontynuuj|Przeglądaj/ })
     .first()
     .getAttribute("href"))!;
   const player = (await page

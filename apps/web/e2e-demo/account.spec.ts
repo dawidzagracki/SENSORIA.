@@ -65,7 +65,11 @@ test("biblioteka → czytnik: rozdziały, nawigacja i skala tekstu", async ({
     page.getByRole("heading", { name: "Moja biblioteka" }),
   ).toBeVisible();
   await expect(page.getByText("Zmysły w domu").first()).toBeVisible();
-  await page.getByRole("link", { name: "Czytaj" }).first().click();
+  await page
+    .locator("li", { hasText: "Zmysły w domu" })
+    .first()
+    .getByRole("link", { name: /kurs/i })
+    .click();
   await expect(page).toHaveURL(/\/konto\/czytnik\//);
   // The reader resumes where the customer stopped; jump to the first chapter explicitly.
   await page.getByRole("button", { name: /Zmysły i codzienność/ }).click();
@@ -324,7 +328,7 @@ test("spójność w koncie, czytniku i odtwarzaczu: brak kanciastych narożnikó
     await visit(path);
   await page.goto("/konto/biblioteka");
   const reader = await page
-    .getByRole("link", { name: "Czytaj" })
+    .getByRole("link", { name: /Czytaj|Kontynuuj|Przeglądaj/ })
     .first()
     .getAttribute("href");
   const player = await page

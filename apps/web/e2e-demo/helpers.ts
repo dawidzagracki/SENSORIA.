@@ -234,3 +234,20 @@ export async function findLayoutProblems(page: Page): Promise<string[]> {
     return problems.slice(0, 20);
   });
 }
+
+/** Remove earlier messages for a recipient so the next mail found is the one just requested. */
+export async function clearMailFor(context: BrowserContext, to: string) {
+  const page = await context.newPage();
+  try {
+    await page.goto("http://localhost:8025");
+    await page.evaluate(
+      (query) =>
+        fetch(`/api/v1/search?query=${encodeURIComponent(query)}`, {
+          method: "DELETE",
+        }),
+      `to:${to}`,
+    );
+  } finally {
+    await page.close();
+  }
+}

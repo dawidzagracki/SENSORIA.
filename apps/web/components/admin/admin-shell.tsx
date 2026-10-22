@@ -77,25 +77,41 @@ export function AdminShell({
   return (
     <div className="min-h-screen bg-surface-muted text-ink lg:grid lg:grid-cols-[15rem_minmax(0,1fr)]">
       <aside className="border-b border-border bg-surface p-4 lg:min-h-screen lg:border-b-0 lg:border-r">
-        <p className="font-display text-emphasis">
-          <BrandLogo />
-          <span className="ml-2 text-caption font-bold text-ink-muted">
-            panel
-          </span>
-        </p>
-        <nav aria-label="Panel administracyjny" className="mt-4">
-          <ul className="flex flex-wrap gap-1 lg:block lg:space-y-1">
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-display text-emphasis">
+            <BrandLogo />
+            <span className="ml-2 text-caption font-bold text-ink-muted">
+              panel
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={logout}
+            className="min-h-touch rounded-pill border border-border px-4 text-body-small font-semibold text-accent-action lg:hidden"
+          >
+            Wyloguj
+          </button>
+        </div>
+        <nav aria-label="Panel administracyjny" className="mt-3 lg:mt-4">
+          <ul className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-1 lg:mx-0 lg:block lg:space-y-1 lg:overflow-visible lg:px-0 lg:pb-0">
             {items.map((item) => {
               const active =
                 item.href === "/admin"
                   ? pathname === "/admin"
                   : pathname.startsWith(item.href);
               return (
-                <li key={item.href}>
+                <li className="shrink-0 lg:shrink" key={item.href}>
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`flex min-h-touch items-center rounded-control px-3 text-body-small focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action ${
+                    ref={(node) => {
+                      if (active && node && window.innerWidth < 1024)
+                        node.scrollIntoView({
+                          inline: "center",
+                          block: "nearest",
+                        });
+                    }}
+                    className={`flex min-h-touch items-center whitespace-nowrap rounded-pill px-4 text-body-small focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action lg:rounded-control lg:px-3 ${
                       active
                         ? "bg-ink font-bold text-surface"
                         : "hover:bg-surface-muted"
@@ -108,7 +124,7 @@ export function AdminShell({
             })}
           </ul>
         </nav>
-        <div className="mt-6 border-t border-border pt-4 text-caption text-ink-muted">
+        <div className="mt-6 hidden border-t border-border pt-4 text-caption text-ink-muted lg:block">
           <p>
             {admin.display_name} ·{" "}
             {admin.role === "owner" ? "właścicielka" : "obsługa"}

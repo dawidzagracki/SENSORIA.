@@ -92,9 +92,9 @@ describe("DiscountSummary", () => {
       screen.getByText("Dostawa · paczkomat").parentElement,
     ).toHaveTextContent("0,00 zł");
     expect(
-      screen.getByText("W tym sprzedaż zwolniona z VAT").parentElement,
+      screen.getByText("sprzedaż zwolniona z VAT").parentElement,
     ).toHaveTextContent("250,00 zł");
-    expect(screen.getByText("W tym VAT 5%").parentElement).toHaveTextContent(
+    expect(screen.getByText("stawka 5%").parentElement).toHaveTextContent(
       "9,38 zł",
     );
     expect(screen.getByText("Razem").parentElement).toHaveTextContent(
@@ -146,10 +146,8 @@ describe("DiscountSummary", () => {
     const user = userEvent.setup();
     const mutate: CartMutation = vi.fn().mockResolvedValue(physical);
     render(<DiscountSummary cart={physical} mutate={mutate} />);
-    expect(screen.getByText("W tym VAT 5%")).toBeInTheDocument();
-    expect(
-      screen.getByText("W tym sprzedaż zwolniona z VAT"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("stawka 5%")).toBeInTheDocument();
+    expect(screen.getByText("sprzedaż zwolniona z VAT")).toBeInTheDocument();
     await user.click(screen.getByRole("radio", { name: /Paczkomat InPost/ }));
     expect(mutate).toHaveBeenCalledWith("PATCH", "/delivery", {
       method: "parcel_locker",

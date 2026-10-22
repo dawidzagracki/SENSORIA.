@@ -17,6 +17,8 @@ services:
       GOOGLE_TOKEN_URL: http://fake-stripe:9911/google/token
       GOOGLE_USERINFO_URL: http://fake-stripe:9911/google/userinfo
       SITE_URL: http://localhost:8090
+      EMAIL_CODE_EMAIL_LIMIT: "1000"
+      EMAIL_CODE_IP_LIMIT: "5000"
     depends_on:
       mailpit:
         condition: service_started

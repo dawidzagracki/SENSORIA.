@@ -7,6 +7,7 @@ import { GoogleMark } from "@/components/brand/logos";
 import { Button } from "@/components/ui/button";
 import { ACCOUNT_SESSION_EVENT } from "@/components/layout/account-link";
 import { TextField } from "@/components/ui/text-field";
+import { EmailCodeLogin } from "@/components/account/email-code-login";
 import { safeReturnPath } from "@/lib/safe-return";
 import {
   PurchaseLinkingNotice,
@@ -108,7 +109,7 @@ export function AccountAuthPanel({
   nextPath?: string;
 }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"login" | "register">("login");
+  const [mode, setMode] = useState<"login" | "register" | "code">("login");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -357,11 +358,12 @@ export function AccountAuthPanel({
     <section className="w-full max-w-xl rounded-card border border-border bg-surface p-5 shadow-subtle sm:p-8">
       <div
         aria-label="Wybierz sposób"
-        className="grid grid-cols-2 rounded-pill bg-surface-muted p-1"
+        className="grid grid-cols-3 rounded-pill bg-surface-muted p-1"
         role="group"
       >
         {[
           { id: "login", label: "Logowanie" },
+          { id: "code", label: "Bez konta" },
           { id: "register", label: "Załóż konto" },
         ].map((tab) => (
           <button
@@ -369,7 +371,7 @@ export function AccountAuthPanel({
             className={`min-h-control-md rounded-pill px-3 font-interface text-label font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action ${mode === tab.id ? "bg-surface text-ink shadow-subtle" : "text-ink-muted"}`}
             key={tab.id}
             onClick={() => {
-              setMode(tab.id as "login" | "register");
+              setMode(tab.id as "login" | "register" | "code");
               setError("");
               setFieldErrors({});
             }}
@@ -379,170 +381,181 @@ export function AccountAuthPanel({
           </button>
         ))}
       </div>
-      {googleEnabled ? (
+      {mode === "code" ? (
+        <EmailCodeLogin nextPath={nextPath} />
+      ) : (
         <>
-          <a
-            className="mt-6 flex min-h-control-lg w-full items-center justify-center gap-3 rounded-pill border border-border bg-surface px-4 py-3 font-interface text-button font-semibold text-ink transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
-            href={googleHref}
-          >
-            <GoogleMark />
-            {mode === "login"
-              ? "Zaloguj się przez Google"
-              : "Załóż konto przez Google"}
-          </a>
-          <div className="my-5 flex items-center gap-4 text-caption font-bold tracking-wide text-ink-muted">
-            <span className="h-px flex-1 bg-border" />
-            LUB E-MAILEM
-            <span className="h-px flex-1 bg-border" />
-          </div>
-        </>
-      ) : null}
-      <form className="mt-7 space-y-5" onSubmit={submit}>
-        {mode === "register" ? (
-          <div className="grid gap-5 sm:grid-cols-2">
-            <TextField
-              autoComplete="given-name"
-              error={fieldErrors.first_name}
-              label="Imię"
-              name="first_name"
-              required
-            />
-            <TextField
-              autoComplete="family-name"
-              error={fieldErrors.last_name}
-              label="Nazwisko"
-              name="last_name"
-              required
-            />
-          </div>
-        ) : null}
-        <TextField
-          autoComplete="email"
-          error={fieldErrors.email}
-          id="login-email"
-          label="Adres e-mail"
-          name="email"
-          onChange={(event) => {
-            setEmail(event.currentTarget.value);
-            setFieldErrors((current) => ({ ...current, email: "" }));
-          }}
-          value={email}
-          required
-          type="email"
-        />
-        <TextField
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-          hint={
-            mode === "register"
-              ? "Co najmniej 10 znaków. Możesz wkleić hasło z menedżera."
-              : undefined
-          }
-          label="Hasło"
-          error={fieldErrors.password}
-          maxLength={1024}
-          minLength={mode === "register" ? 10 : undefined}
-          name="password"
-          required
-          type="password"
-        />
-        {mode === "login" ? (
-          <div className="flex flex-wrap items-center justify-between gap-3 text-caption">
-            <label className="flex min-h-control-sm items-center gap-2 text-ink">
-              <input
-                className="h-4 w-4 accent-accent-action"
-                name="remember_me"
-                type="checkbox"
-              />
-              Zapamiętaj mnie
-            </label>
-            <Link
-              className="min-h-control-sm py-2 font-bold text-accent-action underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
-              href="/konto/odzyskaj-haslo"
-            >
-              Nie pamiętam hasła
-            </Link>
-          </div>
-        ) : (
-          <PasswordConfirm
-            error={fieldErrors.password_confirmation}
-            onChange={() =>
-              setFieldErrors((current) => ({
-                ...current,
-                password_confirmation: "",
-              }))
-            }
-          />
-        )}
-        {error ? (
-          <p className="text-body-small text-on-danger" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {notice ? (
-          <div className="space-y-3" role="status">
-            <p className="text-body-small text-on-success">{notice}</p>
-            <Link
-              className="inline-flex min-h-control-sm items-center font-bold text-accent-action underline"
-              href={safeReturnPath(nextPath)}
-            >
-              Przejdź dalej
-            </Link>
-          </div>
-        ) : null}
-        <Button
-          className="w-full"
-          loading={busy || linkBusy}
-          loadingLabel="Trwa wysyłanie formularza"
-          size="lg"
-          type="submit"
-        >
-          {mode === "login" ? "Zaloguj się" : "Załóż konto"}
-        </Button>
-      </form>
-      {mode === "login" ? (
-        <>
-          <div className="my-6 flex items-center gap-4 text-caption font-bold tracking-wide text-ink-muted">
-            <span className="h-px flex-1 bg-border" />
-            ALBO
-            <span className="h-px flex-1 bg-border" />
-          </div>
-          <button
-            className="min-h-control-lg w-full rounded-pill border border-border px-4 py-3 text-label font-bold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action disabled:cursor-wait disabled:opacity-60"
-            disabled={linkBusy || busy}
-            onClick={() => void requestLoginLink()}
-            type="button"
-          >
-            {linkBusy ? "Wysyłamy prośbę…" : "Wyślij mi link do logowania"}
-          </button>
-          <p
-            aria-live="polite"
-            className="mt-2 text-caption text-ink-muted"
-            role="status"
-          >
-            Jeśli konto istnieje, otrzymasz jednorazowy link ważny przez 15
-            minut.
-          </p>
-          {loginLinkNotice ? (
-            <p className="mt-3 text-body-small text-on-success" role="status">
-              {loginLinkNotice}
-            </p>
+          {googleEnabled ? (
+            <>
+              <a
+                className="mt-6 flex min-h-control-lg w-full items-center justify-center gap-3 rounded-pill border border-border bg-surface px-4 py-3 font-interface text-button font-semibold text-ink transition hover:bg-surface-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+                href={googleHref}
+              >
+                <GoogleMark />
+                {mode === "login"
+                  ? "Zaloguj się przez Google"
+                  : "Załóż konto przez Google"}
+              </a>
+              <div className="my-5 flex items-center gap-4 text-caption font-bold tracking-wide text-ink-muted">
+                <span className="h-px flex-1 bg-border" />
+                LUB E-MAILEM
+                <span className="h-px flex-1 bg-border" />
+              </div>
+            </>
           ) : null}
-          <div className="mt-6 rounded-card bg-surface-muted p-4 text-body-small">
-            <strong>Kupujesz bez konta?</strong>
-            <p className="mt-1 text-ink-muted">
-              Możesz złożyć zamówienie bez rejestracji. Potwierdzenie adresu
-              będzie potrzebne do bezpiecznego powiązania wcześniejszych
-              zakupów.
-            </p>
-            <Link
-              className="mt-2 inline-flex min-h-control-sm items-center font-bold text-accent-action underline"
-              href="/"
+          <form className="mt-7 space-y-5" onSubmit={submit}>
+            {mode === "register" ? (
+              <div className="grid gap-5 sm:grid-cols-2">
+                <TextField
+                  autoComplete="given-name"
+                  error={fieldErrors.first_name}
+                  label="Imię"
+                  name="first_name"
+                  required
+                />
+                <TextField
+                  autoComplete="family-name"
+                  error={fieldErrors.last_name}
+                  label="Nazwisko"
+                  name="last_name"
+                  required
+                />
+              </div>
+            ) : null}
+            <TextField
+              autoComplete="email"
+              error={fieldErrors.email}
+              id="login-email"
+              label="Adres e-mail"
+              name="email"
+              onChange={(event) => {
+                setEmail(event.currentTarget.value);
+                setFieldErrors((current) => ({ ...current, email: "" }));
+              }}
+              value={email}
+              required
+              type="email"
+            />
+            <TextField
+              autoComplete={
+                mode === "login" ? "current-password" : "new-password"
+              }
+              hint={
+                mode === "register"
+                  ? "Co najmniej 10 znaków. Możesz wkleić hasło z menedżera."
+                  : undefined
+              }
+              label="Hasło"
+              error={fieldErrors.password}
+              maxLength={1024}
+              minLength={mode === "register" ? 10 : undefined}
+              name="password"
+              required
+              type="password"
+            />
+            {mode === "login" ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 text-caption">
+                <label className="flex min-h-control-sm items-center gap-2 text-ink">
+                  <input
+                    className="h-4 w-4 accent-accent-action"
+                    name="remember_me"
+                    type="checkbox"
+                  />
+                  Zapamiętaj mnie
+                </label>
+                <Link
+                  className="min-h-control-sm py-2 font-bold text-accent-action underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+                  href="/konto/odzyskaj-haslo"
+                >
+                  Nie pamiętam hasła
+                </Link>
+              </div>
+            ) : (
+              <PasswordConfirm
+                error={fieldErrors.password_confirmation}
+                onChange={() =>
+                  setFieldErrors((current) => ({
+                    ...current,
+                    password_confirmation: "",
+                  }))
+                }
+              />
+            )}
+            {error ? (
+              <p className="text-body-small text-on-danger" role="alert">
+                {error}
+              </p>
+            ) : null}
+            {notice ? (
+              <div className="space-y-3" role="status">
+                <p className="text-body-small text-on-success">{notice}</p>
+                <Link
+                  className="inline-flex min-h-control-sm items-center font-bold text-accent-action underline"
+                  href={safeReturnPath(nextPath)}
+                >
+                  Przejdź dalej
+                </Link>
+              </div>
+            ) : null}
+            <Button
+              className="w-full"
+              loading={busy || linkBusy}
+              loadingLabel="Trwa wysyłanie formularza"
+              size="lg"
+              type="submit"
             >
-              Wróć do sklepu
-            </Link>
-          </div>
+              {mode === "login" ? "Zaloguj się" : "Załóż konto"}
+            </Button>
+          </form>
+          {mode === "login" ? (
+            <>
+              <div className="my-6 flex items-center gap-4 text-caption font-bold tracking-wide text-ink-muted">
+                <span className="h-px flex-1 bg-border" />
+                ALBO
+                <span className="h-px flex-1 bg-border" />
+              </div>
+              <button
+                className="min-h-control-lg w-full rounded-pill border border-border px-4 py-3 text-label font-bold text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action disabled:cursor-wait disabled:opacity-60"
+                disabled={linkBusy || busy}
+                onClick={() => void requestLoginLink()}
+                type="button"
+              >
+                {linkBusy ? "Wysyłamy prośbę…" : "Wyślij mi link do logowania"}
+              </button>
+              <p
+                aria-live="polite"
+                className="mt-2 text-caption text-ink-muted"
+                role="status"
+              >
+                Jeśli konto istnieje, otrzymasz jednorazowy link ważny przez 15
+                minut.
+              </p>
+              {loginLinkNotice ? (
+                <p
+                  className="mt-3 text-body-small text-on-success"
+                  role="status"
+                >
+                  {loginLinkNotice}
+                </p>
+              ) : null}
+              <div className="mt-6 rounded-card bg-surface-muted p-4 text-body-small">
+                <strong>Kupujesz bez konta?</strong>
+                <p className="mt-1 text-ink-muted">
+                  Możesz złożyć zamówienie bez rejestracji. Potwierdzenie adresu
+                  będzie potrzebne do bezpiecznego powiązania wcześniejszych
+                  zakupów.
+                </p>
+                <Link
+                  className="mt-2 inline-flex min-h-control-sm items-center font-bold text-accent-action underline"
+                  href="/"
+                >
+                  Wróć do sklepu
+                </Link>
+              </div>
+            </>
+          ) : null}
         </>
-      ) : null}
+      )}
     </section>
   );
 }

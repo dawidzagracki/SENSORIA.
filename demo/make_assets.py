@@ -41,12 +41,16 @@ def cover(title: str, subtitle: str, top: tuple[int, int, int], bottom: tuple[in
     return base64.b64encode(buffer.getvalue()).decode()
 
 
-def pdf(title: str, pages: list[tuple[str, str]], footer: str | None = None) -> str:
+def pdf(title: str, pages: list[tuple[str, ...]], footer: str | None = None) -> str:
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A5)
     width, height = A5
     c.setTitle(title)
-    for index, (heading, body) in enumerate(pages, start=1):
+    for index, (heading, body, *rest) in enumerate(pages, start=1):
+        outline = rest[0] if rest else heading
+        if outline:
+            c.bookmarkPage(f"p{index}")
+            c.addOutlineEntry(outline, f"p{index}", 0)
         c.setFont("DVB", 16)
         y = height - 60
         for line in textwrap.wrap(heading, 38):
@@ -77,9 +81,12 @@ LOREM = [
 EBOOK = [(f"Rozdział {n}: " + t, "\n\n".join(LOREM)) for n, t in enumerate(
     ["Zmysły i codzienność", "Dotyk i bliskość", "Dźwięk i cisza", "Ruch i równowaga", "Rytuały dnia",
      "Kiedy szukać wsparcia"], start=1)]
-COURSE = [(f"Lekcja {n}: " + t, "\n\n".join(LOREM)) for n, t in enumerate(
-    ["Czym jest regulacja emocji", "Ciało jako sygnał", "Oddech i zabawa", "Rozmowa o trudnych uczuciach",
-     "Plan na tydzień"], start=1)]
+_LESSONS = ["Czym jest regulacja emocji", "Ciało jako sygnał", "Oddech i zabawa",
+            "Rozmowa o trudnych uczuciach", "Plan na tydzień"]
+COURSE = []
+for _n, _t in enumerate(_LESSONS, start=1):
+    COURSE.append((f"Lekcja {_n}: " + _t, "\n\n".join(LOREM), f"Lekcja {_n}: {_t}"))
+    COURSE.append((f"Lekcja {_n}: ćwiczenie", "\n\n".join(reversed(LOREM)), None))
 FOOTER = "Fragment bezpłatny · pełna wersja dostępna w sensoria.shop"
 print(json.dumps({
     "covers": {

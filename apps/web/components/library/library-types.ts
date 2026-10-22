@@ -25,6 +25,8 @@ export type EntitlementDetail = {
     label: string;
     chapter_id: string | null;
   }>;
+  reader_mode: "blocks" | "pdf" | "none";
+  pdf_file_id: string | null;
   reader_chapters: Array<{
     position: number;
     title: string;
@@ -54,7 +56,8 @@ export type ChapterContent = {
 };
 
 export type ContentBlock = {
-  type: "p" | "h2" | "quote" | "list" | "exercise";
+  type: "p" | "h2" | "quote" | "list" | "exercise" | "pdf_page";
+  page?: number;
   text?: string;
   title?: string;
   items?: string[];

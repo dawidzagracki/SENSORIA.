@@ -322,7 +322,7 @@ export function ConfirmationView({
                       href={`/konto/czytnik/${item.id}${tokenParam}`}
                       className="inline-flex min-h-touch items-center rounded-pill bg-accent-action px-5 text-label font-bold text-surface"
                     >
-                      Czytaj w przeglądarce
+                      Czytaj jako kurs
                     </Link>
                   )}
                   {(files[item.id] ?? [])
@@ -341,8 +341,10 @@ export function ConfirmationView({
             ))}
           </ul>
           <p className="mt-3 text-caption text-ink-muted">
-            Każdy plik PDF jest oznaczony Twoimi danymi. Link do pobrania działa
-            ograniczoną liczbę razy i można go w każdej chwili odnowić.
+            Wrócisz tu w każdej chwili: na stronie logowania wybierz „Bez konta”
+            i wpisz kod, który wyślemy na adres z zamówienia. Każdy plik PDF
+            jest oznaczony Twoimi danymi. Link do pobrania działa ograniczoną
+            liczbę razy i można go w każdej chwili odnowić.
           </p>
         </section>
       ) : null}

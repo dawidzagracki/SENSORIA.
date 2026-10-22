@@ -252,9 +252,8 @@ def main() -> None:
     publish(ebook, "e-book")
     course = create({"kind": "DIGITAL", "name": "Regulacja emocji u dziecka — kurs PDF", "price": 9900, "vat_rate": "RATE_23",
                      "short_description": "Kurs PDF w 5 lekcjach z ćwiczeniami dla rodziców.", "description": desc,
-                     "digital": {"label": "COURSE_PDF", "file_format": "PDF", "page_count": 5, "edition": "I"}}, "course")
+                     "digital": {"label": "COURSE_PDF", "file_format": "PDF", "page_count": 10, "edition": "I"}}, "course")
     upload_file(course, "Kurs PDF", "kurs.pdf", pdfs["course"], "application/pdf")
-    s, b, _ = A("PUT", f"/products/{course}/chapters", {"chapters": chapter_blocks}); step("rozdziały czytnika kursu", s == 200, b)
     publish(course, "kurs")
 
     # categories and audiences (no admin endpoint for them)

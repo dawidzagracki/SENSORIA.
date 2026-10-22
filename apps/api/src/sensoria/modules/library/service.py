@@ -9,7 +9,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import Request
-from sqlalchemy import select, update
+from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sensoria.modules.accounts.auth import digest_secret, require_customer_id
@@ -35,6 +35,7 @@ from .models import (
     ProductFile,
     WatermarkedFile,
 )
+from .pdf_course import PdfChapter, build_chapters
 from .watermark import stamp_pdf
 
 LINK_TTL = timedelta(hours=24)
@@ -134,6 +135,42 @@ async def _product_files(session: AsyncSession, product_id: UUID) -> list[Produc
     )
 
 
+async def pdf_course(
+    session: AsyncSession, product_id: UUID
+) -> tuple[ProductFile, int, list[PdfChapter]] | None:
+    """Chapters of the product's first PDF; None when it has no PDF or it cannot be read."""
+    files = await _product_files(session, product_id)
+    product_file = next((f for f in files if f.kind == "pdf"), None)
+    if product_file is None:
+        return None
+    source = await session.get(StoredFile, product_file.stored_file_id)
+    if source is None:
+        return None
+    try:
+        total, chapters = await asyncio.to_thread(
+            build_chapters, StorageService().resolve_file(source)
+        )
+    except (OSError, ValueError, DomainError):
+        return None
+    return (product_file, total, chapters) if chapters else None
+
+
+async def reader_stats(session: AsyncSession, product_id: UUID) -> tuple[bool, int]:
+    """(has reader, number of chapters): editorial chapters first, otherwise the PDF course."""
+    editorial = int(
+        await session.scalar(
+            select(func.count())
+            .select_from(EbookChapter)
+            .where(EbookChapter.product_id == product_id)
+        )
+        or 0
+    )
+    if editorial:
+        return True, editorial
+    course = await pdf_course(session, product_id)
+    return (True, len(course[2])) if course else (False, 0)
+
+
 async def entitlement_detail(
     session: AsyncSession, entitlement: Entitlement, order: Order
 ) -> dict[str, Any]:
@@ -161,6 +198,20 @@ async def entitlement_detail(
     audiobook = await session.get(ProductAudiobook, product.id)
     progress = await session.get(ContentProgress, entitlement.id)
     total_pages = sum(chapter.page_count or 0 for chapter in chapters)
+    reader_mode = "blocks" if chapters else "none"
+    reader_items: list[dict[str, Any]] = [
+        {"position": c.position, "title": c.title, "page_count": c.page_count} for c in chapters
+    ]
+    pdf_file_id: UUID | None = None
+    if not chapters:
+        course = await pdf_course(session, product.id)
+        if course is not None:
+            pdf_file, pdf_total, pdf_chapters = course
+            reader_mode, pdf_file_id, total_pages = "pdf", pdf_file.id, pdf_total
+            reader_items = [
+                {"position": c.position, "title": c.title, "page_count": c.page_count}
+                for c in pdf_chapters
+            ]
     cover_url = await session.scalar(
         select(ProductImage.url)
         .where(ProductImage.product_id == product.id)
@@ -181,9 +232,9 @@ async def entitlement_detail(
             {"id": f.id, "kind": f.kind, "label": f.label, "chapter_id": f.chapter_id}
             for f in files
         ],
-        "reader_chapters": [
-            {"position": c.position, "title": c.title, "page_count": c.page_count} for c in chapters
-        ],
+        "reader_chapters": reader_items,
+        "reader_mode": reader_mode,
+        "pdf_file_id": pdf_file_id,
         "audio_chapters": [
             {
                 "position": c.position,
@@ -236,6 +287,11 @@ async def issue_download_link(
 async def _ensure_watermarked(
     session: AsyncSession, entitlement: Entitlement, product_file: ProductFile
 ) -> StoredFile:
+    # Course pages are requested in parallel; serialize stamping so one copy is created.
+    await session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:key))"),
+        {"key": f"watermark:{entitlement.id}:{product_file.id}"},
+    )
     cached = await session.scalar(
         select(WatermarkedFile).where(
             WatermarkedFile.entitlement_id == entitlement.id,
@@ -346,13 +402,7 @@ async def customer_library(session: AsyncSession, customer_id: UUID) -> list[dic
     items: list[dict[str, Any]] = []
     for entitlement, order, product in rows:
         progress = await session.get(ContentProgress, entitlement.id)
-        chapters = list(
-            (
-                await session.scalars(
-                    select(EbookChapter).where(EbookChapter.product_id == product.id)
-                )
-            ).all()
-        )
+        has_reader, chapters_total = await reader_stats(session, product.id)
         items.append(
             {
                 "id": entitlement.id,
@@ -360,8 +410,8 @@ async def customer_library(session: AsyncSession, customer_id: UUID) -> list[dic
                 "title": product.name,
                 "order_number": order.public_number,
                 "granted_at": entitlement.granted_at,
-                "has_reader": bool(chapters),
-                "chapters_total": len(chapters),
+                "has_reader": has_reader,
+                "chapters_total": chapters_total,
                 "chapters_completed": len(progress.completed) if progress else 0,
             }
         )
@@ -377,19 +427,23 @@ async def order_library(session: AsyncSession, order: Order) -> list[dict[str, A
             .order_by(Entitlement.id)
         )
     ).all()
-    return [
-        {
-            "id": e.id,
-            "kind": e.kind,
-            "title": p.name,
-            "order_number": order.public_number,
-            "granted_at": e.granted_at,
-            "has_reader": False,
-            "chapters_total": 0,
-            "chapters_completed": 0,
-        }
-        for e, p in rows
-    ]
+    items: list[dict[str, Any]] = []
+    for e, p in rows:
+        progress = await session.get(ContentProgress, e.id)
+        has_reader, chapters_total = await reader_stats(session, p.id)
+        items.append(
+            {
+                "id": e.id,
+                "kind": e.kind,
+                "title": p.name,
+                "order_number": order.public_number,
+                "granted_at": e.granted_at,
+                "has_reader": has_reader,
+                "chapters_total": chapters_total,
+                "chapters_completed": len(progress.completed) if progress else 0,
+            }
+        )
+    return items
 
 
 async def read_chapter(

@@ -1,11 +1,37 @@
 import type { ContentBlock } from "./library-types";
 
 /** Renders structured blocks as text only; there is no HTML injection path. */
-export function ContentBlocks({ blocks }: { blocks: ContentBlock[] }) {
+export function ContentBlocks({
+  blocks,
+  pageUrl,
+}: {
+  blocks: ContentBlock[];
+  pageUrl?: (page: number) => string;
+}) {
   return (
     <>
       {blocks.map((block, index) => {
         const key = `${block.type}-${index}`;
+        if (block.type === "pdf_page" && pageUrl && block.page) {
+          return (
+            <figure
+              key={key}
+              className="my-6 overflow-hidden rounded-card border border-border bg-surface shadow-subtle"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                alt={`Strona ${block.page}`}
+                className="block h-auto w-full"
+                decoding="async"
+                loading="lazy"
+                src={pageUrl(block.page)}
+              />
+              <figcaption className="border-t border-border px-4 py-2 text-caption text-ink-muted">
+                Strona {block.page}
+              </figcaption>
+            </figure>
+          );
+        }
         if (block.type === "h2")
           return (
             <h2

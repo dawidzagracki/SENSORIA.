@@ -38,9 +38,18 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
    (realizacja), klienci, opinie (moderacja), zgłoszenia, kody rabatowe, strony i FAQ, raporty (CSV), ustawienia, dziennik.
 8. **Strony formalne i cookies** — regulamin, polityka prywatności, ustawienia cookies w stopce, centrum pomocy z odstąpieniem.
 
+## Nowe w tej wersji
+
+- **PDF jako kurs i jako plik** — każdy zakupiony PDF otwiera się w przeglądarce jak kurs (rozdziały z zakładek PDF albo co 5/10 stron, strony renderowane na serwerze, pamięć miejsca, „Ukończono X% · zostało Y%”) i można go pobrać (egzemplarz oznaczony danymi kupującej).
+- **Konto gościa przez kod z e-maila** — zakładka „Bez konta” na `/konto`: kod 6-cyfrowy (10 min, 5 prób), po wpisaniu klient widzi bibliotekę i zamówienia.
+- **Mapa Paczkomatów** — Leaflet + OpenStreetMap, 60+ punktów w 12 miastach w atrapie InPost, wyszukiwanie w okolicy mapy i po lokalizacji.
+- **Panel**: „Klienci” to każdy kupujący (także bez konta); „do wysyłki” obejmuje tylko zamówienia fizyczne; panel jest czytelny na telefonie (przewijane menu, karty zamiast tabel).
+- **Menu główne** nie powiela filtrów katalogu (Sklep · O autorce · Pomoc).
+- `docs/prezentacja-sensoria.pdf` — przewodnik po wszystkich 53 ekranach z opisem i polem „Odbiór etapu”; generowany poleceniem `GALLERY=1 … playwright test gallery.spec.ts`.
+
 ## Testy przepływów (Playwright, prawdziwy stos)
 
-`apps/web/e2e-demo/` zawiera 53 testy (w tym skan dostępności axe WCAG 2.1 AA: brak naruszeń serious/critical) (w tym kontrola układu: brak przepełnień i nakładających się kontrolek na 7 szerokościach) klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
+`apps/web/e2e-demo/` zawiera 60 testów (w tym skan dostępności axe WCAG 2.1 AA: brak naruszeń serious/critical) (w tym kontrola układu: brak przepełnień i nakładających się kontrolek na 7 szerokościach) klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
 karta → koszyk → checkout → bramka → potwierdzenie → biblioteka/czytnik/odtwarzacz, filtry i wyszukiwarka, kody rabatowe,
 dostawa (gabinet, kurier, Paczkomat), faktura na firmę, rejestracja z potwierdzeniem e-maila (z Mailpit), opinie,
 reklamacje, vouchery z QR i PDF, dokumenty, każda sekcja panelu.

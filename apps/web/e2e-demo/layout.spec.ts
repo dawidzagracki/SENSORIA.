@@ -90,7 +90,7 @@ test("układ: konto, biblioteka i panel we wszystkich szerokościach", async ({
   }
   await page.goto("/konto/biblioteka");
   const reader = (await page
-    .getByRole("link", { name: "Czytaj" })
+    .getByRole("link", { name: /Czytaj|Kontynuuj|Przeglądaj/ })
     .first()
     .getAttribute("href"))!;
   const player = (await page

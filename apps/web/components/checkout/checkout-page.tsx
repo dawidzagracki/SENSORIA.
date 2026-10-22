@@ -13,7 +13,10 @@ import {
   VisaLogo,
 } from "@/components/brand/logos";
 import { Button, Checkbox, Modal, RadioCard } from "@/components/ui";
-import { PickupMap } from "@/components/checkout/pickup-map";
+import {
+  PickupMap,
+  type PickupMapHandle,
+} from "@/components/checkout/pickup-map";
 import { VatBreakdown } from "@/components/cart/vat-breakdown";
 import type { CartView } from "@/components/cart/cart-types";
 import type { PickupPointSnapshot } from "@/components/cart/cart-types";
@@ -147,6 +150,7 @@ export function CheckoutPage() {
   const [pickupCode, setPickupCode] = useState("");
   const [pickupPoints, setPickupPoints] = useState<PickupPointSnapshot[]>([]);
   const [activePickupCode, setActivePickupCode] = useState<string | null>(null);
+  const pickupMapHandle = useRef<PickupMapHandle | null>(null);
   const [pickupBusy, setPickupBusy] = useState(false);
   const [pickupError, setPickupError] = useState("");
   const [pickupStatus, setPickupStatus] = useState("");
@@ -253,6 +257,35 @@ export function CheckoutPage() {
     ),
   );
   const hasCourierAddress = requiresShipping && deliveryMethod === "courier";
+
+  async function searchPickupPointsNear(lat: number, lng: number) {
+    setPickupBusy(true);
+    setPickupError("");
+    setPickupStatus("");
+    try {
+      const response = await fetch(
+        `/api/cart/pickup-points?${new URLSearchParams({ near: `${lat.toFixed(6)},${lng.toFixed(6)}` })}`,
+        { credentials: "include", cache: "no-store" },
+      );
+      if (!response.ok) throw new Error(await errorMessage(response));
+      const data = (await response.json()) as { items: PickupPointSnapshot[] };
+      setPickupPoints(data.items);
+      setActivePickupCode(null);
+      setPickupStatus(
+        data.items.length
+          ? `Znaleziono punkty: ${data.items.length}.`
+          : "Brak Paczkomatów w tej okolicy — przesuń mapę lub wpisz miasto.",
+      );
+    } catch (caught) {
+      setPickupError(
+        caught instanceof Error
+          ? caught.message
+          : "Nie udało się wyszukać punktów.",
+      );
+    } finally {
+      setPickupBusy(false);
+    }
+  }
 
   async function searchPickupPoints(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -1327,13 +1360,53 @@ export function CheckoutPage() {
               Szukaj punktów
             </Button>
           </form>
-          {pickupPoints.length ? (
+          {pickupModalOpen ? (
             <PickupMap
               activeCode={activePickupCode}
+              onReady={(handle) => {
+                pickupMapHandle.current = handle;
+              }}
               onActivate={setActivePickupCode}
               points={pickupPoints}
             />
           ) : null}
+          <div className="flex flex-wrap gap-3">
+            <Button
+              disabled={pickupBusy}
+              onClick={() => {
+                const center = pickupMapHandle.current?.center();
+                if (center) void searchPickupPointsNear(center[0], center[1]);
+              }}
+              size="sm"
+              variant="secondary"
+            >
+              Szukaj w tej okolicy mapy
+            </Button>
+            <Button
+              disabled={pickupBusy}
+              onClick={() => {
+                if (!navigator.geolocation) {
+                  setPickupError("Przeglądarka nie udostępnia lokalizacji.");
+                  return;
+                }
+                navigator.geolocation.getCurrentPosition(
+                  (position) =>
+                    void searchPickupPointsNear(
+                      position.coords.latitude,
+                      position.coords.longitude,
+                    ),
+                  () =>
+                    setPickupError(
+                      "Nie udało się ustalić lokalizacji. Wpisz miasto lub kod pocztowy.",
+                    ),
+                );
+              }}
+              size="sm"
+              variant="secondary"
+            >
+              Użyj mojej lokalizacji
+            </Button>
+          </div>
           {pickupPoints.length ? (
             <ul className="space-y-3" aria-label="Wyniki wyszukiwania punktów">
               {pickupPoints.map((point) => (

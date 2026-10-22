@@ -166,3 +166,36 @@ test("spójność w panelu: brak kanciastych narożników", async ({ page }) => 
   }
   expect(square).toEqual([]);
 });
+
+test("panel: klientem jest każdy kupujący, także bez konta", async ({
+  page,
+}) => {
+  await adminLogin(page);
+  await page.goto("/admin/klienci");
+  await expect(page.getByText(/także bez konta/).first()).toBeVisible();
+  const guest = page.locator("tr", {
+    hasText: "piotr.zielinski@sensoria.demo",
+  });
+  await expect(guest).toContainText("Gość");
+  await guest.getByRole("button", { name: "Szczegóły" }).click();
+  await expect(page.getByText(/Klient bez konta/)).toBeVisible();
+  await expect(page.getByText(/Zamówień: 1/)).toBeVisible();
+});
+
+test("panel: do wysyłki trafiają tylko zamówienia fizyczne", async ({
+  page,
+}) => {
+  await adminLogin(page);
+  await page.goto(
+    "/admin/zamowienia?status=paid&fulfillment=awaiting_fulfillment",
+  );
+  await expect(page.getByRole("heading", { name: "Zamówienia" })).toBeVisible();
+  await expect(page.locator("tbody tr").first()).toBeVisible();
+  const rows = await page.locator("tbody tr").allInnerTexts();
+  expect(rows.length).toBeGreaterThan(0);
+  for (const row of rows) expect(row).toContain("Do realizacji");
+  await page.goto("/admin");
+  await expect(
+    page.getByRole("link", { name: /Przesyłki fizyczne do realizacji/ }),
+  ).toContainText(String(rows.length));
+});

@@ -151,8 +151,8 @@ export function LibraryView() {
                       />
                     </div>
                     <p className="mt-1 text-caption text-ink-muted">
-                      Przeczytane rozdziały: {item.chapters_completed} z{" "}
-                      {item.chapters_total}
+                      Ukończono {percent}% · rozdziały:{" "}
+                      {item.chapters_completed} z {item.chapters_total}
                     </p>
                   </div>
                 ) : null}
@@ -165,7 +165,13 @@ export function LibraryView() {
                         : `/konto/czytnik/${item.id}`
                     }
                   >
-                    {item.kind === "audiobook" ? "Słuchaj" : "Czytaj"}
+                    {item.kind === "audiobook"
+                      ? "Słuchaj"
+                      : percent >= 100
+                        ? "Przeglądaj kurs ponownie"
+                        : percent > 0
+                          ? `Kontynuuj kurs · ${percent}%`
+                          : "Czytaj jako kurs"}
                   </Link>
                   {files
                     .filter((file) => file.kind === "pdf")

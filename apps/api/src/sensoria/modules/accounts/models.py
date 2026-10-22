@@ -351,3 +351,24 @@ class DeletedEmailSuppression(UUIDMixin, Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
+
+
+class EmailLoginCode(UUIDMixin, Base):
+    """Six-digit one-time code mailed to a buyer; only a keyed digest is stored."""
+
+    __tablename__ = "email_login_codes"
+    __table_args__ = (
+        CheckConstraint("attempts >= 0", name="nonnegative_attempts"),
+        Index("ix_email_login_codes_email_created", "email", "created_at"),
+        Index("ix_email_login_codes_ip_created", "requested_ip", "created_at"),
+    )
+
+    email: Mapped[str] = mapped_column(String(320), nullable=False)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    requested_ip: Mapped[str] = mapped_column(String(64), nullable=False)

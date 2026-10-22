@@ -59,21 +59,22 @@ describe("shop layout adapters", () => {
     }
   });
 
-  it("marks exactly the category matching the current URL and updates on rerender", () => {
+  it("marks exactly the destination matching the current URL and updates on rerender", () => {
+    routerState.pathname = "/sklep";
     const { rerender } = render(<MainNavigation />);
-    expect(screen.getByRole("link", { name: "Vouchery" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sklep" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(screen.getAllByRole("link")).toHaveLength(5);
+    expect(screen.getAllByRole("link")).toHaveLength(3);
 
-    routerState.query = "kind=BOOK";
+    routerState.pathname = "/o-autorce";
     rerender(<MainNavigation />);
-    expect(screen.getByRole("link", { name: "Książki" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "O autorce" })).toHaveAttribute(
       "aria-current",
       "page",
     );
-    expect(screen.getByRole("link", { name: "Vouchery" })).not.toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Sklep" })).not.toHaveAttribute(
       "aria-current",
     );
   });

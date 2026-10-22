@@ -319,12 +319,15 @@ async def choose_cart_delivery(
 
 @router.get("/pickup-points", response_model=PickupPointListResponse)
 async def search_cart_pickup_points(
-    query: Annotated[str, Query(min_length=2, max_length=100)],
     session: SessionDependency,
+    query: Annotated[str | None, Query(min_length=2, max_length=100)] = None,
+    near: Annotated[
+        str | None, Query(pattern=r"^-?\d{1,3}(\.\d{1,8})?,-?\d{1,3}(\.\d{1,8})?$")
+    ] = None,
     cart_token: Annotated[str | None, Cookie()] = None,
 ) -> PickupPointListResponse:
-    """Search only operating InPost parcel lockers for the current shipping cart."""
-    return await list_cart_points(session, cart_token, query)
+    """Search operating InPost parcel lockers by city/postal code or around a map position."""
+    return await list_cart_points(session, cart_token, query, near)
 
 
 @router.post("/pickup-point", response_model=CartResponse)

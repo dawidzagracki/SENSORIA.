@@ -37,14 +37,51 @@ a{{display:flex;gap:12px;align-items:center;padding:12px;border-radius:16px;colo
 small{{color:#5f6368;display:block}}.demo{{background:#fff3cd;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:16px}}</style>
 <main><p class="demo">Tryb demonstracyjny — to nie jest prawdziwe logowanie Google.</p>
 <h1>Wybierz konto</h1><p>aby kontynuować w Sensoria</p>{items}</main></html>"""
+CITIES = [
+    ("Olsztyn", "10", 53.7784, 20.4801, ["ul. Kościuszki", "al. Warszawska", "ul. Knosały", "ul. Dworcowa", "ul. Jagiellońska"]),
+    ("Warszawa", "00", 52.2297, 21.0122, ["ul. Marszałkowska", "ul. Puławska", "ul. Świętokrzyska", "ul. Wolska", "ul. Targowa"]),
+    ("Kraków", "31", 50.0647, 19.9450, ["ul. Długa", "ul. Dietla", "ul. Starowiślna", "al. Pokoju", "ul. Wielicka"]),
+    ("Gdańsk", "80", 54.3520, 18.6466, ["ul. Długa", "ul. Grunwaldzka", "ul. Podwale Staromiejskie", "ul. Słowackiego", "ul. Chmielna"]),
+    ("Wrocław", "50", 51.1079, 17.0385, ["ul. Świdnicka", "ul. Legnicka", "ul. Piłsudskiego", "ul. Grabiszyńska", "ul. Kazimierza Wielkiego"]),
+    ("Poznań", "60", 52.4064, 16.9252, ["ul. Półwiejska", "ul. Głogowska", "ul. Święty Marcin", "ul. Dąbrowskiego", "ul. Garbary"]),
+    ("Łódź", "90", 51.7592, 19.4560, ["ul. Piotrkowska", "ul. Kilińskiego", "ul. Pomorska", "al. Mickiewicza", "ul. Zachodnia"]),
+    ("Szczecin", "70", 53.4285, 14.5528, ["al. Niepodległości", "ul. Wojska Polskiego", "ul. Krzywoustego", "ul. Bohaterów Warszawy", "ul. Jagiellońska"]),
+    ("Lublin", "20", 51.2465, 22.5684, ["ul. Krakowskie Przedmieście", "ul. Lipowa", "al. Racławickie", "ul. Zamojska", "ul. Wileńska"]),
+    ("Katowice", "40", 50.2649, 19.0238, ["ul. Mariacka", "ul. 3 Maja", "ul. Chorzowska", "ul. Francuska", "ul. Warszawska"]),
+    ("Białystok", "15", 53.1325, 23.1688, ["ul. Lipowa", "ul. Sienkiewicza", "ul. Branickiego", "ul. Warszawska", "ul. Legionowa"]),
+    ("Gdynia", "81", 54.5189, 18.5305, ["ul. Świętojańska", "ul. Śląska", "ul. Chylońska", "ul. Morska", "ul. Wielkopolska"]),
+]
+LOCKERS: list[tuple[str, str, str, str, str, float, float]] = []
+for _c, (_city, _pre, _lat, _lon, _streets) in enumerate(CITIES):
+    for _i, _street in enumerate(_streets):
+        LOCKERS.append((
+            f"{_city[:3].upper()}{_i + 1:02d}M",
+            _street,
+            str(3 + _i * 7),
+            f"{_pre}-{100 + _i * 37:03d}",
+            _city,
+            round(_lat + (_i - 2) * 0.012 + (_i % 2) * 0.004, 5),
+            round(_lon + ((_i * 3) % 5 - 2) * 0.014, 5),
+        ))
+# keep the three codes the e2e/seed already use
 LOCKERS = [
     ("OLS01M", "ul. Kościuszki", "12", "10-502", "Olsztyn", 53.7784, 20.4801),
     ("OLS02M", "al. Warszawska", "98", "10-702", "Olsztyn", 53.7541, 20.4583),
     ("OLS03M", "ul. Knosały", "5", "10-015", "Olsztyn", 53.7899, 20.5012),
-    ("WAW01M", "ul. Marszałkowska", "10", "00-590", "Warszawa", 52.2297, 21.0122),
-    ("WAW02M", "ul. Puławska", "40", "02-512", "Warszawa", 52.2002, 21.0245),
-    ("KRK01M", "ul. Długa", "20", "31-147", "Kraków", 50.0647, 19.9450),
-]
+] + [entry for entry in LOCKERS if not entry[0].startswith("OLS")]
+
+
+def fold(text: str) -> str:
+    table = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
+    return text.translate(table).lower()
+
+
+def distance_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    import math
+
+    p = math.pi / 180
+    a = 0.5 - math.cos((lat2 - lat1) * p) / 2 + math.cos(lat1 * p) * math.cos(lat2 * p) * (1 - math.cos((lon2 - lon1) * p)) / 2
+    return 12742 * math.asin(math.sqrt(a))
 
 
 def locker(entry: tuple[str, str, str, str, str, float, float]) -> dict[str, object]:
@@ -151,13 +188,21 @@ class Handler(BaseHTTPRequestHandler):
         path = parsed.path
         if path == "/v1/points":
             query = parse_qs(parsed.query)
-            city = (query.get("city") or [""])[0].lower()
+            city = fold((query.get("city") or [""])[0])
             code = (query.get("post_code") or [""])[0].replace("-", "")
-            hits = [
-                locker(entry)
-                for entry in LOCKERS
-                if (city and city in entry[4].lower()) or (code and entry[3].replace("-", "").startswith(code[:2]))
-            ]
+            near = (query.get("relative_point") or [""])[0]
+            if near:
+                lat, lon = (float(part) for part in near.split(","))
+                ranked = sorted(LOCKERS, key=lambda entry: distance_km(lat, lon, entry[5], entry[6]))
+                entries = [entry for entry in ranked if distance_km(lat, lon, entry[5], entry[6]) <= 15][:20]
+            else:
+                entries = [
+                    entry
+                    for entry in LOCKERS
+                    if (city and (city in fold(entry[4]) or city in fold(entry[1]) or city == fold(entry[0])))
+                    or (code and entry[3].replace("-", "").startswith(code[:2]))
+                ][:20]
+            hits = [locker(entry) for entry in entries]
             self._send(200, json.dumps({"items": hits}).encode(), "application/json")
         elif path.startswith("/v1/points/"):
             match = [entry for entry in LOCKERS if entry[0] == path.rsplit("/", 1)[1]]

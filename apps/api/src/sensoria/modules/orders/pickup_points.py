@@ -170,6 +170,33 @@ async def search_points(query: str, settings: Settings | None = None) -> PickupP
     return PickupPointListResponse(items=[point for point in points if point is not None])
 
 
+async def search_points_near(
+    near: str, settings: Settings | None = None
+) -> PickupPointListResponse:
+    """Closest lockers to a ``lat,lng`` map position (InPost ``relative_point``)."""
+    lat_text, lon_text = near.split(",", 1)
+    lat, lon = float(lat_text), float(lon_text)
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise DomainError("INPOST_QUERY_INVALID", "Nieprawidłowa pozycja na mapie.", 422)
+    params = {
+        "type": "parcel_locker",
+        "functions": "parcel_collect",
+        "per_page": "20",
+        "page": "1",
+        "relative_point": f"{lat:.6f},{lon:.6f}",
+        "max_distance": "15000",
+    }
+    active = settings or get_settings()
+    data = await _fetch(f"{active.INPOST_POINTS_API_URL}?{urlencode(params)}", active)
+    raw_items = data.get("items")
+    if not isinstance(raw_items, list):
+        raise DomainError(
+            "INPOST_POINTS_UNAVAILABLE", "Otrzymano nieprawidłową odpowiedź InPost.", 503
+        )
+    points = [_safe_point(item) for item in raw_items if isinstance(item, dict)]
+    return PickupPointListResponse(items=[point for point in points if point is not None])
+
+
 async def get_point(code: str, settings: Settings | None = None) -> PickupPointSnapshot:
     """Load and validate one point; never use a client-provided URL."""
     normalized = code.strip().upper()
@@ -220,10 +247,14 @@ async def _current_cart(session: AsyncSession, token: str | None) -> Cart:
 
 
 async def list_cart_points(
-    session: AsyncSession, token: str | None, query: str
+    session: AsyncSession, token: str | None, query: str | None, near: str | None = None
 ) -> PickupPointListResponse:
     await _current_cart(session, token)
     await session.rollback()
+    if near:
+        return await search_points_near(near)
+    if not query:
+        raise DomainError("INPOST_QUERY_INVALID", "Podaj miasto albo kod pocztowy.", 422)
     return await search_points(query)
 
 

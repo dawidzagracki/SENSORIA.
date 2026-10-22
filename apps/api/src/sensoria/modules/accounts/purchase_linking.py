@@ -38,6 +38,7 @@ ReconciliationSource = Literal[
     "manual",
     "payment",
     "oauth",
+    "email_code",
 ]
 
 
@@ -194,6 +195,7 @@ async def reconcile_guest_purchases(
         "manual",
         "payment",
         "oauth",
+        "email_code",
     }:
         raise ValueError("Unsupported purchase-linking source")
     if at.tzinfo is None or at.utcoffset() is None:

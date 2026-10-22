@@ -19,7 +19,7 @@ type Dashboard = {
 const ATTENTION: Array<[string, string, string]> = [
   [
     "orders_awaiting_shipment",
-    "Zamówienia do wysyłki",
+    "Przesyłki fizyczne do realizacji",
     "/admin/zamowienia?status=paid&fulfillment=awaiting_fulfillment",
   ],
   [

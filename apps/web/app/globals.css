@@ -97,6 +97,8 @@ body {
   }
   .responsive-table tr {
     @apply mb-3 rounded-card border border-border bg-surface p-3;
+    /* tbody divide-y would remove the card's bottom border */
+    border-width: 1px !important;
   }
   .responsive-table td {
     @apply flex items-start justify-between gap-4 px-0 py-1 text-right;
