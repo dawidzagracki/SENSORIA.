@@ -87,7 +87,7 @@ function VoucherCover({ product }: { product: CatalogProductDetail }) {
   if (!image) return <TicketPreview product={product} />;
   return (
     <figure className="min-w-0 space-y-3">
-      <div className="relative aspect-ebook-cover w-full overflow-hidden rounded-card bg-surface-muted shadow-subtle lg:aspect-square">
+      <div className="relative mx-auto aspect-ebook-cover w-full max-w-content overflow-hidden rounded-card bg-surface-muted shadow-subtle lg:aspect-square lg:max-w-none">
         <Image
           alt={image.alt}
           className="object-cover"
@@ -391,8 +391,8 @@ export function VoucherProductView({ product, initialVariantKey }: Props) {
 
           <Checkbox
             checked={gift}
-            description="W zamówieniu podasz imię, dedykację i wybierzesz termin wysyłki."
-            label="Kupujesz w prezencie? Zaznacz przy zamówieniu — dołączymy dedykację i wyślemy voucher w wybranym dniu."
+            description="Dane obdarowanej osoby podasz w zamówieniu."
+            label="Dołączymy dedykację i wyślemy voucher w wybranym dniu."
             onChange={(event) => setGift(event.currentTarget.checked)}
             title="Kupujesz w prezencie?"
             variant="card"

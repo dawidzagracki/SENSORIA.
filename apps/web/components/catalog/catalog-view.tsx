@@ -9,7 +9,6 @@ import {
   Button,
   Modal,
   ProductCard,
-  Select,
 } from "@/components/ui";
 import { NoResults } from "@/components/catalog/no-results";
 import { CartToast, useAddToCart } from "@/components/products/use-add-to-cart";
@@ -491,25 +490,31 @@ export function CatalogView({
                     </button>
                   ) : null}
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <Select
-                    className="min-w-48"
-                    label="Sortuj"
-                    onChange={(event) =>
-                      navigate({ sort: event.target.value || null })
-                    }
-                    value={currentSort}
+                <div className="flex flex-wrap items-center gap-4">
+                  <label
+                    className="flex items-center gap-3 text-body-small font-semibold text-ink"
+                    htmlFor="catalog-sort"
                   >
-                    <option value="">Trafność</option>
-                    {sortOptions.map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </Select>
+                    Sortuj
+                    <select
+                      className="min-h-control-md min-w-48 rounded-pill border border-border bg-surface px-5 py-2 font-body text-body-small font-normal text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+                      id="catalog-sort"
+                      onChange={(event) =>
+                        navigate({ sort: event.target.value || null })
+                      }
+                      value={currentSort}
+                    >
+                      <option value="">Trafność</option>
+                      {sortOptions.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                   <div
                     aria-label="Widok produktów"
-                    className="hidden gap-1 self-end md:flex"
+                    className="hidden items-center gap-2 md:flex"
                     role="group"
                   >
                     <Button

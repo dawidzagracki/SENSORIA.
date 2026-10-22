@@ -138,3 +138,99 @@ export async function findSquareControls(page: Page): Promise<string[]> {
       ),
   );
 }
+
+/**
+ * Layout sanity for the current page: horizontal overflow, interactive elements that overlap each
+ * other and elements that stick out of the viewport (outside deliberate scroll containers).
+ */
+export async function findLayoutProblems(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const problems: string[] = [];
+    const vw = window.innerWidth;
+    const label = (el: Element) =>
+      `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ""}.${String(el.className).slice(0, 50)} "${(el.textContent ?? "").trim().slice(0, 30)}"`;
+    if (document.documentElement.scrollWidth > vw + 1)
+      problems.push(
+        `poziome przewijanie: ${document.documentElement.scrollWidth} > ${vw}`,
+      );
+
+    const fixedLike = (el: Element) => {
+      for (let node: Element | null = el; node; node = node.parentElement) {
+        const position = getComputedStyle(node).position;
+        if (position === "fixed" || position === "sticky") return true;
+      }
+      return false;
+    };
+    const visible = (el: Element) => {
+      const box = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      return (
+        box.width > 2 &&
+        box.height > 2 &&
+        style.visibility !== "hidden" &&
+        style.display !== "none" &&
+        style.opacity !== "0"
+      );
+    };
+    const insideScroller = (el: Element) => {
+      for (let node = el.parentElement; node; node = node.parentElement) {
+        const overflow = getComputedStyle(node).overflowX;
+        if (
+          (overflow === "auto" ||
+            overflow === "scroll" ||
+            overflow === "hidden") &&
+          node.scrollWidth > node.clientWidth
+        )
+          return true;
+      }
+      return false;
+    };
+
+    const interactive = [
+      ...document.querySelectorAll(
+        "a[href], button, input:not([type=hidden]):not([type=radio]):not([type=checkbox]), select, textarea",
+      ),
+    ]
+      .filter(visible)
+      .filter(
+        (el) =>
+          !fixedLike(el) &&
+          !el.closest("dialog:not([open])") &&
+          !el.closest("[hidden]") &&
+          !el.closest(".sr-only"),
+      );
+    for (const el of interactive) {
+      const box = el.getBoundingClientRect();
+      if (!insideScroller(el) && (box.right > vw + 1 || box.left < -1))
+        problems.push(`poza ekranem: ${label(el)}`);
+    }
+    const boxes = interactive.map((el) => ({
+      el,
+      box: el.getBoundingClientRect(),
+    }));
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i];
+        const b = boxes[j];
+        if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+        // Deliberate compositions: a button inset in its own field, and rotated hero cards.
+        const inset = (x: Element, y: Element) =>
+          getComputedStyle(x).position === "absolute" &&
+          x.parentElement?.contains(y);
+        if (inset(a.el, b.el) || inset(b.el, a.el)) continue;
+        if (
+          getComputedStyle(a.el).transform !== "none" ||
+          getComputedStyle(b.el).transform !== "none"
+        )
+          continue;
+        const w =
+          Math.min(a.box.right, b.box.right) - Math.max(a.box.left, b.box.left);
+        const h =
+          Math.min(a.box.bottom, b.box.bottom) - Math.max(a.box.top, b.box.top);
+        if (w > 4 && h > 4)
+          problems.push(`nakładanie: ${label(a.el)} ⟷ ${label(b.el)}`);
+      }
+    }
+    return problems.slice(0, 20);
+  });
+}

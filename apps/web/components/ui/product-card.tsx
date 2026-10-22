@@ -63,7 +63,7 @@ export function ProductCard({
         <h3 className="font-display text-card-title font-extrabold text-ink">
           {href ? (
             <Link
-              className="inline-flex min-h-touch items-center focus-visible:rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
+              className="inline-flex min-h-touch items-start focus-visible:rounded-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action"
               href={href}
             >
               {title}

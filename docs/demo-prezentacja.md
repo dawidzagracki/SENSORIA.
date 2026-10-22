@@ -40,7 +40,7 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
 
 ## Testy przepływów (Playwright, prawdziwy stos)
 
-`apps/web/e2e-demo/` zawiera 47 testów klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
+`apps/web/e2e-demo/` zawiera 49 testów (w tym kontrola układu: brak przepełnień i nakładających się kontrolek na 7 szerokościach) klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
 karta → koszyk → checkout → bramka → potwierdzenie → biblioteka/czytnik/odtwarzacz, filtry i wyszukiwarka, kody rabatowe,
 dostawa (gabinet, kurier, Paczkomat), faktura na firmę, rejestracja z potwierdzeniem e-maila (z Mailpit), opinie,
 reklamacje, vouchery z QR i PDF, dokumenty, każda sekcja panelu.

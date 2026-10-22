@@ -149,7 +149,7 @@ function HeroProductCard({
   return (
     <Link
       aria-label={`${type}: ${product.name}, ${formatMoney(product.price)}`}
-      className={`group w-[72%] shrink-0 snap-center rounded-card border border-border bg-surface p-3 shadow-subtle transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:w-[44%] sm:p-4 lg:w-auto ${position}`}
+      className={`group w-[72%] shrink-0 snap-center rounded-card border border-border bg-surface p-3 shadow-subtle transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-action focus-visible:ring-offset-2 focus-visible:ring-offset-surface sm:w-[44%] sm:p-4 md:w-[31%] lg:w-auto ${position}`}
       href={`/sklep/${encodeURIComponent(product.slug)}`}
     >
       <div
