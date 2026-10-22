@@ -528,7 +528,7 @@ export function MyVouchersView() {
                 tutaj.
               </p>
               <Link
-                className="mt-5 inline-flex min-h-touch items-center rounded-control bg-accent px-5 font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="mt-5 inline-flex min-h-touch items-center rounded-pill bg-accent-action px-5 font-semibold text-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 href="/sklep?typ=voucher"
               >
                 Zobacz vouchery
