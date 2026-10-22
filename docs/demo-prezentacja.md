@@ -29,7 +29,7 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
 
 1. **Strona główna i katalog** — filtry, wyszukiwarka, karty produktów, ceny z VAT.
 2. **Produkt** — voucher (wybór wariantu online/stacjonarnie), książka, e-book z darmowym fragmentem PDF, audiobook, kurs.
-3. **Zakup jako gość** — koszyk, kod rabatowy, dostawa (Paczkomat/kurier/odbiór w gabinecie), checkout, płatność BLIK w bramce demo,
+3. **Zakup jako gość** — koszyk, kod rabatowy, dostawa (Paczkomat z wyborem na mapie / kurier / odbiór w gabinecie), checkout, płatność BLIK w bramce demo,
    strona potwierdzenia, zamówienie dostępne od razu.
 4. **Poczta** (Mailpit) — potwierdzenie zamówienia, dostęp do plików, voucher z PDF.
 5. **Konto klientki** (Anna) — logowanie, biblioteka, **czytnik** e-booka, historia zamówień, vouchery, dane i zgody (eksport/usunięcie).
@@ -40,7 +40,7 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
 
 ## Testy przepływów (Playwright, prawdziwy stos)
 
-`apps/web/e2e-demo/` zawiera 49 testów (w tym kontrola układu: brak przepełnień i nakładających się kontrolek na 7 szerokościach) klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
+`apps/web/e2e-demo/` zawiera 53 testy (w tym skan dostępności axe WCAG 2.1 AA: brak naruszeń serious/critical) (w tym kontrola układu: brak przepełnień i nakładających się kontrolek na 7 szerokościach) klikających sklep, konto i panel na działającym stosie demo (desktop + telefon):
 karta → koszyk → checkout → bramka → potwierdzenie → biblioteka/czytnik/odtwarzacz, filtry i wyszukiwarka, kody rabatowe,
 dostawa (gabinet, kurier, Paczkomat), faktura na firmę, rejestracja z potwierdzeniem e-maila (z Mailpit), opinie,
 reklamacje, vouchery z QR i PDF, dokumenty, każda sekcja panelu.
@@ -72,6 +72,7 @@ docker run --rm -e DEMO_URL=http://localhost:8090 -e DEMO_HOST_MAP=1 -v "$PWD/ap
 - Dane osobowe, NIP i teksty prawne są demonstracyjne — nie do użycia produkcyjnego.
 - Panel nie ma jeszcze 2FA (prace w gałęzi `wip/2fa-totp`).
 - Logowanie przez Google na produkcji wymaga `GOOGLE_CLIENT_ID` i `GOOGLE_CLIENT_SECRET` (przycisk pojawia się tylko wtedy); w demo działa atrapa.
-- Loga płatności i dostawy (BLIK, Visa, Mastercard, Google Pay, Apple Pay, Stripe, InPost) to uproszczone znaki rysowane w SVG — przed premierą podmień je na oficjalne materiały marek.
+- Loga płatności (BLIK, Visa, Mastercard, Google Pay, Apple Pay, Stripe) to uproszczone znaki SVG — przed premierą podmień je na oficjalne materiały marek. Logo InPost jest oficjalne (`apps/web/public/brand/inpost.png`); sprawdź zgodę na użycie.
+- Mapa Paczkomatów (Leaflet + kafelki OpenStreetMap) wymaga internetu; współrzędne punktów w demo pochodzą z atrapy InPost, na produkcji z API InPost.
 - Wyszukiwarka Paczkomatów korzysta z atrapy (6 punktów: Olsztyn, Warszawa, Kraków); na produkcji — prawdziwe API InPost.
 - Pierwsze wejście po starcie może chwilę trwać; produkcyjny build web jest szybki dalej.
