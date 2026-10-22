@@ -45,7 +45,7 @@ Konta (hasło wszędzie: `Demo-Sensoria-2026`):
 - **Mapa Paczkomatów** — Leaflet + OpenStreetMap, 60+ punktów w 12 miastach w atrapie InPost, wyszukiwanie w okolicy mapy i po lokalizacji.
 - **Panel**: „Klienci” to każdy kupujący (także bez konta); „do wysyłki” obejmuje tylko zamówienia fizyczne; panel jest czytelny na telefonie (przewijane menu, karty zamiast tabel).
 - **Menu główne** nie powiela filtrów katalogu (Sklep · O autorce · Pomoc).
-- `docs/prezentacja-sensoria.pdf` — przewodnik po wszystkich 53 ekranach z opisem i polem „Odbiór etapu”; generowany poleceniem `GALLERY=1 … playwright test gallery.spec.ts`.
+- `docs/prezentacja-sensoria.pdf` — przewodnik po wszystkich 53 ekranach z opisem; generowany poleceniem `GALLERY=1 … playwright test gallery.spec.ts`.
 
 ## Testy przepływów (Playwright, prawdziwy stos)
 

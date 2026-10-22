@@ -923,8 +923,6 @@ test("prezentacja: zrzuty wszystkich ekranów i PDF", async ({ browser }) => {
     </div>
     <div class="right">
       ${shot.mobile ? `<img class="phone" src="${img(shot.mobile)}" alt="">` : ""}
-      <div class="checks"><b>Co sprawdzić</b><ul>${shot.checks.map((c) => `<li>${esc(c)}</li>`).join("")}</ul></div>
-      <div class="accept"><b>Odbiór etapu</b><p>☐ zaakceptowano &nbsp; ☐ do poprawy</p><p class="line">Uwagi:</p><p class="line"></p></div>
     </div>
   </div>
 </section>`,
@@ -948,7 +946,7 @@ h2{margin:2mm 0 0;font-size:21pt} .path{margin:1mm 0 3mm;font-size:9pt;color:#6e
 .toc{font-size:11pt} .toc li{margin:2mm 0}
 </style><body>
 <section class="slide cover"><h1>SENSORIA<span class="dot">.</span></h1><p>Przewodnik po wszystkich ekranach sklepu i panelu administracyjnego</p><p>Wersja pokazowa · ${today} · ${shots.length} ekranów do odbioru</p></section>
-<section class="slide"><h2>Jak korzystać z dokumentu</h2><ul class="toc"><li>Każda strona opisuje jeden ekran: zrzut z komputera, (jeśli ma wersję mobilną) zrzut z telefonu, opis i listę rzeczy do sprawdzenia.</li><li>W prawym dolnym rogu jest pole „Odbiór etapu” — zaznacz, czy ekran jest zaakceptowany, i dopisz uwagi.</li><li>Dane w wersji pokazowej są przykładowe; płatność i poczta to atrapy, wszystko inne działa naprawdę.</li></ul><h2 style="margin-top:8mm">Spis części</h2><ol class="toc">${sections.map((s) => `<li>${esc(s)} — ${shots.filter((x) => x.section === s).length} ekr.</li>`).join("")}</ol></section>
+<section class="slide"><h2>Jak korzystać z dokumentu</h2><ul class="toc"><li>Każda strona opisuje jeden ekran: zrzut z komputera, (jeśli ma wersję mobilną) zrzut z telefonu oraz opis.</li><li>Dane w wersji pokazowej są przykładowe; płatność i poczta to atrapy, wszystko inne działa naprawdę.</li></ul><h2 style="margin-top:8mm">Spis części</h2><ol class="toc">${sections.map((s) => `<li>${esc(s)} — ${shots.filter((x) => x.section === s).length} ekr.</li>`).join("")}</ol></section>
 ${slides}
 </body></html>`;
   writeFileSync(`${OUT}/prezentacja.html`, html);
